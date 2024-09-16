@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import os
 import socket
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -105,8 +105,8 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
-if socket.gethostname() == 'cscita':
-    AUTH_PASSWORD_VALIDATORS = [
+#if socket.gethostname() == 'cscita':
+AUTH_PASSWORD_VALIDATORS = [
         {
             "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
         },
@@ -120,8 +120,8 @@ if socket.gethostname() == 'cscita':
             "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
         },
     ]
-else:
-    AUTH_PASSWORD_VALIDATORS = [ ]
+#else:
+#    AUTH_PASSWORD_VALIDATORS = [ ]
 
 
 # Internationalization
@@ -161,12 +161,16 @@ STATICFILES_DIRS = [
 
 if socket.gethostname() == 'cscita':
     STATIC_ROOT = 'usr/local/test/bc-tasystem/src/static/'
+else:
+    WAITLIST_APP_HOST = 'localhost'
+    WAITLIST_APP_PORT = 8080 
 
 # EMAIL
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
 EMAIL_HOST_USER = 'tasystem2023@gmail.com'
 EMAIL_HOST_PASSWORD = 'eymwzvyzsrajryjo'
 

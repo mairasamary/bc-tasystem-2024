@@ -30,10 +30,11 @@ load_dotenv(dotenv_path)
 SECRET_KEY = "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"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+#DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ["cscita.bc.edu"]
-
+#ALLOWED_HOSTS = ["cscita.bc.edu"]
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 

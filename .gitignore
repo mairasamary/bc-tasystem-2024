@@ -138,7 +138,7 @@ dmypy.json
 pyvenv.cfg
 
 # ds_store
-/.DS_Store
+**/.DS_Store
 
 # todo
 /todo.txt

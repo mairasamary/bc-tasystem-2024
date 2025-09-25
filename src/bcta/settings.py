@@ -90,6 +90,9 @@ WSGI_APPLICATION = "bcta.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+DATABASE_ENGINE = 'django.db.backends.sqlite3' if DEBUG else 'django.db.backends.postgresql'
+DATABASE_NAME = os.path.join(BASE_DIR, 'db.sqlite3') if DEBUG else os.getenv("DATABASE_NAME")
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',

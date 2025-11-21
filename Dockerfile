@@ -51,6 +51,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
 COPY src/ ./src/
+COPY .env ./
 
 # Create necessary directories and set permissions
 RUN mkdir -p /app/src/static /app/src/media && \

@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+from enum import Enum
 from pathlib import Path
 import os
 import socket
@@ -19,22 +20,22 @@ from dotenv import load_dotenv, find_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ENV VARIABLES (env is in a directory above src)
-dotenv_path = os.path.join(BASE_DIR, '../.env')
+dotenv_path = os.path.join(BASE_DIR, "../.env")
 load_dotenv(dotenv_path)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-#SECRET_KEY = "django-insecure-&-o0uda&gah_*mwk9fcn)orpv#3o)btpv5d83@+0hth#8j8e^2"
+# SECRET_KEY = "django-insecure-&-o0uda&gah_*mwk9fcn)orpv#3o)btpv5d83@+0hth#8j8e^2"
 SECRET_KEY = "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"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-#DEBUG = False
+# DEBUG = False
 DEBUG = True
 
-#ALLOWED_HOSTS = ["cscita.bc.edu"]
-ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS = ["cscita.bc.edu"]
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
@@ -45,8 +46,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'django.contrib.sites',
-
+    "django.contrib.sites",
     # own apps
     "users",
     "main",
@@ -71,7 +71,7 @@ ROOT_URLCONF = "bcta.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, 'templates')],
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -90,17 +90,21 @@ WSGI_APPLICATION = "bcta.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASE_ENGINE = 'django.db.backends.sqlite3' if DEBUG else 'django.db.backends.postgresql'
-DATABASE_NAME = os.path.join(BASE_DIR, 'db.sqlite3') if DEBUG else os.getenv("DATABASE_NAME")
+DATABASE_ENGINE = (
+    "django.db.backends.sqlite3" if DEBUG else "django.db.backends.postgresql"
+)
+DATABASE_NAME = (
+    os.path.join(BASE_DIR, "db.sqlite3") if DEBUG else os.getenv("DATABASE_NAME")
+)
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv("DATABASE_NAME"),
-        'USER': os.getenv("DATABASE_USERNAME"),
-        'PASSWORD': os.getenv("DATABASE_PASSWORD"),
-        'HOST': os.getenv("DATABASE_HOST"),
-        'PORT': os.getenv("DATABASE_PORT"),
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("DATABASE_NAME"),
+        "USER": os.getenv("DATABASE_USERNAME"),
+        "PASSWORD": os.getenv("DATABASE_PASSWORD"),
+        "HOST": os.getenv("DATABASE_HOST"),
+        "PORT": os.getenv("DATABASE_PORT"),
     }
 }
 
@@ -108,22 +112,22 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
-#if socket.gethostname() == 'cscita':
+# if socket.gethostname() == 'cscita':
 AUTH_PASSWORD_VALIDATORS = [
-        {
-            "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-        },
-        {
-            "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-        },
-        {
-            "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-        },
-        {
-            "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-        },
-    ]
-#else:
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
+]
+# else:
 #    AUTH_PASSWORD_VALIDATORS = [ ]
 
 
@@ -149,38 +153,56 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-AUTH_USER_MODEL = 'users.CustomUser'
+AUTH_USER_MODEL = "users.CustomUser"
 
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
 
-LOGIN_URL = '/users/login'
+LOGIN_URL = "/users/login"
 
-STATIC_URL = '/static/'
+STATIC_URL = "/static/"
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static')
-]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
-if socket.gethostname() == 'cscita':
-    STATIC_ROOT = 'usr/local/test/bc-tasystem/src/static/'
+if socket.gethostname() == "cscita":
+    STATIC_ROOT = "usr/local/test/bc-tasystem/src/static/"
 else:
-    WAITLIST_APP_HOST = 'localhost'
-    WAITLIST_APP_PORT = 8080 
+    WAITLIST_APP_HOST = "localhost"
+    WAITLIST_APP_PORT = 8080
 
 # EMAIL
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
-EMAIL_HOST_USER = 'tasystem2023@gmail.com'
-EMAIL_HOST_PASSWORD = 'eymwzvyzsrajryjo'
+EMAIL_HOST_USER = "tasystem2023@gmail.com"
+EMAIL_HOST_PASSWORD = "eymwzvyzsrajryjo"
 
 # OAUTH
 SITE_ID = 3
 
 AUTHENTICATION_BACKENDS = [
-    'django_gauth.backends.GoogleAuthBackend',
-    'django.contrib.auth.backends.ModelBackend'
+    "django_gauth.backends.GoogleAuthBackend",
+    "django.contrib.auth.backends.ModelBackend",
 ]
+
+
+class BcTaEnvironment(str, Enum):
+    DEV = "dev"
+    PROD = "prod"
+
+    def __str__(self):
+        return self.value
+
+    def __repr__(self):
+        return self.value
+
+
+env_str = os.getenv("ENV", "dev").lower()
+if env_str not in (BcTaEnvironment.DEV, BcTaEnvironment.PROD):
+    raise ValueError(
+        f"Invalid ENV value: {env_str}. Must be one of {[e.value for e in BcTaEnvironment]}"
+    )
+ENV = BcTaEnvironment(env_str)
+SITE_HOSTNAME = os.getenv("SITE_HOSTNAME", "127.0.0.1:8000")

@@ -25,8 +25,9 @@ services:
     restart: unless-stopped
 
   admin:
-    build: .
-    working_dir: /app/src
+    build:
+      context: .
+      dockerfile: Dockerfile.admin
     ports:
       - "8081:8081"
     environment:
@@ -42,7 +43,6 @@ services:
       - ./src:/app/src
     depends_on:
       - db
-    command: django-admin runserver 0.0.0.0:8081
     restart: unless-stopped
 
   db:

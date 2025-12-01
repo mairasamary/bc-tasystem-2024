@@ -15,7 +15,7 @@ services:
       - DATABASE_PASSWORD=postgres
     volumes:
       # Mount source code for development (optional)
-      - ./src:/app/src:ro
+      - ./src:/app/src
       # # Mount static files
       # - static_volume:/app/src/static
       # # Mount media files

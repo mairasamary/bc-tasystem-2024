@@ -85,10 +85,10 @@ class UploadView(LoginRequiredMixin, UserPassesTestMixin, View):
             instructor_last_name=instructor.last_name,
             room_name=row[7],
             timeslot=row[8],
-            max_enroll=row[9],
-            room_size=row[10],
+            max_enroll=row[10],
+            room_size=row[11],
             num_tas=num_tas,
-            description=row[12],
+            description=row[5], # TODO: Add description
             professor=instructor
         )
         instructor.courses.add(new_class)

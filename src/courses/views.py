@@ -50,9 +50,9 @@ class UploadView(LoginRequiredMixin, UserPassesTestMixin, View):
         instructor, created = User.objects.get_or_create(
             first_name=instructor_first_name,
             last_name=instructor_last_name,
+            email=email,
             defaults={
                 'professor': True,
-                'email': email,
                 'eagleid': self.generate_eagleid()
             }
         )

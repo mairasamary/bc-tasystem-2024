@@ -14,64 +14,69 @@ from random import randint
 
 class UploadView(LoginRequiredMixin, UserPassesTestMixin, View):
     def get(self, request):
-        return render(request, 'upload.html')
+        return render(request, "upload.html")
 
     def post(self, request):
-        excel_file = request.FILES.get('excel_file')
+        excel_file = request.FILES.get("excel_file")
         if excel_file:
             self.process_excel_file(excel_file)
-        messages.success(self.request, 'Successfully Uploaded Excel File')
-        return render(request, 'upload.html')
+        messages.success(self.request, "Successfully Uploaded Excel File")
+        return render(request, "upload.html")
 
     def process_excel_file(self, excel_file):
         workbook = load_workbook(excel_file)
         sheet = workbook.active
 
         for row in sheet.iter_rows(values_only=True):
-            if not row[0] or row[0] == 'Term':
+            if not row[0] or row[0] == "Term":
                 continue
             instructor = self.get_or_create_instructor(row)
             self.create_course(row, instructor)
 
     def get_email(self, first_name, last_name):
-        return f'{first_name}.{last_name}@bc.edu' if f'{last_name}, {first_name}' not in instructors else instructors[f'{last_name}, {first_name}']['Short Email']
+        return (
+            f"{first_name}.{last_name}@bc.edu"
+            if f"{last_name}, {first_name}" not in instructors
+            else instructors[f"{last_name}, {first_name}"]["Short Email"]
+        )
 
     def get_or_create_instructor(self, row):
         try:
-            instructor_first_name = row[6].split(',')[1].strip()
-            instructor_last_name = row[6].split(',')[0].strip()
+            instructor_first_name = row[6].split(",")[1].strip()
+            instructor_last_name = row[6].split(",")[0].strip()
         except:
             instructor_first_name = row[6]
             instructor_last_name = ""
 
         email = self.get_email(instructor_first_name, instructor_last_name)
 
-
         instructor, created = User.objects.get_or_create(
-            first_name=instructor_first_name,
-            last_name=instructor_last_name,
             email=email,
             defaults={
-                'professor': True,
-                'eagleid': self.generate_eagleid()
-            }
+                "professor": True,
+                "eagleid": self.generate_eagleid(),
+                "first_name": instructor_first_name,
+                "last_name": instructor_last_name,
+            },
         )
 
         if created:
-            instructor.set_password('password')
+            instructor.set_password("password")
             instructor.save()
 
         return instructor
 
     def create_course(self, row, instructor):
-        excluded_lectures = ["Computer Science I",
-                             "Computer Science II", "Computer Organization and Lab"]
+        excluded_lectures = [
+            "Computer Science I",
+            "Computer Science II",
+            "Computer Organization and Lab",
+        ]
 
         if row[5] in excluded_lectures and row[1] == "Lecture":
             return
 
-        num_tas = 1 if row[1] == "Discussion" or row[1] == "Lab" else int(
-            row[9]) // 20
+        num_tas = 1 if row[1] == "Discussion" or row[1] == "Lab" else int(row[9]) // 20
 
         num_tas = 1 if num_tas == 0 else num_tas
 
@@ -88,8 +93,8 @@ class UploadView(LoginRequiredMixin, UserPassesTestMixin, View):
             max_enroll=row[10],
             room_size=row[11],
             num_tas=num_tas,
-            description=row[5], # TODO: Add description
-            professor=instructor
+            description=row[5],  # TODO: Add description
+            professor=instructor,
         )
         instructor.courses.add(new_class)
 
@@ -106,8 +111,8 @@ class UploadView(LoginRequiredMixin, UserPassesTestMixin, View):
 class CloseView(LoginRequiredMixin, UserPassesTestMixin, View):
     def post(self, request):
         self.archive_courses()
-        messages.success(self.request, 'Successfully Closed Courses')
-        return redirect('courses:manage-course')
+        messages.success(self.request, "Successfully Closed Courses")
+        return redirect("courses:manage-course")
 
     def archive_courses(self):
         current_courses = Course.objects.all()
@@ -121,18 +126,18 @@ class CloseView(LoginRequiredMixin, UserPassesTestMixin, View):
 
 class ListView(LoginRequiredMixin, ListView):
     model = Course
-    template_name = 'list.html'
-    ordering = ['course']
-    context_object_name = 'course_data'
+    template_name = "list.html"
+    ordering = ["course"]
+    context_object_name = "course_data"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['professors'] = User.objects.filter(professor=True)
+        context["professors"] = User.objects.filter(professor=True)
         return context
 
     def get_queryset(self):
         user = self.request.user
-        professor_id = self.request.GET.get('professor_id', None)
+        professor_id = self.request.GET.get("professor_id", None)
 
         if professor_id:
             return Course.objects.filter(professor__id=professor_id, is_active=True)
@@ -140,20 +145,20 @@ class ListView(LoginRequiredMixin, ListView):
         if user.is_student() or user.is_superuser:
             return Course.objects.filter(is_active=True)
 
-        return Course.objects.filter(professor=user,is_active=True)
+        return Course.objects.filter(professor=user, is_active=True)
 
 
 class CourseDetailView(LoginRequiredMixin, DetailView):
     model = Course
-    template_name = 'course_detail.html'
+    template_name = "course_detail.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['course'] = Course.objects.get(pk=self.kwargs.get('pk'))
-        context['is_professor'] = self.is_professor()
-        context['at_max_apps'] = self.at_max_apps()
-        context['has_applied'] = self.has_applied()
-        context['is_ta'] = self.is_ta()
+        context["course"] = Course.objects.get(pk=self.kwargs.get("pk"))
+        context["is_professor"] = self.is_professor()
+        context["at_max_apps"] = self.at_max_apps()
+        context["has_applied"] = self.has_applied()
+        context["is_ta"] = self.is_ta()
         return context
 
     def is_professor(self):

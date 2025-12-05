@@ -1,5 +1,10 @@
-from django.shortcuts import render
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import (
+    ListView,
+    DetailView,
+    CreateView,
+    UpdateView,
+    DeleteView,
+)
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from .models import Application
@@ -7,15 +12,14 @@ from courses.models import Course
 from .forms import ApplicationForm
 from django.urls import reverse
 from django.contrib import messages
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
 from offers.views import send_html_email
 
 
-class ApplicationCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView):
+class ApplicationCreateView(
+    SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView
+):
     model = Application
-    template_name = 'application_form.html'
+    template_name = "application_form.html"
     form_class = ApplicationForm
     success_message = "Your application has been submitted successfully!"
 
@@ -33,27 +37,30 @@ class ApplicationCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesT
         return super().form_valid(form)
 
     def get_object(self):
-        return Course.objects.get(pk=self.kwargs.get('pk'))
+        return Course.objects.get(pk=self.kwargs.get("pk"))
 
     def test_func(self):
         return self.request.user.is_student() or self.request.user.is_superuser
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['course'] = self.get_object()
-        context['can_apply'] = self.ensure_user_can_apply()
+        context["course"] = self.get_object()
+        context["can_apply"] = self.ensure_user_can_apply()
         return context
 
     def get_success_url(self):
         # email for the professor after the student submits application
-        url = reverse('courses:course-detail', args=[self.get_object().id])
-        subject = f'TA Offer Update For {self.get_object().instructor_first_name} {self.get_object().instructor_last_name}'
-        message = [f'Dear {self.get_object().instructor_first_name} {self.get_object().instructor_last_name}',
-                   f'The student submitted an application for {self.get_object().course_title}. View the application here: https://cscita.bc.edu{url}']
-        # recipients = self.get_object().professor.email # for production
-        recipients = 'kohke@bc.edu'  # for testing purposes
-        send_html_email(subject, recipients, message)
-        return self.get_object().get_absolute_url()
+        course = self.get_object()
+        url = reverse("courses:course-detail", args=[course.id])
+        subject = f"TA Offer Update For {course.instructor_first_name} {course.instructor_last_name}"
+        message = [
+            f"Dear {course.instructor_first_name} {course.instructor_last_name}",
+            f"The student submitted an application for {course.course_title}. View the application here: http://http://cscigpu03.bc.edu:8080{url}",
+        ]
+        if course.professor and course.professor.email:
+            recipients = course.professor.email
+            send_html_email(subject, recipients, message)
+        return course.get_absolute_url()
 
     def ensure_user_can_apply(self):
         user = self.request.user
@@ -70,8 +77,8 @@ class ApplicationCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesT
 
 class ApplicationListView(LoginRequiredMixin, ListView):
     model = Application
-    template_name = 'applications.html'
-    context_object_name = 'applications'
+    template_name = "applications.html"
+    context_object_name = "applications"
 
     def get_queryset(self):
         if self.request.user.is_superuser:
@@ -83,52 +90,62 @@ class ApplicationListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['applications'] = self.get_queryset()
+        context["applications"] = self.get_queryset()
         if self.request.user.is_student():
-            context['title'] = 'My Applications'
+            context["title"] = "My Applications"
         else:
-            context['title'] = 'Applications'
+            context["title"] = "Applications"
         return context
 
 
-class ApplicationDeleteView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class ApplicationDeleteView(
+    SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, DeleteView
+):
     model = Application
-    template_name = 'application_confirm_delete.html'
+    template_name = "application_confirm_delete.html"
     success_message = "Your application has been deleted successfully!"
 
     def get_success_url(self):
-        return reverse('applications:application-list')
+        return reverse("applications:application-list")
 
     def test_func(self):
         application = self.get_object()
         if application.get_status() != "PENDING":
             return False
-        return self.request.user.is_superuser or self.request.user == self.get_object().student
+        return (
+            self.request.user.is_superuser
+            or self.request.user == self.get_object().student
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['course'] = self.get_object().course
-        return context\
-
+        context["course"] = self.get_object().course
+        return context
 
 
 class ApplicationDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Application
-    template_name = 'application_detail.html'
+    template_name = "application_detail.html"
 
     def test_func(self):
-        return self.request.user.is_superuser or self.request.user == self.get_object().student or self.request.user == self.get_object().course.professor
+        return (
+            self.request.user.is_superuser
+            or self.request.user == self.get_object().student
+            or self.request.user == self.get_object().course.professor
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['course'] = self.get_object().course
+        context["course"] = self.get_object().course
         return context
 
 
-class ApplicationRejectView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class ApplicationRejectView(
+    SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView
+):
     model = Application
     fields = []
-    template_name = 'application_reject.html'
+    template_name = "application_reject.html"
     success_message = "The application has been rejected successfully!"
 
     def form_valid(self, form):
@@ -137,22 +154,28 @@ class ApplicationRejectView(SuccessMessageMixin, LoginRequiredMixin, UserPassesT
 
     def get_success_url(self):
         # email for the student after an application is rejected
-        url = reverse('courses:course-list')
-        subject = f'TA Application Update For {self.get_object().student.first_name} {self.get_object().student.last_name}'
-        message = [f'Dear {self.get_object().student.first_name} {self.get_object().student.last_name}',
-                   f'We regret to inform you that your application has been rejected. You can view other courses here: https://cscita.bc.edu{url}']
-        # recipients = self.get_object().student.email # for production
-        recipients = 'kohke@bc.edu'  # for testing purposes
-        send_html_email(subject, recipients, message)
-        return reverse('applications:application-list')
+        url = reverse("courses:course-list")
+        student = self.get_object().student
+        subject = f"TA Application Update For {student.first_name} {student.last_name}"
+        message = [
+            f"Dear {student.first_name} {student.last_name}",
+            f"We regret to inform you that your application has been rejected. You can view other courses here: http://http://cscigpu03.bc.edu:8080{url}",
+        ]
+        recipients = student.email
+        if recipients:
+            send_html_email(subject, recipients, message)
+        return reverse("applications:application-list")
 
     def test_func(self):
         application = self.get_object()
         if application.get_status() != "PENDING":
             return False
-        return self.request.user.is_superuser or self.request.user == self.get_object().course.professor
+        return (
+            self.request.user.is_superuser
+            or self.request.user == self.get_object().course.professor
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['course'] = self.get_object().course
+        context["course"] = self.get_object().course
         return context

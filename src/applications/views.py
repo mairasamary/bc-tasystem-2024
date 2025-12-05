@@ -55,7 +55,7 @@ class ApplicationCreateView(
         subject = f"TA Offer Update For {course.instructor_first_name} {course.instructor_last_name}"
         message = [
             f"Dear {course.instructor_first_name} {course.instructor_last_name}",
-            f"The student submitted an application for {course.course_title}. View the application here: http://http://cscigpu03.bc.edu:8080{url}",
+            f"The student submitted an application for {course.course_title}. View the application here: http://cscigpu03.bc.edu:8080{url}",
         ]
         if course.professor and course.professor.email:
             recipients = course.professor.email
@@ -159,7 +159,7 @@ class ApplicationRejectView(
         subject = f"TA Application Update For {student.first_name} {student.last_name}"
         message = [
             f"Dear {student.first_name} {student.last_name}",
-            f"We regret to inform you that your application has been rejected. You can view other courses here: http://http://cscigpu03.bc.edu:8080{url}",
+            f"We regret to inform you that your application has been rejected. You can view other courses here: http://cscigpu03.bc.edu:8080{url}",
         ]
         recipients = student.email
         if recipients:

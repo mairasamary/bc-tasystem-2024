@@ -59,7 +59,7 @@ class OfferCreateView(
         message = [
             f"Dear {student}",
             f"Congratulations! You have received an offer for {course}",
-            f"Access the offer here: https://cscita.bc.edu{url}",
+            f"Access the offer here: http://http://cscigpu03.bc.edu:8080{url}",
         ]
         if student.email:
             recipients = student.email
@@ -152,7 +152,7 @@ class OfferAcceptView(
         subject = f"TA Offer Update For {course.instructor_first_name} {course.instructor_last_name}"
         message = [
             f"Dear {course.instructor_first_name} {course.instructor_last_name}",
-            f"The student has accepted your offer. You can view the status of {course} here: https://cscita.bc.edu{url}",
+            f"The student has accepted your offer. You can view the status of {course} here: http://http://cscigpu03.bc.edu:8080{url}",
         ]
         if course.professor and course.professor.email:
             recipients = course.professor.email
@@ -203,7 +203,7 @@ class OfferRejectView(
         subject = f"TA Offer Update For {course.instructor_first_name} {course.instructor_last_name}"
         message = [
             f"Dear {course.instructor_first_name} {course.instructor_last_name}",
-            f"The student has declined your offer. You can view the status of {course} here: https://cscita.bc.edu{url}",
+            f"The student has declined your offer. You can view the status of {course} here: http://cscigpu03.bc.edu:8080{url}",
         ]
         if course.professor and course.professor.email:
             recipients = course.professor.email

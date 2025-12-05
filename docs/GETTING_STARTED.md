@@ -39,8 +39,10 @@ BC CS Department TA System
   - You are already a TA for another course
   - You have already applied to this specific course
   - You have reached the maximum of 5 applications
+  ![](./images/getting-started-02.png)
 
 ### 3. View Your Applications
+![](./images/getting-started-03.png)
 - Navigate to "My Applications" to see all your submitted applications
 - Each application shows:
   - Course information

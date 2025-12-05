@@ -54,7 +54,8 @@ class OfferCreateView(
         application = self.get_object()
         student = application.student
         course = application.course
-        url = reverse("offers:offer-accept", args=[course.id])
+        offer = Offer.objects.get(application=application)
+        url = reverse("offers:offer-detail", args=[offer.id])
         subject = f"TA Application Update For {student}"
         message = [
             f"Dear {student}",
@@ -249,5 +250,6 @@ def send_html_email(subject, recipients, message):
         # Log the error but don't fail the request
         # In production, you might want to use Django's logging framework
         import logging
+
         logger = logging.getLogger(__name__)
         logger.error(f"Failed to send email to {recipients}: {str(e)}")

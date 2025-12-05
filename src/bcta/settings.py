@@ -176,7 +176,9 @@ EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
-EMAIL_HOST_USER = "cscita@bc.edu"
+EMAIL_HOST_USER = (
+    "tasystem2023@gmail.com"  # TODO: Change to cscita@bc.edu for production
+)
 EMAIL_HOST_PASSWORD = "eymwzvyzsrajryjo"
 
 # OAUTH

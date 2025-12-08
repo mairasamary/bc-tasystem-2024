@@ -1,0 +1,241 @@
+{% extends 'base_v2.html' %}
+
+{% block title %}Courses - BC TA System{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<nav class="flex mb-8" aria-label="Breadcrumb">
+    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+        <li class="inline-flex items-center">
+            <a href="{% url 'dashboard_v2' %}"
+                class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-indigo-600">
+                <svg class="w-3 h-3 me-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                    viewBox="0 0 20 20">
+                    <path
+                        d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z" />
+                </svg>
+                Dashboard
+            </a>
+        </li>
+        <li>
+            <div class="flex items-center">
+                <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                    fill="none" viewBox="0 0 6 10">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="m1 9 4-4-4-4" />
+                </svg>
+                <span class="ms-1 text-sm font-medium text-gray-500 md:ms-2">Courses</span>
+            </div>
+        </li>
+    </ol>
+</nav>
+
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Courses</h1>
+        <p class="mt-2 text-gray-600">Manage course details and TA requirements.</p>
+    </div>
+    <form class="flex flex-col sm:flex-row gap-3" method="GET">
+        <div class="relative">
+            <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 20 20">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                </svg>
+            </div>
+            <input type="text" name="q" value="{{ request.GET.q|default:'' }}" id="table-search"
+                class="block w-full sm:w-64 p-2.5 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Search courses...">
+        </div>
+        <button type="button"
+            class="text-white bg-indigo-700 hover:bg-indigo-800 focus:ring-4 focus:ring-indigo-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none transition-colors">
+            Create Course
+        </button>
+    </form>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-gray-500">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3">Course</th>
+                    <th scope="col" class="px-6 py-3">Term</th>
+                    <th scope="col" class="px-6 py-3">Schedule</th>
+                    <th scope="col" class="px-6 py-3">Enrolled</th>
+                    <th scope="col" class="px-6 py-3">TAs</th>
+                    <th scope="col" class="px-6 py-3">Status</th>
+                    <th scope="col" class="px-6 py-3">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for course in courses %}
+                <tr class="bg-white border-b hover:bg-gray-50">
+                    <td class="px-6 py-4">
+                        <div class="flex flex-col">
+                            <span class="text-sm font-bold text-gray-900">{{ course.course }}</span>
+                            <span class="text-xs text-gray-500">{{ course.course_title }}</span>
+                            <div class="mt-1">
+                                {% if course.class_type == 'Lecture' %}
+                                <span
+                                    class="bg-purple-100 text-purple-800 text-[10px] font-semibold px-2 py-0.5 rounded border border-purple-100">Lecture</span>
+                                {% else %}
+                                <span
+                                    class="bg-blue-100 text-blue-800 text-[10px] font-semibold px-2 py-0.5 rounded border border-blue-100">Discussion</span>
+                                {% endif %}
+                                <span class="text-xs text-gray-400 ml-1">Sec: {{ course.section }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-xs font-medium px-2 py-1 rounded bg-gray-100 text-gray-600">
+                            {{ course.term }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex flex-col gap-1">
+                            <div class="flex items-center gap-2 text-xs text-gray-900">
+                                <svg class="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                {{ course.timeslot }}
+                            </div>
+                            <div class="flex items-center gap-2 text-xs text-gray-500">
+                                <svg class="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                {{ course.room_name }}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-1">
+                            <span class="text-sm font-medium text-gray-900">{{ course.max_enroll }}</span>
+                            <span class="text-xs text-gray-400">/ {{ course.room_size }}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-200 mb-1 max-w-[80px]">
+                            <!-- Crude calculation for width, ideally done in backend or with templatetag -->
+                            <div class="bg-indigo-600 h-1.5 rounded-full"
+                                style="width: {% widthratio course.current_tas.count course.num_tas 100 %}%"></div>
+                        </div>
+                        <span class="text-xs text-gray-500">{{ course.current_tas.count }} of {{ course.num_tas }}
+                            filled</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        {% if course.status %}
+                        <span
+                            class="inline-flex items-center bg-green-50 text-green-700 text-xs font-medium px-2.5 py-0.5 rounded-full ring-1 ring-inset ring-green-600/20">
+                            <span class="w-1.5 h-1.5 me-1.5 bg-green-500 rounded-full"></span>
+                            Active
+                        </span>
+                        {% else %}
+                        <span
+                            class="inline-flex items-center bg-red-50 text-red-700 text-xs font-medium px-2.5 py-0.5 rounded-full ring-1 ring-inset ring-red-600/20">
+                            <span class="w-1.5 h-1.5 me-1.5 bg-red-500 rounded-full"></span>
+                            Closed
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4">
+                        {% if user.is_professor %}
+                        <a href="{% url 'admin:courses_course_change' course.id %}"
+                            class="text-gray-400 hover:text-indigo-600 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
+                                </path>
+                            </svg>
+                        </a>
+                        {% else %}
+                        {% if course.id in applied_course_ids %}
+                        <span
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                            <svg class="w-3 h-3 me-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
+                            </svg>
+                            Applied
+                        </span>
+                        {% else %}
+                        <form action="{% url 'apply_to_course_v2' course.id %}" method="POST" class="inline">
+                            {% csrf_token %}
+                            <button type="submit"
+                                class="text-indigo-600 hover:text-indigo-900 font-medium text-sm inline-flex items-center gap-1 transition-colors">
+                                Apply
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                </svg>
+                            </button>
+                        </form>
+                        {% endif %}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                        No courses found. Create one to get started.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination (Placeholder) -->
+    <div class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
+        <div class="flex flex-1 justify-between sm:hidden">
+            <a href="#"
+                class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Previous</a>
+            <a href="#"
+                class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Next</a>
+        </div>
+        <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+            <div>
+                <p class="text-sm text-gray-700">
+                    Showing <span class="font-medium">1</span> to <span class="font-medium">10</span> of <span
+                        class="font-medium">{{ courses|length }}</span> results
+                </p>
+            </div>
+            <div>
+                <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                    <a href="#"
+                        class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+                        <span class="sr-only">Previous</span>
+                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd"
+                                d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                    <a href="#" aria-current="page"
+                        class="relative z-10 inline-flex items-center bg-indigo-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">1</a>
+                    <a href="#"
+                        class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">2</a>
+                    <a href="#"
+                        class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">3</a>
+                    <a href="#"
+                        class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+                        <span class="sr-only">Next</span>
+                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd"
+                                d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

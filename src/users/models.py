@@ -39,6 +39,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.first_name + ' ' + self.last_name
 
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
     def is_professor(self):
         return self.professor
 

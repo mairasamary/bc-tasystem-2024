@@ -20,7 +20,7 @@
 	}
 
 
-	 #google-signin-button > img{
+	#google-signin-button>img {
 		margin-right: 10px;
 		height: 1.5rem;
 	}
@@ -35,8 +35,17 @@
 <h2 class="fw-normal mb-4">Login</h2>
 
 <a href="{% url 'django_gauth:login' %}" id="google-signin-button">
-    <img src="https://developers.google.com/identity/images/g-logo.png"  alt="Google Icon">
-    <span class="text">Sign in with Google</span>
+	<img src="https://developers.google.com/identity/images/g-logo.png" alt="Google Icon">
+	<span class="text">Sign in with Google</span>
 </a>
+
+<hr class="my-6">
+
+<form method="post">
+	{% csrf_token %}
+	{{ form.as_p }}
+	<button type="submit"
+		class="mt-4 w-full text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 focus:outline-none">Login</button>
+</form>
 
 {% endblock %}

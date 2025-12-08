@@ -1,0 +1,65 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}BC TA System{% endblock %}</title>
+
+    <!-- Google Fonts: Inter Tight -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
+
+    <!-- Tailwind CSS (Play CDN for dev) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Inter Tight"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter Tight', sans-serif;
+            background-color: #f3f4f6;
+            /* bg-gray-100 */
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-900 antialiased min-h-screen flex flex-col">
+    {% include "components/v2/navbar.html" %}
+
+    <main class="flex-grow container mx-auto px-4 pt-24 pb-12">
+        {% if messages %}
+        <div class="mb-6 space-y-2">
+            {% for message in messages %}
+            <div class="p-4 mb-4 text-sm rounded-lg {% if message.tags == 'error' %}bg-red-50 text-red-800{% else %}bg-green-50 text-green-800{% endif %}"
+                role="alert">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-auto">
+        <div class="w-full max-w-screen-xl mx-auto p-4 md:py-8">
+            <span class="block text-sm text-gray-500 sm:text-center">© 2024 <a href="#" class="hover:underline">BC TA
+                    System</a>. All Rights Reserved.</span>
+        </div>
+    </footer>
+</body>
+
+</html>

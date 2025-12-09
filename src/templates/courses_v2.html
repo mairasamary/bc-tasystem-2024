@@ -61,6 +61,7 @@
             <thead class="text-xs text-gray-700 uppercase bg-gray-50">
                 <tr>
                     <th scope="col" class="px-6 py-3">Course</th>
+                    <th scope="col" class="px-6 py-3">Professor</th>
                     <th scope="col" class="px-6 py-3">Term</th>
                     <th scope="col" class="px-6 py-3">Schedule</th>
                     <th scope="col" class="px-6 py-3">Enrolled</th>
@@ -85,6 +86,30 @@
                                     class="bg-blue-100 text-blue-800 text-[10px] font-semibold px-2 py-0.5 rounded border border-blue-100">Discussion</span>
                                 {% endif %}
                                 <span class="text-xs text-gray-400 ml-1">Sec: {{ course.section }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div
+                                class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs mr-3">
+                                {% if course.professor %}
+                                {{ course.professor.first_name|first }}{{ course.professor.last_name|first }}
+                                {% else %}
+                                {{ course.instructor_first_name|first }}{{ course.instructor_last_name|first }}
+                                {% endif %}
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-sm font-medium text-gray-900">
+                                    {% if course.professor %}
+                                    {{ course.professor.get_full_name }}
+                                    {% else %}
+                                    {{ course.instructor_first_name }} {{ course.instructor_last_name }}
+                                    {% endif %}
+                                </span>
+                                {% if course.professor %}
+                                <span class="text-xs text-gray-500">{{ course.professor.email }}</span>
+                                {% endif %}
                             </div>
                         </div>
                     </td>

@@ -64,13 +64,23 @@
         </div>
 
         {% if user.is_professor and app.get_status == 'PENDING' %}
-        <form action="{% url 'make_offer_v2' app.id %}" method="POST">
-            {% csrf_token %}
-            <button type="submit"
-                class="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none shadow-sm transition-colors">
-                Make Offer
-            </button>
-        </form>
+        <div class="flex items-center gap-2">
+            <form action="{% url 'make_offer_v2' app.id %}" method="POST">
+                {% csrf_token %}
+                <button type="submit"
+                    class="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none shadow-sm transition-colors">
+                    Make Offer
+                </button>
+            </form>
+            <form action="{% url 'reject_application_v2' app.id %}" method="POST"
+                onsubmit="return confirm('Are you sure you want to reject this application?');">
+                {% csrf_token %}
+                <button type="submit"
+                    class="text-red-600 bg-white border border-red-600 hover:bg-red-50 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none shadow-sm transition-colors">
+                    Reject
+                </button>
+            </form>
+        </div>
         {% endif %}
     </div>
 </div>

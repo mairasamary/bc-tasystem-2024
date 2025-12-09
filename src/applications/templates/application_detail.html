@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block content %} 
+{% block content %}
 
 <h2 class="mb-4 fw-normal">Application to {{ application.course }}</h2>
 
@@ -25,17 +25,25 @@
     <p>{{ application.additional_information }}</p>
 </div>
 
-<a href="{% url 'applications:application-list' %}" class="btn btn-outline-secondary btn-sm mb-3">Back to Applications</a>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <a href="{% url 'applications:application-list' %}" class="btn btn-outline-secondary btn-sm">Back to
+        Applications</a>
 
-{% if user == application.course.professor or user.is_superuser %}
-    {% if application.get_status == 'PENDING' %}
-        <a href="{% url 'offers:offer-create' application.id %}" class="btn btn-outline-primary btn-sm mb-3 ms-2">Send Offer</a>
-        <a href="{% url 'applications:application-reject' application.id %}" class="btn btn-outline-danger btn-sm ms-2 mb-3">Reject Application</a>
-    {% endif %}
-{% else %}
-    {% if application.get_status == 'PENDING' %}
-        <a href="{% url 'applications:application-delete' application.id %}" class="btn btn-outline-secondary btn-sm mb-3 ms-2">Withdraw Application</a>
-    {% endif %}
-{% endif %}
+    <div>
+        {% if user == application.course.professor or user.is_superuser %}
+        {% if application.get_status == 'PENDING' %}
+        <a href="{% url 'offers:offer-create' application.id %}" class="btn btn-outline-primary btn-sm ms-2">Send
+            Offer</a>
+        <a href="{% url 'applications:application-reject' application.id %}"
+            class="btn btn-outline-danger btn-sm ms-2">Reject Application</a>
+        {% endif %}
+        {% else %}
+        {% if application.get_status == 'PENDING' %}
+        <a href="{% url 'applications:application-delete' application.id %}"
+            class="btn btn-outline-secondary btn-sm ms-2">Withdraw Application</a>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
 
 {% endblock %}

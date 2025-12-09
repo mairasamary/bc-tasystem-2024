@@ -76,15 +76,17 @@
                         {% endif %}
                     </td>
                     <td class="px-6 py-4">
-                        {% if user.is_professor and app.get_status == 'PENDING' %}
-                        <form action="{% url 'make_offer_v2' app.id %}" method="POST" class="inline">
-                            {% csrf_token %}
-                            <button type="submit" class="font-medium text-green-600 hover:underline">Make Offer</button>
-                        </form>
-                        {% else %}
-                        <a href="{% url 'application_detail_v2' app.id %}"
-                            class="font-medium text-indigo-600 hover:underline">View Details</a>
-                        {% endif %}
+                        <div class="flex items-center gap-3">
+                            <a href="{% url 'application_detail_v2' app.id %}"
+                                class="font-medium text-indigo-600 hover:underline">View Details</a>
+                            {% if user.is_professor and app.get_status == 'PENDING' %}
+                            <form action="{% url 'make_offer_v2' app.id %}" method="POST" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="font-medium text-green-600 hover:underline">Make
+                                    Offer</button>
+                            </form>
+                            {% endif %}
+                        </div>
                     </td>
                 </tr>
                 {% empty %}

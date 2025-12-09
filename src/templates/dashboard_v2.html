@@ -141,7 +141,8 @@
                             No Date <!-- Fix model later if needed -->
                         </td>
                         <td class="px-6 py-4">
-                            <a href="#" class="font-medium text-indigo-600 hover:underline">Review</a>
+                            <a href="{% url 'application_detail_v2' app.id %}"
+                                class="font-medium text-indigo-600 hover:underline">Review</a>
                         </td>
                     </tr>
                     {% empty %}

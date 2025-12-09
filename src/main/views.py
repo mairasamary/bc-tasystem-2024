@@ -165,6 +165,22 @@ def make_offer_v2(request, application_id):
     return redirect('applications_v2')
 
 @login_required
+def reject_application_v2(request, application_id):
+    if request.method == 'POST':
+        if not request.user.is_professor():
+            messages.error(request, "Only professors can reject applications.")
+            return redirect('applications_v2')
+            
+        app = get_object_or_404(Application, id=application_id)
+        
+        # Use model method
+        app.reject()
+        
+        messages.success(request, f"Application for {app.student.get_full_name()} has been rejected.")
+        
+    return redirect('applications_v2')
+
+@login_required
 def accept_offer_v2(request, offer_id):
     if request.method == 'POST':
         offer = get_object_or_404(Offer, id=offer_id)

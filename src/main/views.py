@@ -15,34 +15,52 @@ def home(request):
 
 @login_required
 def admin_dashboard_v2(request):
-    # Stats
-    pending_apps_count = Application.objects.filter(status=ApplicationStatus.PENDING.value).count()
-    total_offers_count = Offer.objects.count()
-    active_courses_count = Course.objects.filter(status=True).count()
-    total_users_count = User.objects.count()
+    # Check if user is professor or superuser
+    if request.user.is_superuser or request.user.is_professor():
+        # Stats
+        pending_apps_count = Application.objects.filter(status=ApplicationStatus.PENDING.value).count()
+        total_offers_count = Offer.objects.count()
+        active_courses_count = Course.objects.filter(status=True).count()
+        total_users_count = User.objects.count()
 
-    # Lists
-    pending_apps = Application.objects.filter(status=ApplicationStatus.PENDING.value).select_related('student', 'course').order_by('-id')[:5]
-    recent_offers = Offer.objects.all().select_related('recipient', 'course').order_by('-created_at')[:5]
+        # Lists
+        pending_apps = Application.objects.filter(status=ApplicationStatus.PENDING.value).select_related('student', 'course').order_by('-id')[:5]
+        recent_offers = Offer.objects.all().select_related('recipient', 'course').order_by('-created_at')[:5]
 
-    context = {
-        'pending_apps_count': pending_apps_count,
-        'total_offers_count': total_offers_count,
-        'active_courses_count': active_courses_count,
-        'total_users_count': total_users_count,
-        'pending_apps': pending_apps,
-        'recent_offers': recent_offers,
-    }
-    return render(request, 'dashboard_v2.html', context)
+        context = {
+            'pending_apps_count': pending_apps_count,
+            'total_offers_count': total_offers_count,
+            'active_courses_count': active_courses_count,
+            'total_users_count': total_users_count,
+            'pending_apps': pending_apps,
+            'recent_offers': recent_offers,
+        }
+        return render(request, 'dashboard_v2.html', context)
+    else:
+        # Student Dashboard
+        my_apps = Application.objects.filter(student=request.user).select_related('course').order_by('-id')
+        my_offers = Offer.objects.filter(recipient=request.user).select_related('course', 'sender').order_by('-created_at')
+        
+        context = {
+            'my_apps': my_apps,
+            'my_offers': my_offers,
+        }
+        return render(request, 'student_dashboard.html', context)
 
 @login_required
 def applications_list_v2(request):
-    apps = Application.objects.select_related('student', 'course').order_by('-id')
+    if request.user.is_superuser or request.user.is_professor():
+        apps = Application.objects.select_related('student', 'course').order_by('-id')
+    else:
+        apps = Application.objects.filter(student=request.user).select_related('student', 'course').order_by('-id')
     return render(request, 'applications_v2.html', {'apps': apps})
 
 @login_required
 def offers_list_v2(request):
-    offers = Offer.objects.select_related('recipient', 'course').order_by('-created_at')
+    if request.user.is_superuser or request.user.is_professor():
+        offers = Offer.objects.select_related('recipient', 'course').order_by('-created_at')
+    else:
+        offers = Offer.objects.filter(recipient=request.user).select_related('recipient', 'course').order_by('-created_at')
     return render(request, 'offers_v2.html', {'offers': offers})
 
 from django.shortcuts import render, redirect, get_object_or_404

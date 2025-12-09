@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from courses.models import Course
 from applications.models import Application, ApplicationStatus
+from applications.forms import ApplicationForm
 from offers.models import Offer, OfferStatus
 
 User = get_user_model()
@@ -94,26 +95,48 @@ def courses_list_v2(request):
 
 @login_required
 def apply_to_course_v2(request, course_id):
-    if request.method == 'POST':
-        course = get_object_or_404(Course, id=course_id)
-        if request.user.is_professor():
-             messages.error(request, "Professors cannot apply for TA positions.")
-             return redirect('courses_v2')
-        
-        # Check if already applied
-        if Application.objects.filter(student=request.user, course=course).exists():
-             messages.warning(request, "You have already applied to this course.")
-             return redirect('courses_v2')
+    course = get_object_or_404(Course, id=course_id)
+    
+    # Permission Checks
+    if request.user.is_professor():
+         messages.error(request, "Professors cannot apply for TA positions.")
+         return redirect('courses_v2')
+         
+    # Check if student can apply
+    if hasattr(request.user, 'reached_max_applications') and request.user.reached_max_applications():
+         messages.error(request, "You have reached the maximum number of courses you can apply to (5).")
+         return redirect('courses_v2')
+         
+    if hasattr(request.user, 'is_ta') and request.user.is_ta():
+         messages.error(request, "You are already a TA for a course.")
+         return redirect('courses_v2')
+    
+    # Check if already applied
+    if Application.objects.filter(student=request.user, course=course).exists():
+         messages.warning(request, "You have already applied to this course.")
+         return redirect('courses_v2')
 
-        # Create application
-        Application.objects.create(
-            student=request.user,
-            course=course,
-            status=ApplicationStatus.PENDING.value
-        )
-        messages.success(request, f"Successfully applied to {course.course}.")
+    if request.method == 'POST':
+        form = ApplicationForm(request.POST)
+        if form.is_valid():
+            app = form.save(commit=False)
+            app.student = request.user
+            app.course = course
+            app.status = ApplicationStatus.PENDING.value
+            app.save()
+            
+            messages.success(request, f"Successfully applied to {course.course}.")
+            return redirect('courses_v2')
+    else:
+        form = ApplicationForm()
+        # Add Tailwind classes to the widget
+        form.fields['additional_information'].widget.attrs.update({
+            'class': 'block w-full rounded-md border-0 p-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6',
+            'rows': 4,
+            'placeholder': 'Explain your qualifications and interest...'
+        })
         
-    return redirect('courses_v2')
+    return render(request, 'application_form_v2.html', {'form': form, 'course': course})
 
 @login_required
 def make_offer_v2(request, application_id):

@@ -231,6 +231,10 @@ def send_html_email(subject, recipients, message):
         recipients: string or list of email addresses.
         message: List of message lines (rendered into template).
     """
+    if settings.ENV != "prod":
+        print("Email not sent in non-production environment")
+        return
+
     if not recipients:
         return
 

@@ -14,6 +14,7 @@ from applications.models import Application
 from .models import Offer
 from django.urls import reverse
 from django.contrib import messages
+from django.conf import settings
 
 
 class OfferCreateView(

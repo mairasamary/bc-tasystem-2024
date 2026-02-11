@@ -4,11 +4,11 @@
 
 {% block content %}
 <!-- Breadcrumb -->
-<nav class="flex mb-8" aria-label="Breadcrumb">
+<nav class="flex mt-4 mb-8" aria-label="Breadcrumb">
     <ol class="inline-flex items-center space-x-1 md:space-x-3">
         <li class="inline-flex items-center">
             <a href="{% url 'dashboard_v2' %}"
-                class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-indigo-600">
+                class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-bc-maroon transition-colors">
                 <svg class="w-3 h-3 me-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
                     viewBox="0 0 20 20">
                     <path
@@ -30,10 +30,10 @@
     </ol>
 </nav>
 
-<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 animate-fade-in">
     <div>
-        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Courses</h1>
-        <p class="mt-2 text-gray-600">Manage course details and TA requirements.</p>
+        <h1 class="text-4xl font-extrabold text-bc-maroon tracking-tight">Courses</h1>
+        <p class="mt-2 text-gray-600 text-lg">Manage course details and TA requirements</p>
     </div>
     <form class="flex flex-col sm:flex-row gap-3" method="GET">
         <div class="relative">
@@ -45,17 +45,22 @@
                 </svg>
             </div>
             <input type="text" name="q" value="{{ request.GET.q|default:'' }}" id="table-search"
-                class="block w-full sm:w-64 p-2.5 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500"
+                class="block w-full sm:w-64 p-2.5 ps-10 text-sm text-gray-900 border-2 border-gray-300 rounded-lg bg-white focus:ring-bc-maroon focus:border-bc-maroon transition-all"
                 placeholder="Search courses...">
         </div>
         <button type="button"
-            class="text-white bg-indigo-700 hover:bg-indigo-800 focus:ring-4 focus:ring-indigo-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none transition-colors">
-            Create Course
+            class="text-white bg-gradient-to-r from-bc-maroon to-bc-maroon-700 hover:from-bc-maroon-700 hover:to-bc-maroon-800 focus:ring-4 focus:ring-bc-maroon-300 font-semibold rounded-lg text-sm px-6 py-2.5 focus:outline-none transition-all shadow-md hover:shadow-lg">
+            <span class="flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Create Course
+            </span>
         </button>
     </form>
 </div>
 
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+<div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden animate-fade-in">
     <div class="overflow-x-auto">
         <table class="w-full text-sm text-left text-gray-500">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50">
@@ -92,7 +97,7 @@
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
                             <div
-                                class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs mr-3">
+                                class="h-8 w-8 rounded-full bg-gradient-to-br from-bc-maroon-100 to-bc-maroon-200 flex items-center justify-center text-bc-maroon-700 font-bold text-xs mr-3 shadow-sm">
                                 {% if course.professor %}
                                 {{ course.professor.first_name|first }}{{ course.professor.last_name|first }}
                                 {% else %}
@@ -147,12 +152,11 @@
                         </div>
                     </td>
                     <td class="px-6 py-4">
-                        <div class="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-200 mb-1 max-w-[80px]">
-                            <!-- Crude calculation for width, ideally done in backend or with templatetag -->
-                            <div class="bg-indigo-600 h-1.5 rounded-full"
+                        <div class="w-full bg-gray-200 rounded-full h-2 mb-1 max-w-[100px] shadow-inner">
+                            <div class="bg-gradient-to-r from-bc-maroon to-bc-maroon-700 h-2 rounded-full shadow-sm transition-all duration-500"
                                 style="width: {% widthratio course.current_tas.count course.num_tas 100 %}%"></div>
                         </div>
-                        <span class="text-xs text-gray-500">{{ course.current_tas.count }} of {{ course.num_tas }}
+                        <span class="text-xs font-medium text-gray-700">{{ course.current_tas.count }} / {{ course.num_tas }}
                             filled</span>
                     </td>
                     <td class="px-6 py-4">
@@ -173,7 +177,7 @@
                     <td class="px-6 py-4">
                         {% if user.is_professor %}
                         <a href="{% url 'admin:courses_course_change' course.id %}"
-                            class="text-gray-400 hover:text-indigo-600 transition-colors">
+                            class="text-gray-400 hover:text-bc-maroon transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
@@ -183,7 +187,7 @@
                         {% else %}
                         {% if course.id in applied_course_ids %}
                         <span
-                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-300 shadow-sm">
                             <svg class="w-3 h-3 me-1" fill="currentColor" viewBox="0 0 20 20">
                                 <path
                                     d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
@@ -192,7 +196,7 @@
                         </span>
                         {% else %}
                         <a href="{% url 'apply_to_course_v2' course.id %}"
-                            class="text-indigo-600 hover:text-indigo-900 font-medium text-sm inline-flex items-center gap-1 transition-colors">
+                            class="text-white bg-gradient-to-r from-bc-maroon to-bc-maroon-700 hover:from-bc-maroon-700 hover:to-bc-maroon-800 font-semibold text-sm inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-all shadow-md hover:shadow-lg hover:scale-105">
                             Apply
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -241,7 +245,7 @@
                         </svg>
                     </a>
                     <a href="#" aria-current="page"
-                        class="relative z-10 inline-flex items-center bg-indigo-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">1</a>
+                        class="relative z-10 inline-flex items-center bg-gradient-to-r from-bc-maroon to-bc-maroon-700 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bc-maroon shadow-md">1</a>
                     <a href="#"
                         class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">2</a>
                     <a href="#"

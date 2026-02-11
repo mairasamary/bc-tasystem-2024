@@ -21,6 +21,34 @@
                 extend: {
                     fontFamily: {
                         sans: ['"Inter Tight"', 'sans-serif'],
+                    },
+                    colors: {
+                        'bc-maroon': {
+                            DEFAULT: '#8B0015',
+                            50: '#FFE5E9',
+                            100: '#FFB3BE',
+                            200: '#FF8193',
+                            300: '#FF4F68',
+                            400: '#E6003D',
+                            500: '#8B0015',
+                            600: '#6B0010',
+                            700: '#4B000B',
+                            800: '#2B0006',
+                            900: '#0B0001',
+                        },
+                        'bc-gold': {
+                            DEFAULT: '#C8C372',
+                            50: '#FAF9F0',
+                            100: '#F2F0D9',
+                            200: '#EAE7C2',
+                            300: '#E2DEAB',
+                            400: '#DAD594',
+                            500: '#C8C372',
+                            600: '#B8AF4B',
+                            700: '#8D8738',
+                            800: '#625F27',
+                            900: '#373716',
+                        },
                     }
                 }
             }
@@ -29,8 +57,34 @@
     <style>
         body {
             font-family: 'Inter Tight', sans-serif;
-            background-color: #f3f4f6;
-            /* bg-gray-100 */
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #8B0015;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6B0010;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out;
         }
     </style>
 </head>
@@ -54,10 +108,16 @@
         {% endblock %}
     </main>
 
-    <footer class="bg-white border-t border-gray-200 mt-auto">
-        <div class="w-full max-w-screen-xl mx-auto p-4 md:py-8">
-            <span class="block text-sm text-gray-500 sm:text-center">© 2024 <a href="#" class="hover:underline">BC TA
-                    System</a>. All Rights Reserved.</span>
+    <footer class="bg-white border-t-4 border-bc-maroon mt-auto">
+        <div class="w-full max-w-screen-xl mx-auto p-6 md:py-8">
+            <div class="sm:flex sm:items-center sm:justify-between">
+                <span class="text-sm text-gray-500 sm:text-center">
+                    © 2026 <span class="font-bold text-bc-maroon">Boston College</span> TA System. All Rights Reserved.
+                </span>
+                <div class="flex mt-4 space-x-5 sm:justify-center sm:mt-0">
+                    <span class="text-sm text-gray-500">140 Commonwealth Avenue, Chestnut Hill, MA 02467</span>
+                </div>
+            </div>
         </div>
     </footer>
 </body>

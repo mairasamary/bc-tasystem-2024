@@ -1,0 +1,301 @@
+{% extends 'base_v2.html' %}
+
+{% block title %}Student Profile - BC TA System{% endblock %}
+
+{% block content %}
+<nav class="flex mb-4" aria-label="Breadcrumb">
+    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+        <li class="inline-flex items-center">
+            <a href="{% url 'dashboard_v2' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-bc-maroon">
+                <svg class="w-3 h-3 me-2.5" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z" />
+                </svg>
+                Dashboard
+            </a>
+        </li>
+        <li>
+            <div class="flex items-center">
+                <svg class="w-3 h-3 text-gray-400 mx-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4" />
+                </svg>
+                <span class="ms-1 text-sm font-medium text-gray-500 md:ms-2">Profile</span>
+            </div>
+        </li>
+    </ol>
+</nav>
+
+<form method="post" enctype="multipart/form-data" class="h-[calc(100vh-12rem)] min-h-[400px] flex flex-col">
+    {% csrf_token %}
+
+    <div class="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-4 flex-1 min-h-0">
+        <!-- Left: Profile picture, name, email -->
+        <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 flex flex-col items-center justify-start md:row-span-2">
+            <label for="id_profile_photo" class="cursor-pointer block group">
+                <div class="w-36 h-36 rounded-full overflow-hidden bg-gray-100 border-2 border-dashed border-gray-300 group-hover:border-bc-maroon transition-colors flex items-center justify-center">
+                    {% if profile.profile_photo %}
+                    <img id="profile-photo-preview" src="{% url 'users:serve_profile_photo' %}" alt="Profile" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="w-full h-full items-center justify-center bg-gray-200 hidden" style="display: none;">
+                        <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    </div>
+                    {% else %}
+                    <img id="profile-photo-preview" src="" alt="" class="hidden w-full h-full object-cover">
+                    <div class="w-full h-full flex flex-col items-center justify-center text-gray-400 group-hover:text-bc-maroon transition-colors">
+                        <svg class="w-12 h-12 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        <span class="text-xs font-medium">Click to upload</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </label>
+            <input type="file" name="profile_photo" id="id_profile_photo" accept="image/*" class="hidden">
+            <div class="mt-4 text-center">
+                <h2 class="text-lg font-semibold text-gray-900">{{ user.get_full_name }}</h2>
+                <p class="text-sm text-gray-600 mt-0.5">{{ user.email }}</p>
+            </div>
+            {% if profile_form.profile_photo.errors %}
+            <p class="mt-2 text-sm text-red-600">{{ profile_form.profile_photo.errors.0 }}</p>
+            {% endif %}
+
+            <!-- Skills: search + bubbles -->
+            <div class="mt-6 w-full">
+                <label class="block text-sm font-semibold text-gray-900 mb-2">Skills</label>
+                <div class="relative">
+                    <input type="text" id="skill-search" placeholder="Search skills..." autocomplete="off"
+                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-bc-maroon focus:border-bc-maroon">
+                    <div id="skill-results" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto hidden"></div>
+                </div>
+                <div id="skill-bubbles" class="flex flex-wrap gap-1.5 mt-2">
+                    {% for skill in selected_skills %}
+                    <span class="skill-bubble inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-bc-maroon/15 text-bc-maroon text-xs font-medium">
+                        {{ skill.name }}
+                        <button type="button" class="remove-skill ml-0.5 hover:text-bc-maroon-700" data-skill-id="{{ skill.id }}" aria-label="Remove">&times;</button>
+                        <input type="hidden" name="skills" value="{{ skill.id }}">
+                    </span>
+                    {% endfor %}
+                </div>
+                {% if profile_form.skills.errors %}<p class="text-sm text-red-600 mt-1">{{ profile_form.skills.errors.0 }}</p>{% endif %}
+            </div>
+        </div>
+
+        <!-- Top right: Resume and CV -->
+        <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 flex flex-col">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Resume & CV</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Resume</label>
+                    {% if profile.resume %}
+                    <a href="{% url 'users:serve_resume' %}" target="_blank" class="text-sm text-bc-maroon hover:underline block mb-1">View current</a>
+                    {% endif %}
+                    <input type="file" name="resume" id="id_resume" accept=".pdf,.doc,.docx" class="block w-full text-sm text-gray-500 file:mr-2 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-bc-maroon file:text-white hover:file:bg-bc-maroon-700">
+                    {% if profile_form.resume.errors %}<p class="text-sm text-red-600 mt-1">{{ profile_form.resume.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">CV</label>
+                    {% if profile.cv %}
+                    <a href="{% url 'users:serve_cv' %}" target="_blank" class="text-sm text-bc-maroon hover:underline block mb-1">View current</a>
+                    {% endif %}
+                    <input type="file" name="cv" id="id_cv" accept=".pdf,.doc,.docx" class="block w-full text-sm text-gray-500 file:mr-2 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-bc-maroon file:text-white hover:file:bg-bc-maroon-700">
+                    {% if profile_form.cv.errors %}<p class="text-sm text-red-600 mt-1">{{ profile_form.cv.errors.0 }}</p>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom right: Courses and grades -->
+        <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 flex flex-col min-h-0">
+            <h2 class="text-lg font-semibold text-gray-900 mb-3">Courses & Grades</h2>
+            {{ course_formset.management_form }}
+            <div id="course-formset-container" class="space-y-2 overflow-y-auto flex-1 min-h-0 pr-1">
+                {% for form in course_formset %}
+                <div class="past-course-row flex flex-wrap items-end gap-2 p-2 rounded-lg bg-gray-50 border border-gray-100 text-sm">
+                    {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                    <div class="min-w-[120px] flex-1">
+                        <label class="block text-xs font-medium text-gray-600 mb-0.5">Course</label>
+                        {{ form.course_selection }}
+                    </div>
+                    <div class="custom-course-wrap min-w-[100px] flex-1 {% if form.course_selection.value != '__custom__' %}hidden{% endif %}">
+                        <label class="block text-xs font-medium text-gray-600 mb-0.5">Custom</label>
+                        {{ form.custom_course_name }}
+                    </div>
+                    <div class="w-20">
+                        <label class="block text-xs font-medium text-gray-600 mb-0.5">Grade</label>
+                        {{ form.grade }}
+                    </div>
+                    {% if course_formset.can_delete %}
+                    <div class="flex items-center">
+                        <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer">
+                            {{ form.DELETE }} Del
+                        </label>
+                    </div>
+                    {% endif %}
+                    {% if form.course_selection.errors %}<span class="text-red-600 text-xs">{{ form.course_selection.errors.0 }}</span>{% endif %}
+                    {% if form.grade.errors %}<span class="text-red-600 text-xs">{{ form.grade.errors.0 }}</span>{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            <button type="button" id="add-course-btn" class="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-bc-maroon border border-bc-maroon rounded-lg hover:bg-bc-maroon hover:text-white transition-colors w-fit">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                Add course
+            </button>
+
+            <div id="empty-course-form" class="hidden">
+                <div class="past-course-row empty-form-template flex flex-wrap items-end gap-2 p-2 rounded-lg bg-gray-50 border border-gray-100 text-sm">
+                    {% for hidden in course_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
+                    <div class="min-w-[120px] flex-1">
+                        <label class="block text-xs font-medium text-gray-600 mb-0.5">Course</label>
+                        {{ course_formset.empty_form.course_selection }}
+                    </div>
+                    <div class="custom-course-wrap min-w-[100px] flex-1 hidden">
+                        <label class="block text-xs font-medium text-gray-600 mb-0.5">Custom</label>
+                        {{ course_formset.empty_form.custom_course_name }}
+                    </div>
+                    <div class="w-20">
+                        <label class="block text-xs font-medium text-gray-600 mb-0.5">Grade</label>
+                        {{ course_formset.empty_form.grade }}
+                    </div>
+                    {% if course_formset.can_delete %}
+                    <div class="flex items-center">
+                        <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer">
+                            {{ course_formset.empty_form.DELETE }} Del
+                        </label>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex justify-end mt-4">
+        <button type="submit" class="px-6 py-2.5 bg-bc-maroon text-white font-semibold rounded-lg hover:bg-bc-maroon-700 focus:ring-4 focus:ring-bc-maroon-300 transition-all shadow-md">
+            Save profile
+        </button>
+    </div>
+</form>
+
+<script>
+(function() {
+    var totalFormsInput = document.querySelector('input[name$="-TOTAL_FORMS"]');
+    var container = document.getElementById('course-formset-container');
+    var emptyFormEl = document.getElementById('empty-course-form');
+    var addBtn = document.getElementById('add-course-btn');
+    var photoInput = document.getElementById('id_profile_photo');
+
+    if (photoInput) {
+        photoInput.addEventListener('change', function() {
+            var file = this.files[0];
+            if (file && file.type.startsWith('image/')) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var preview = document.getElementById('profile-photo-preview');
+                    var placeholder = preview && preview.nextElementSibling;
+                    if (preview) {
+                        preview.src = e.target.result;
+                        preview.alt = 'Profile';
+                        preview.classList.remove('hidden');
+                        if (placeholder) placeholder.classList.add('hidden');
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    function addCourseRow() {
+        var template = emptyFormEl.querySelector('.empty-form-template');
+        var newRow = template.cloneNode(true);
+        newRow.classList.remove('empty-form-template');
+        var nextIndex = parseInt(totalFormsInput.value, 10);
+        newRow.querySelectorAll('input, select').forEach(function(el) {
+            if (el.name) el.name = el.name.replace('__prefix__', nextIndex);
+            if (el.id) el.id = el.id.replace('__prefix__', nextIndex);
+        });
+        newRow.querySelectorAll('label[for]').forEach(function(label) {
+            var forVal = label.getAttribute('for');
+            if (forVal) label.setAttribute('for', forVal.replace('__prefix__', nextIndex));
+        });
+        container.appendChild(newRow);
+        totalFormsInput.value = nextIndex + 1;
+    }
+
+    addBtn.addEventListener('click', addCourseRow);
+
+    container.addEventListener('change', function(e) {
+        if (e.target.matches('select[name*="course_selection"]')) {
+            var wrap = e.target.closest('.past-course-row').querySelector('.custom-course-wrap');
+            if (wrap) wrap.classList.toggle('hidden', e.target.value !== '__custom__');
+        }
+    });
+
+    var allSkills = {{ all_skills_json|safe }};
+    var selectedIds = {{ selected_skill_ids_json|safe }};
+    var searchInput = document.getElementById('skill-search');
+    var resultsDiv = document.getElementById('skill-results');
+    var bubblesDiv = document.getElementById('skill-bubbles');
+
+    function getSelectedIds() {
+        return Array.from(bubblesDiv.querySelectorAll('input[name="skills"]')).map(function(inp) { return inp.value; });
+    }
+
+    function addSkill(id, name) {
+        if (getSelectedIds().indexOf(id) >= 0) return;
+        var bubble = document.createElement('span');
+        bubble.className = 'skill-bubble inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-bc-maroon/15 text-bc-maroon text-xs font-medium';
+        bubble.appendChild(document.createTextNode(name + ' '));
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'remove-skill ml-0.5 hover:text-bc-maroon-700';
+        btn.setAttribute('data-skill-id', id);
+        btn.setAttribute('aria-label', 'Remove');
+        btn.textContent = '\u00D7';
+        var hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'skills';
+        hidden.value = id;
+        bubble.appendChild(btn);
+        bubble.appendChild(hidden);
+        bubblesDiv.appendChild(bubble);
+        searchInput.value = '';
+        resultsDiv.classList.add('hidden');
+        resultsDiv.innerHTML = '';
+    }
+
+    function removeSkill(id) {
+        var bubble = bubblesDiv.querySelector('.skill-bubble [data-skill-id="' + id + '"]');
+        if (bubble) bubble.closest('.skill-bubble').remove();
+    }
+
+    function showSkillResults() {
+        var q = searchInput.value.trim().toLowerCase();
+        var selected = getSelectedIds();
+        var available = allSkills.filter(function(s) { return selected.indexOf(s.id) < 0; });
+        var matches = q
+            ? available.filter(function(s) { return s.name.toLowerCase().indexOf(q) >= 0; })
+            : available;
+        matches.sort(function(a, b) { return a.name.localeCompare(b.name); });
+        resultsDiv.innerHTML = '';
+        matches.forEach(function(s) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg';
+            btn.textContent = s.name;
+            btn.addEventListener('click', function() { addSkill(s.id, s.name); });
+            resultsDiv.appendChild(btn);
+        });
+        resultsDiv.classList.toggle('hidden', matches.length === 0);
+    }
+
+    if (searchInput && resultsDiv && bubblesDiv) {
+        searchInput.addEventListener('input', showSkillResults);
+        searchInput.addEventListener('blur', function() {
+            setTimeout(function() { resultsDiv.classList.add('hidden'); }, 150);
+        });
+        searchInput.addEventListener('focus', function() {
+            showSkillResults();
+        });
+        bubblesDiv.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-skill')) {
+                removeSkill(e.target.getAttribute('data-skill-id'));
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}

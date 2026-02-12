@@ -77,7 +77,7 @@ class OfferListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         if self.request.user.is_superuser:
             return Offer.objects.all()
-        elif self.request.user.is_student():
+        elif self.request.user.is_student:
             return Offer.objects.filter(recipient=self.request.user)
         else:
             return Offer.objects.filter(course__professor=self.request.user)
@@ -85,7 +85,7 @@ class OfferListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["offers"] = self.get_queryset()
-        if self.request.user.is_student():
+        if self.request.user.is_student:
             context["title"] = "My Offers"
         else:
             context["title"] = "Offers"

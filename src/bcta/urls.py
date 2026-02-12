@@ -1,14 +1,16 @@
+from django.conf import settings
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
+from django.views.generic import RedirectView
+from django.views.static import serve
 
 urlpatterns = [
-    path("", include("main.urls")),
-    path("v2/", include("main.urls_v2")), 
-
+    path("", RedirectView.as_view(pattern_name="dashboard_v2", permanent=False)),
+    path("", include("main.urls_v2")),
+    path("v0/", include("main.urls_v0")),
     path("admin/", admin.site.urls),
     path("users/", include("users.urls")),
-    path("courses/", include("courses.urls")),
-    path("applications/", include("applications.urls"), name="applications"),
-    path("offers/", include("offers.urls"), name="offers"),
     path("oauth/", include("django_gauth.urls")),
 ]
+if settings.DEBUG:
+    urlpatterns += [re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT})]

@@ -3,6 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
 from .models import CustomUser, Skill
 from django.utils.html import format_html
+from courses.models import Course
 
 
 class CustomUserChangeForm(UserChangeForm):
@@ -63,6 +64,15 @@ def ta_status_display(obj):
 ta_status_display.short_description = 'TA status'
 
 
+class CourseTAInline(admin.TabularInline):
+    """Inline to assign courses this user is a TA for."""
+    model = Course.current_tas.through
+    fk_name = 'customuser'
+    extra = 0
+    verbose_name = 'TA assignment'
+    verbose_name_plural = 'TA assignments (courses this user TAs for)'
+
+
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
     form = CustomUserChangeForm
@@ -89,17 +99,6 @@ class CustomUserAdmin(UserAdmin):
                 ),
             },
         ),
-        (
-            'TA assignment',
-            {
-                'fields': ('course_working_for',),
-                'description': (
-                    'Assign courses this user is a TA for. '
-                    'Students typically become TAs when they accept an offer, '
-                    'but you can manually assign or adjust here.'
-                ),
-            },
-        ),
         ('Status', {'fields': ('is_active',)}),
     )
     add_fieldsets = (
@@ -111,7 +110,10 @@ class CustomUserAdmin(UserAdmin):
             },
         ),
     )
-    filter_horizontal = ('course_working_for',)
+    inlines = [CourseTAInline]
+
+
+admin.site.register(CustomUser, CustomUserAdmin)
 
 
 @admin.register(Skill)

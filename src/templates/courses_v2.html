@@ -48,15 +48,26 @@
                 class="block w-full sm:w-64 p-2.5 ps-10 text-sm text-gray-900 border-2 border-gray-300 rounded-lg bg-white focus:ring-bc-maroon focus:border-bc-maroon transition-all"
                 placeholder="Search courses...">
         </div>
-        <button type="button"
-            class="text-white bg-gradient-to-r from-bc-maroon to-bc-maroon-700 hover:from-bc-maroon-700 hover:to-bc-maroon-800 focus:ring-4 focus:ring-bc-maroon-300 font-semibold rounded-lg text-sm px-6 py-2.5 focus:outline-none transition-all shadow-md hover:shadow-lg">
+        {% if user.is_superuser %}
+        <a href="{% url 'upload_courses_v2' %}"
+            class="text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-bc-maroon focus:ring-4 focus:ring-gray-100 font-semibold rounded-lg text-sm px-6 py-2.5 focus:outline-none transition-all shadow-sm hover:shadow-md no-underline">
+            <span class="flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                </svg>
+                Upload Courses
+            </span>
+        </a>
+        <a href="{% url 'create_course_v2' %}"
+            class="text-white bg-gradient-to-r from-bc-maroon to-bc-maroon-700 hover:from-bc-maroon-700 hover:to-bc-maroon-800 focus:ring-4 focus:ring-bc-maroon-300 font-semibold rounded-lg text-sm px-6 py-2.5 focus:outline-none transition-all shadow-md hover:shadow-lg no-underline">
             <span class="flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                 </svg>
                 Create Course
             </span>
-        </button>
+        </a>
+        {% endif %}
     </form>
 </div>
 
@@ -154,7 +165,7 @@
                     <td class="px-6 py-4">
                         <div class="w-full bg-gray-200 rounded-full h-2 mb-1 max-w-[100px] shadow-inner">
                             <div class="bg-gradient-to-r from-bc-maroon to-bc-maroon-700 h-2 rounded-full shadow-sm transition-all duration-500"
-                                style="width: {% widthratio course.current_tas.count course.num_tas 100 %}%"></div>
+                                style="width: {% if course.num_tas %}{% widthratio course.current_tas.count course.num_tas 100 %}{% else %}0{% endif %}%"></div>
                         </div>
                         <span class="text-xs font-medium text-gray-700">{{ course.current_tas.count }} / {{ course.num_tas }}
                             filled</span>
@@ -175,7 +186,7 @@
                         {% endif %}
                     </td>
                     <td class="px-6 py-4">
-                        {% if user.is_professor %}
+                        {% if user.is_superuser or user.is_professor %}
                         <a href="{% url 'admin:courses_course_change' course.id %}"
                             class="text-gray-400 hover:text-bc-maroon transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

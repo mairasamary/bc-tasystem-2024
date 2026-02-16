@@ -68,6 +68,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db.models import Q
 from applications.models import Application, ApplicationStatus
+from courses.forms import CourseForm
+from courses.views import UploadView
 
 @login_required
 def courses_list_v2(request):
@@ -92,6 +94,61 @@ def courses_list_v2(request):
         'courses': courses,
         'applied_course_ids': applied_course_ids
     })
+
+@login_required
+def create_course_v2(request):
+    if not request.user.is_superuser:
+        messages.error(request, "Only admins can create courses.")
+        return redirect('courses_v2')
+
+    if request.method == 'POST':
+        form = CourseForm(request.POST)
+        if form.is_valid():
+            course = form.save(commit=False)
+            if course.professor:
+                course.instructor_first_name = course.professor.first_name
+                course.instructor_last_name = course.professor.last_name
+            else:
+                course.instructor_first_name = ''
+                course.instructor_last_name = ''
+            course.save()
+            messages.success(request, f"Course {course.course} - {course.course_title} created successfully.")
+            return redirect('courses_v2')
+    else:
+        form = CourseForm()
+
+    return render(request, 'create_course_v2.html', {'form': form})
+
+@login_required
+def upload_courses_v2(request):
+    if not request.user.is_superuser:
+        messages.error(request, "Only admins can upload courses.")
+        return redirect('courses_v2')
+
+    if request.method == 'POST':
+        excel_file = request.FILES.get("excel_file")
+        if excel_file:
+            upload_view = UploadView()
+            upload_view.request = request
+            upload_view.process_excel_file(excel_file)
+            messages.success(request, "Successfully uploaded courses from Excel file.")
+        else:
+            messages.error(request, "Please select an Excel file to upload.")
+        return redirect('courses_v2')
+
+    return render(request, 'upload_courses_v2.html')
+
+@login_required
+def close_semester_v2(request):
+    if not request.user.is_superuser:
+        messages.error(request, "Only admins can close the semester.")
+        return redirect('courses_v2')
+
+    if request.method == 'POST':
+        Course.objects.all().update(is_active=False, status=False)
+        messages.success(request, "Successfully closed all courses for the semester.")
+
+    return redirect('courses_v2')
 
 @login_required
 def apply_to_course_v2(request, course_id):

@@ -1,0 +1,193 @@
+{% extends 'base_v2.html' %}
+
+{% block title %}Create Course - BC TA System{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<nav class="flex mt-4 mb-8" aria-label="Breadcrumb">
+    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+        <li class="inline-flex items-center">
+            <a href="{% url 'dashboard_v2' %}"
+                class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-bc-maroon transition-colors">
+                <svg class="w-3 h-3 me-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                    viewBox="0 0 20 20">
+                    <path
+                        d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z" />
+                </svg>
+                Dashboard
+            </a>
+        </li>
+        <li>
+            <div class="flex items-center">
+                <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                    fill="none" viewBox="0 0 6 10">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="m1 9 4-4-4-4" />
+                </svg>
+                <a href="{% url 'courses_v2' %}"
+                    class="ms-1 text-sm font-medium text-gray-700 hover:text-bc-maroon md:ms-2 transition-colors">Courses</a>
+            </div>
+        </li>
+        <li>
+            <div class="flex items-center">
+                <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                    fill="none" viewBox="0 0 6 10">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="m1 9 4-4-4-4" />
+                </svg>
+                <span class="ms-1 text-sm font-medium text-gray-500 md:ms-2">Create Course</span>
+            </div>
+        </li>
+    </ol>
+</nav>
+
+<div class="max-w-3xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Create Course</h1>
+        <p class="mt-2 text-gray-600">Add a new course to the TA system.</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <form method="post">
+            {% csrf_token %}
+
+            <!-- Course Information -->
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Course Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label for="{{ form.course.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.course.label }}
+                    </label>
+                    {{ form.course }}
+                    {% if form.course.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.course.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.course_title.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.course_title.label }}
+                    </label>
+                    {{ form.course_title }}
+                    {% if form.course_title.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.course_title.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.term.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.term.label }}
+                    </label>
+                    {{ form.term }}
+                    {% if form.term.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.term.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.section.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.section.label }}
+                    </label>
+                    {{ form.section }}
+                    {% if form.section.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.section.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.class_type.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.class_type.label }}
+                    </label>
+                    {{ form.class_type }}
+                    {% if form.class_type.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.class_type.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.professor.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.professor.label }}
+                    </label>
+                    {{ form.professor }}
+                    {% if form.professor.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.professor.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Schedule & Location -->
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Schedule & Location</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label for="{{ form.timeslot.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.timeslot.label }}
+                    </label>
+                    {{ form.timeslot }}
+                    {% if form.timeslot.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.timeslot.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.room_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.room_name.label }}
+                    </label>
+                    {{ form.room_name }}
+                    {% if form.room_name.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.room_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Capacity -->
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Capacity</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div>
+                    <label for="{{ form.max_enroll.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.max_enroll.label }}
+                    </label>
+                    {{ form.max_enroll }}
+                    {% if form.max_enroll.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.max_enroll.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.room_size.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.room_size.label }}
+                    </label>
+                    {{ form.room_size }}
+                    {% if form.room_size.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.room_size.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.num_tas.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.num_tas.label }}
+                    </label>
+                    {{ form.num_tas }}
+                    {% if form.num_tas.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.num_tas.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-6">
+                <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form.description.label }}
+                </label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.description.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+                <a href="{% url 'courses_v2' %}"
+                    class="text-gray-700 bg-white border border-gray-300 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 hover:bg-gray-50 focus:z-10 transition-colors">
+                    Cancel
+                </a>
+                <button type="submit"
+                    class="text-white bg-gradient-to-r from-bc-maroon to-bc-maroon-700 hover:from-bc-maroon-700 hover:to-bc-maroon-800 focus:ring-4 focus:ring-bc-maroon-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none transition-all shadow-md hover:shadow-lg">
+                    Create Course
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

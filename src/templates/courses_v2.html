@@ -164,8 +164,8 @@
                     </td>
                     <td class="px-6 py-4">
                         <div class="w-full bg-gray-200 rounded-full h-2 mb-1 max-w-[100px] shadow-inner">
-                            <div class="bg-gradient-to-r from-bc-maroon to-bc-maroon-700 h-2 rounded-full shadow-sm transition-all duration-500"
-                                style="width: {% if course.num_tas %}{% widthratio course.current_tas.count course.num_tas 100 %}{% else %}0{% endif %}%"></div>
+                            <div class="ta-fill-bar bg-gradient-to-r from-bc-maroon to-bc-maroon-700 h-2 rounded-full shadow-sm transition-all duration-500"
+                                data-fill-percent="{{ course.ta_fill_percent }}"></div>
                         </div>
                         <span class="text-xs font-medium text-gray-700">{{ course.current_tas.count }} / {{ course.num_tas }}
                             filled</span>
@@ -187,7 +187,7 @@
                     </td>
                     <td class="px-6 py-4">
                         {% if user.is_superuser or user.is_professor %}
-                        <a href="{% url 'admin:courses_course_change' course.id %}"
+                        <a href="{% url 'edit_course_v2' course.id %}"
                             class="text-gray-400 hover:text-bc-maroon transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -220,7 +220,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                    <td colspan="8" class="px-6 py-8 text-center text-gray-500">
                         No courses found. Create one to get started.
                     </td>
                 </tr>
@@ -275,4 +275,10 @@
         </div>
     </div>
 </div>
+<script>
+document.querySelectorAll('.ta-fill-bar').forEach(function(el) {
+    var pct = el.getAttribute('data-fill-percent');
+    if (pct != null) el.style.width = pct + '%';
+});
+</script>
 {% endblock %}

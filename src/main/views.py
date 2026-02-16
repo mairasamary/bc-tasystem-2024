@@ -119,6 +119,27 @@ def create_course_v2(request):
 
     return render(request, 'create_course_v2.html', {'form': form})
 
+
+@login_required
+def edit_course_v2(request, course_id):
+    if not (request.user.is_superuser or request.user.is_professor):
+        messages.error(request, "You don't have permission to edit courses.")
+        return redirect('courses_v2')
+    course = get_object_or_404(Course, id=course_id)
+    if request.user.is_professor and not request.user.is_superuser and course.professor_id != request.user.id:
+        messages.error(request, "You can only edit your own courses.")
+        return redirect('courses_v2')
+    if request.method == 'POST':
+        form = CourseForm(request.POST, instance=course)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Course {course.course} - {course.course_title} updated successfully.")
+            return redirect('courses_v2')
+    else:
+        form = CourseForm(instance=course)
+    return render(request, 'edit_course_v2.html', {'form': form, 'course': course})
+
+
 @login_required
 def upload_courses_v2(request):
     if not request.user.is_superuser:

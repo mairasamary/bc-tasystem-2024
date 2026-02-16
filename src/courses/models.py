@@ -39,3 +39,10 @@ class Course(models.Model):
 
     def get_object(self):
         return self
+
+    @property
+    def ta_fill_percent(self):
+        """Percentage of TA slots filled (0-100). Returns 0 if num_tas is 0."""
+        if not self.num_tas:
+            return 0
+        return min(100, int(100 * self.current_tas.count() / self.num_tas))

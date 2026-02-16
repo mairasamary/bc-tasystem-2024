@@ -9,6 +9,7 @@ urlpatterns = [
     path("offers/", views.offers_list_v2, name="offers_v2"),
     path("courses/", views.courses_list_v2, name="courses_v2"),
     path("courses/create/", views.create_course_v2, name="create_course_v2"),
+    path("courses/<uuid:course_id>/edit/", views.edit_course_v2, name="edit_course_v2"),
     path("courses/upload/", views.upload_courses_v2, name="upload_courses_v2"),
     path("courses/close/", views.close_semester_v2, name="close_semester_v2"),
     path("apply/<uuid:course_id>/", views.apply_to_course_v2, name="apply_to_course_v2"),

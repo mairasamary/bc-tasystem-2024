@@ -1,0 +1,208 @@
+{% extends 'base_v2.html' %}
+
+{% block title %}{% if is_edit %}Edit{% else %}New{% endif %} TA Evaluation - BC TA System{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<nav class="flex mt-4 mb-8" aria-label="Breadcrumb">
+    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+        <li class="inline-flex items-center">
+            <a href="{% url 'dashboard_v2' %}"
+                class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-bc-maroon transition-colors">
+                <svg class="w-3 h-3 me-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                    viewBox="0 0 20 20">
+                    <path
+                        d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z" />
+                </svg>
+                Dashboard
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'evaluations:list' %}"
+                class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-bc-maroon transition-colors">
+                <svg class="w-3 h-3 me-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 6 10">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="m1 9 4-4-4-4" />
+                </svg>
+                TA Evaluations
+            </a>
+        </li>
+        <li>
+            <div class="flex items-center">
+                <span class="ms-1 text-sm font-medium text-gray-500 md:ms-2">{% if is_edit %}Edit{% else %}New{% endif %}</span>
+            </div>
+        </li>
+    </ol>
+</nav>
+
+<div class="mb-8 animate-fade-in">
+    <h1 class="text-4xl font-extrabold text-bc-maroon tracking-tight">
+        {% if is_edit %}Edit Evaluation{% else %}New TA Evaluation{% endif %}
+    </h1>
+    <p class="mt-2 text-gray-600 text-lg">
+        Rate the TA from 1–5 on each dimension. The average will be computed automatically.
+    </p>
+</div>
+
+{% if not is_edit and not has_tas %}
+<div class="mb-6 p-4 bg-amber-50 text-amber-800 rounded-lg">
+    You don't have any TAs assigned to your courses yet. Assign TAs through the Offers flow first, then return here to evaluate them.
+</div>
+{% endif %}
+
+<form method="post" class="bg-white rounded-xl shadow-lg border border-gray-100 p-8 animate-fade-in">
+    {% csrf_token %}
+
+    {% if is_edit %}
+    <input type="hidden" name="ta" value="{{ evaluation.ta.id }}">
+    <input type="hidden" name="course" value="{{ evaluation.course.id }}">
+    {% endif %}
+
+    {% if form.non_field_errors %}
+    <div class="mb-6 p-4 bg-red-50 text-red-800 rounded-lg">
+        {{ form.non_field_errors }}
+    </div>
+    {% endif %}
+
+    <div class="grid gap-6 md:grid-cols-2">
+        <div>
+            <label for="id_ta" class="block text-sm font-medium text-gray-700 mb-1">TA <span class="text-red-500">*</span></label>
+            {{ form.ta }}
+            {% if form.ta.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ form.ta.errors.0 }}</p>
+            {% endif %}
+        </div>
+        <div>
+            <label for="id_course" class="block text-sm font-medium text-gray-700 mb-1">Course <span class="text-red-500">*</span></label>
+            {{ form.course }}
+            {% if form.course.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ form.course.errors.0 }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mt-8 space-y-4">
+        <p class="text-sm font-medium text-gray-700 mb-4">Rate each dimension (1 = Poor, 5 = Excellent)</p>
+
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3 py-3 border-b border-gray-100">
+            <div class="sm:min-w-[280px] flex-1">
+                <span class="font-medium text-gray-700">Punctuality</span>
+                <p class="text-sm text-gray-500">Arrives on time to sections and office hours, meets grading deadlines</p>
+            </div>
+            <div class="flex gap-3 shrink-0" role="group" aria-required="true">
+                {% for choice in form.rating_punctuality.field.choices %}
+                {% if choice.0 %}
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="radio" name="rating_punctuality" value="{{ choice.0 }}"
+                        {% if form.rating_punctuality.value == choice.0 %}checked{% endif %}
+                        required
+                        class="w-4 h-4 text-bc-maroon border-gray-300 focus:ring-bc-maroon">
+                    <span class="ml-1 text-sm font-medium">{{ choice.0 }}</span>
+                </label>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3 py-3 border-b border-gray-100">
+            <div class="sm:min-w-[280px] flex-1">
+                <span class="font-medium text-gray-700">Communication</span>
+                <p class="text-sm text-gray-500">Clearly explains concepts to students, responsive to questions in section and office hours</p>
+            </div>
+            <div class="flex gap-3 shrink-0" role="group" aria-required="true">
+                {% for choice in form.rating_communication.field.choices %}
+                {% if choice.0 %}
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="radio" name="rating_communication" value="{{ choice.0 }}"
+                        {% if form.rating_communication.value == choice.0 %}checked{% endif %}
+                        required
+                        class="w-4 h-4 text-bc-maroon border-gray-300 focus:ring-bc-maroon">
+                    <span class="ml-1 text-sm font-medium">{{ choice.0 }}</span>
+                </label>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3 py-3 border-b border-gray-100">
+            <div class="sm:min-w-[280px] flex-1">
+                <span class="font-medium text-gray-700">Technical Ability</span>
+                <p class="text-sm text-gray-500">Strong grasp of course material, able to help students with technical content and assignments</p>
+            </div>
+            <div class="flex gap-3 shrink-0" role="group" aria-required="true">
+                {% for choice in form.rating_technical.field.choices %}
+                {% if choice.0 %}
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="radio" name="rating_technical" value="{{ choice.0 }}"
+                        {% if form.rating_technical.value == choice.0 %}checked{% endif %}
+                        required
+                        class="w-4 h-4 text-bc-maroon border-gray-300 focus:ring-bc-maroon">
+                    <span class="ml-1 text-sm font-medium">{{ choice.0 }}</span>
+                </label>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3 py-3 border-b border-gray-100">
+            <div class="sm:min-w-[280px] flex-1">
+                <span class="font-medium text-gray-700">Professionalism</span>
+                <p class="text-sm text-gray-500">Maintains appropriate boundaries, handles student interactions professionally</p>
+            </div>
+            <div class="flex gap-3 shrink-0" role="group" aria-required="true">
+                {% for choice in form.rating_professionalism.field.choices %}
+                {% if choice.0 %}
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="radio" name="rating_professionalism" value="{{ choice.0 }}"
+                        {% if form.rating_professionalism.value == choice.0 %}checked{% endif %}
+                        required
+                        class="w-4 h-4 text-bc-maroon border-gray-300 focus:ring-bc-maroon">
+                    <span class="ml-1 text-sm font-medium">{{ choice.0 }}</span>
+                </label>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3 py-3 border-b border-gray-100">
+            <div class="sm:min-w-[280px] flex-1">
+                <span class="font-medium text-gray-700">Overall Performance</span>
+                <p class="text-sm text-gray-500">Overall effectiveness as a TA in this course</p>
+            </div>
+            <div class="flex gap-3 shrink-0" role="group" aria-required="true">
+                {% for choice in form.rating_overall.field.choices %}
+                {% if choice.0 %}
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="radio" name="rating_overall" value="{{ choice.0 }}"
+                        {% if form.rating_overall.value == choice.0 %}checked{% endif %}
+                        required
+                        class="w-4 h-4 text-bc-maroon border-gray-300 focus:ring-bc-maroon">
+                    <span class="ml-1 text-sm font-medium">{{ choice.0 }}</span>
+                </label>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-8">
+        <label for="id_feedback" class="block text-sm font-medium text-gray-700 mb-1">Written Feedback (optional)</label>
+        {{ form.feedback }}
+        {% if form.feedback.errors %}
+        <p class="mt-1 text-sm text-red-600">{{ form.feedback.errors.0 }}</p>
+        {% endif %}
+    </div>
+
+    <div class="mt-8 flex gap-4">
+        <button type="submit"
+            class="px-6 py-2.5 bg-gradient-to-r from-bc-maroon to-bc-maroon-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all">
+            {% if is_edit %}Update{% else %}Submit{% endif %} Evaluation
+        </button>
+        <a href="{% url 'evaluations:list' %}"
+            class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors">
+            Cancel
+        </a>
+    </div>
+</form>
+{% endblock %}

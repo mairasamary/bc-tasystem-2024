@@ -142,7 +142,7 @@ class ListView(LoginRequiredMixin, ListView):
         if professor_id:
             return Course.objects.filter(professor__id=professor_id, is_active=True)
 
-        if user.is_student() or user.is_superuser:
+        if user.is_student or user.is_superuser:
             return Course.objects.filter(is_active=True)
 
         return Course.objects.filter(professor=user, is_active=True)
@@ -162,7 +162,7 @@ class CourseDetailView(LoginRequiredMixin, DetailView):
         return context
 
     def is_professor(self):
-        return self.request.user.is_professor()
+        return self.request.user.is_professor
 
     def at_max_apps(self):
         return self.request.user.reached_max_applications()

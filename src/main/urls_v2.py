@@ -1,8 +1,10 @@
 from django.urls import path
 from . import views
+from users.views import StudentProfileView
 
 urlpatterns = [
     path("dashboard/", views.admin_dashboard_v2, name="dashboard_v2"),
+    path("profile/", StudentProfileView.as_view(), name="student_profile_v2"),
     path("applications/", views.applications_list_v2, name="applications_v2"),
     path("offers/", views.offers_list_v2, name="offers_v2"),
     path("courses/", views.courses_list_v2, name="courses_v2"),

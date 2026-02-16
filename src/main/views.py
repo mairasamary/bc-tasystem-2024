@@ -17,7 +17,7 @@ def home(request):
 @login_required
 def admin_dashboard_v2(request):
     # Check if user is professor or superuser
-    if request.user.is_superuser or request.user.is_professor():
+    if request.user.is_superuser or request.user.is_professor:
         # Stats
         pending_apps_count = Application.objects.filter(status=ApplicationStatus.PENDING.value).count()
         total_offers_count = Offer.objects.count()
@@ -50,7 +50,7 @@ def admin_dashboard_v2(request):
 
 @login_required
 def applications_list_v2(request):
-    if request.user.is_superuser or request.user.is_professor():
+    if request.user.is_superuser or request.user.is_professor:
         apps = Application.objects.select_related('student', 'course').order_by('-id')
     else:
         apps = Application.objects.filter(student=request.user).select_related('student', 'course').order_by('-id')
@@ -58,7 +58,7 @@ def applications_list_v2(request):
 
 @login_required
 def offers_list_v2(request):
-    if request.user.is_superuser or request.user.is_professor():
+    if request.user.is_superuser or request.user.is_professor:
         offers = Offer.objects.select_related('recipient', 'course').order_by('-created_at')
     else:
         offers = Offer.objects.filter(recipient=request.user).select_related('recipient', 'course').order_by('-created_at')
@@ -83,7 +83,7 @@ def courses_list_v2(request):
         )
     
     # Get IDs of courses the current user has already applied to
-    if not request.user.is_professor(): # Assuming is_professor() method exists based on model view
+    if not request.user.is_professor:
         applied_course_ids = Application.objects.filter(student=request.user).values_list('course_id', flat=True)
     else:
         applied_course_ids = []
@@ -98,7 +98,7 @@ def apply_to_course_v2(request, course_id):
     course = get_object_or_404(Course, id=course_id)
     
     # Permission Checks
-    if request.user.is_professor():
+    if request.user.is_professor:
          messages.error(request, "Professors cannot apply for TA positions.")
          return redirect('courses_v2')
          
@@ -141,7 +141,7 @@ def apply_to_course_v2(request, course_id):
 @login_required
 def make_offer_v2(request, application_id):
     if request.method == 'POST':
-        if not request.user.is_professor():
+        if not request.user.is_professor:
             messages.error(request, "Only professors can make offers.")
             return redirect('applications_v2')
             
@@ -167,7 +167,7 @@ def make_offer_v2(request, application_id):
 @login_required
 def reject_application_v2(request, application_id):
     if request.method == 'POST':
-        if not request.user.is_professor():
+        if not request.user.is_professor:
             messages.error(request, "Only professors can reject applications.")
             return redirect('applications_v2')
             

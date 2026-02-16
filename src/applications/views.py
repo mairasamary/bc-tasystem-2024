@@ -40,7 +40,7 @@ class ApplicationCreateView(
         return Course.objects.get(pk=self.kwargs.get("pk"))
 
     def test_func(self):
-        return self.request.user.is_student() or self.request.user.is_superuser
+        return self.request.user.is_student or self.request.user.is_superuser
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -64,7 +64,7 @@ class ApplicationCreateView(
 
     def ensure_user_can_apply(self):
         user = self.request.user
-        if user.is_professor():
+        if user.is_professor:
             return "You cannot apply to a course if you are a professor"
         if user.reached_max_applications():
             return "You have reached the maximum number of courses you can apply to (5)"
@@ -83,7 +83,7 @@ class ApplicationListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         if self.request.user.is_superuser:
             return Application.objects.all()
-        elif self.request.user.is_student():
+        elif self.request.user.is_student:
             return Application.objects.filter(student=self.request.user)
         else:
             return Application.objects.filter(course__professor=self.request.user)
@@ -91,7 +91,7 @@ class ApplicationListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["applications"] = self.get_queryset()
-        if self.request.user.is_student():
+        if self.request.user.is_student:
             context["title"] = "My Applications"
         else:
             context["title"] = "Applications"

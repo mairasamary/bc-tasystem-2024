@@ -96,7 +96,12 @@ def evaluation_edit(request, pk):
         return redirect("evaluations:list")
 
     if request.method == "POST":
-        form = TAEvaluationForm(request.POST, instance=evaluation, professor=request.user)
+        form = TAEvaluationForm(
+            request.POST,
+            instance=evaluation,
+            professor=request.user,
+            readonly_ta_course=True,
+        )
         if form.is_valid():
             form.save()
             messages.success(request, "Evaluation updated successfully.")

@@ -54,6 +54,11 @@
 <form method="post" class="bg-white rounded-xl shadow-lg border border-gray-100 p-8 animate-fade-in">
     {% csrf_token %}
 
+    {% if is_edit %}
+    <input type="hidden" name="ta" value="{{ evaluation.ta.id }}">
+    <input type="hidden" name="course" value="{{ evaluation.course.id }}">
+    {% endif %}
+
     {% if form.non_field_errors %}
     <div class="mb-6 p-4 bg-red-50 text-red-800 rounded-lg">
         {{ form.non_field_errors }}

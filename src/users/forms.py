@@ -16,11 +16,21 @@ class CustomUserUpdateForm(UserChangeForm):
         del self.fields['password']
 
 
+INPUT_CLASS = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-bc-maroon focus:border-bc-maroon'
+
 class PastCourseForm(forms.ModelForm):
-    course_selection = forms.ChoiceField(choices=COURSE_CHOICES, required=False, label='Course')
-    custom_course_name = forms.CharField(max_length=200, required=False, label='Custom course name',
-        widget=forms.TextInput(attrs={'placeholder': 'Enter elective name'}))
-    grade = forms.ChoiceField(choices=GRADE_CHOICES, required=False, label='Grade')
+    course_selection = forms.ChoiceField(
+        choices=COURSE_CHOICES, required=False, label='Course',
+        widget=forms.Select(attrs={'class': INPUT_CLASS})
+    )
+    custom_course_name = forms.CharField(
+        max_length=200, required=False, label='Custom course name',
+        widget=forms.TextInput(attrs={'placeholder': 'Enter elective name', 'class': INPUT_CLASS})
+    )
+    grade = forms.ChoiceField(
+        choices=GRADE_CHOICES, required=False, label='Grade',
+        widget=forms.Select(attrs={'class': INPUT_CLASS})
+    )
 
     class Meta:
         model = PastCourse

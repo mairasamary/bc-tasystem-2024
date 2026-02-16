@@ -56,8 +56,28 @@ class StudentProfileView(LoginRequiredMixin, TemplateResponseMixin, View):
             request.POST, instance=request.user
         )
         if profile_form.is_valid() and course_formset.is_valid():
-            profile_form.save()
+            # Keep existing files: Django clears FileFields when not in request.FILES
+            old_resume = profile.resume
+            old_cv = profile.cv
+            profile = profile_form.save(commit=False)
+            if not request.FILES.get('resume'):
+                profile.resume = old_resume
+            if not request.FILES.get('cv'):
+                profile.cv = old_cv
+            if request.POST.get('remove_resume') == '1':
+                profile.resume = None
+            if request.POST.get('remove_cv') == '1':
+                profile.cv = None
+            profile.save()
+            profile_form.save_m2m()
             course_formset.save()
+            # Save Eagle ID on user (empty = clear it)
+            eagleid_val = (request.POST.get('eagleid') or '').strip()
+            try:
+                request.user.eagleid = int(eagleid_val) if eagleid_val else 0
+                request.user.save(update_fields=['eagleid'])
+            except (ValueError, TypeError):
+                pass
             messages.success(request, 'Profile updated successfully.')
             return redirect(self.success_url)
         selected_ids = request.POST.getlist('skills', [])

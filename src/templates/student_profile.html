@@ -38,12 +38,12 @@
 </div>
 
 <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden animate-fade-in">
-<form method="post" enctype="multipart/form-data" class="m-0 w-full h-[calc(100vh-12rem)] min-h-[400px] flex flex-col">
+<form method="post" enctype="multipart/form-data" class="m-0 w-full">
     {% csrf_token %}
 
-    <div class="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-4 flex-1 min-h-0">
-        <!-- Left: Profile picture, name, email -->
-        <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 flex flex-col items-center justify-start md:row-span-2">
+    <div class="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-4 p-6">
+        <!-- Left: Profile picture, name, email, Eagle ID -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex flex-col items-center md:row-span-2">
             <label for="id_profile_photo" class="cursor-pointer block group">
                 <div class="w-36 h-36 rounded-full overflow-hidden bg-gray-100 border-2 border-dashed border-gray-300 group-hover:border-bc-maroon transition-colors flex items-center justify-center">
                     {% if profile.profile_photo %}
@@ -61,9 +61,15 @@
                 </div>
             </label>
             <input type="file" name="profile_photo" id="id_profile_photo" accept="image/*" class="hidden">
-            <div class="mt-4 text-center">
+            <div class="mt-4 text-center w-full">
                 <h2 class="text-lg font-semibold text-gray-900">{{ user.get_full_name }}</h2>
                 <p class="text-sm text-gray-600 mt-0.5">{{ user.email }}</p>
+                <div class="mt-3 text-left">
+                    <label for="id_eagleid" class="block text-xs font-medium text-gray-500 mb-0.5">Eagle ID</label>
+                    <input type="number" name="eagleid" value="{% if user.eagleid %}{{ user.eagleid }}{% endif %}" id="id_eagleid" min="0" max="999999999" placeholder="8-digit ID"
+                        class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-bc-maroon focus:border-bc-maroon">
+                    <p class="text-xs text-gray-400 mt-0.5">Leave blank to clear.</p>
+                </div>
             </div>
             {% if profile_form.profile_photo.errors %}
             <p class="mt-2 text-sm text-red-600">{{ profile_form.profile_photo.errors.0 }}</p>
@@ -91,84 +97,112 @@
         </div>
 
         <!-- Top right: Resume and CV -->
-        <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 flex flex-col">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Resume & CV</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Resume</label>
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex flex-col">
+            <h2 class="text-base font-semibold text-gray-900 tracking-tight mb-1">Resume & CV</h2>
+            <p class="text-sm text-gray-500 mb-4">You can upload and save both files. Use PDF, DOC, or DOCX. Replace or remove using the buttons below.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div class="space-y-3">
+                    <label class="block text-sm font-medium text-gray-700">Resume</label>
                     {% if profile.resume %}
-                    <a href="{% url 'users:serve_resume' %}" target="_blank" class="text-sm text-bc-maroon hover:underline block mb-1">View current</a>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <a href="{% url 'users:serve_resume' %}" target="_blank" class="text-sm font-medium text-bc-maroon hover:underline">View current</a>
+                        <span class="text-gray-300">|</span>
+                        <input type="hidden" name="remove_resume" id="id_remove_resume" value="">
+                        <button type="button" id="remove-resume-btn" class="text-xs font-medium text-gray-500 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded-md px-2.5 py-1 transition-colors">Remove</button>
+                    </div>
+                    <p class="text-xs text-gray-500">Replace by choosing a new file below.</p>
                     {% endif %}
-                    <input type="file" name="resume" id="id_resume" accept=".pdf,.doc,.docx" class="block w-full text-sm text-gray-500 file:mr-2 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-bc-maroon file:text-white hover:file:bg-bc-maroon-700">
-                    {% if profile_form.resume.errors %}<p class="text-sm text-red-600 mt-1">{{ profile_form.resume.errors.0 }}</p>{% endif %}
+                    <div class="mt-1">
+                        <input type="file" name="resume" id="id_resume" accept=".pdf,.doc,.docx" class="block w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-bc-maroon file:text-white hover:file:bg-bc-maroon-700 file:cursor-pointer">
+                    </div>
+                    {% if profile_form.resume.errors %}<p class="text-sm text-red-600">{{ profile_form.resume.errors.0 }}</p>{% endif %}
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">CV</label>
+                <div class="space-y-3">
+                    <label class="block text-sm font-medium text-gray-700">CV</label>
                     {% if profile.cv %}
-                    <a href="{% url 'users:serve_cv' %}" target="_blank" class="text-sm text-bc-maroon hover:underline block mb-1">View current</a>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <a href="{% url 'users:serve_cv' %}" target="_blank" class="text-sm font-medium text-bc-maroon hover:underline">View current</a>
+                        <span class="text-gray-300">|</span>
+                        <input type="hidden" name="remove_cv" id="id_remove_cv" value="">
+                        <button type="button" id="remove-cv-btn" class="text-xs font-medium text-gray-500 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded-md px-2.5 py-1 transition-colors">Remove</button>
+                    </div>
+                    <p class="text-xs text-gray-500">Replace by choosing a new file below.</p>
                     {% endif %}
-                    <input type="file" name="cv" id="id_cv" accept=".pdf,.doc,.docx" class="block w-full text-sm text-gray-500 file:mr-2 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-bc-maroon file:text-white hover:file:bg-bc-maroon-700">
-                    {% if profile_form.cv.errors %}<p class="text-sm text-red-600 mt-1">{{ profile_form.cv.errors.0 }}</p>{% endif %}
+                    <div class="mt-1">
+                        <input type="file" name="cv" id="id_cv" accept=".pdf,.doc,.docx" class="block w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-bc-maroon file:text-white hover:file:bg-bc-maroon-700 file:cursor-pointer">
+                    </div>
+                    {% if profile_form.cv.errors %}<p class="text-sm text-red-600">{{ profile_form.cv.errors.0 }}</p>{% endif %}
                 </div>
             </div>
         </div>
 
         <!-- Bottom right: Courses and grades -->
-        <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 flex flex-col min-h-0">
-            <h2 class="text-lg font-semibold text-gray-900 mb-3">Courses & Grades</h2>
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex flex-col">
+            <h2 class="text-base font-semibold text-gray-900 tracking-tight mb-1">Courses & Grades</h2>
+            <p class="text-sm text-gray-500 mb-4">List relevant courses and grades for your TA applications.</p>
             {{ course_formset.management_form }}
-            <div id="course-formset-container" class="space-y-2 overflow-y-auto flex-1 min-h-0 pr-1">
+            <div id="course-formset-container" class="space-y-3">
                 {% for form in course_formset %}
-                <div class="past-course-row flex flex-wrap items-end gap-2 p-2 rounded-lg bg-gray-50 border border-gray-100 text-sm">
+                <div class="past-course-row grid grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_5.5rem_auto] gap-4 items-end p-4 rounded-lg bg-gray-50/80 border border-gray-100 text-sm transition-opacity" data-delete-target="">
                     {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-                    <div class="min-w-[120px] flex-1">
-                        <label class="block text-xs font-medium text-gray-600 mb-0.5">Course</label>
+                    <div class="min-w-0">
+                        <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Course</label>
                         {{ form.course_selection }}
                     </div>
-                    <div class="custom-course-wrap min-w-[100px] flex-1 {% if form.course_selection.value != '__custom__' %}hidden{% endif %}">
-                        <label class="block text-xs font-medium text-gray-600 mb-0.5">Custom</label>
+                    <div class="custom-course-wrap min-w-0 {% if form.course_selection.value != '__custom__' %}hidden{% endif %}">
+                        <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Custom</label>
                         {{ form.custom_course_name }}
                     </div>
-                    <div class="w-20">
-                        <label class="block text-xs font-medium text-gray-600 mb-0.5">Grade</label>
+                    <div class="min-w-0">
+                        <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Grade</label>
                         {{ form.grade }}
                     </div>
                     {% if course_formset.can_delete %}
-                    <div class="flex items-center">
-                        <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer">
-                            {{ form.DELETE }} Del
+                    <div class="flex items-center pb-0.5">
+                        <label class="course-delete-label [&_input]:sr-only [&_input]:absolute inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 text-gray-400 hover:bg-red-50 hover:border-red-200 hover:text-red-600 cursor-pointer transition-colors" title="Remove course">
+                            {{ form.DELETE }}
+                            <span class="delete-icon pointer-events-none">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </span>
                         </label>
                     </div>
                     {% endif %}
-                    {% if form.course_selection.errors %}<span class="text-red-600 text-xs">{{ form.course_selection.errors.0 }}</span>{% endif %}
-                    {% if form.grade.errors %}<span class="text-red-600 text-xs">{{ form.grade.errors.0 }}</span>{% endif %}
+                    {% if form.course_selection.errors or form.grade.errors %}
+                    <div class="col-span-full text-red-600 text-xs mt-1">
+                        {% if form.course_selection.errors %}{{ form.course_selection.errors.0 }}{% endif %}
+                        {% if form.grade.errors %}{{ form.grade.errors.0 }}{% endif %}
+                    </div>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>
-            <button type="button" id="add-course-btn" class="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-bc-maroon border border-bc-maroon rounded-lg hover:bg-bc-maroon hover:text-white transition-colors w-fit">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            <button type="button" id="add-course-btn" class="mt-4 inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors w-fit shadow-sm">
+                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 Add course
             </button>
 
             <div id="empty-course-form" class="hidden">
-                <div class="past-course-row empty-form-template flex flex-wrap items-end gap-2 p-2 rounded-lg bg-gray-50 border border-gray-100 text-sm">
+                <div class="past-course-row empty-form-template grid grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_5.5rem_auto] gap-4 items-end p-4 rounded-lg bg-gray-50/80 border border-gray-100 text-sm" data-delete-target="">
                     {% for hidden in course_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
-                    <div class="min-w-[120px] flex-1">
-                        <label class="block text-xs font-medium text-gray-600 mb-0.5">Course</label>
+                    <div class="min-w-0">
+                        <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Course</label>
                         {{ course_formset.empty_form.course_selection }}
                     </div>
-                    <div class="custom-course-wrap min-w-[100px] flex-1 hidden">
-                        <label class="block text-xs font-medium text-gray-600 mb-0.5">Custom</label>
+                    <div class="custom-course-wrap min-w-0 hidden">
+                        <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Custom</label>
                         {{ course_formset.empty_form.custom_course_name }}
                     </div>
-                    <div class="w-20">
-                        <label class="block text-xs font-medium text-gray-600 mb-0.5">Grade</label>
+                    <div class="min-w-0">
+                        <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Grade</label>
                         {{ course_formset.empty_form.grade }}
                     </div>
                     {% if course_formset.can_delete %}
-                    <div class="flex items-center">
-                        <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer">
-                            {{ course_formset.empty_form.DELETE }} Del
+                    <div class="flex items-center pb-0.5">
+                        <label class="course-delete-label [&_input]:sr-only [&_input]:absolute inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 text-gray-400 hover:bg-red-50 hover:border-red-200 hover:text-red-600 cursor-pointer transition-colors" title="Remove course">
+                            {{ course_formset.empty_form.DELETE }}
+                            <span class="delete-icon pointer-events-none">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </span>
                         </label>
                     </div>
                     {% endif %}
@@ -177,7 +211,7 @@
         </div>
     </div>
 
-    <div class="flex justify-end mt-4">
+    <div class="flex justify-end mt-4 px-6 pb-6">
         <button type="submit" class="px-6 py-2.5 bg-bc-maroon text-white font-semibold rounded-lg hover:bg-bc-maroon-700 focus:ring-4 focus:ring-bc-maroon-300 transition-all shadow-md">
             Save profile
         </button>
@@ -234,10 +268,40 @@
 
     addBtn.addEventListener('click', addCourseRow);
 
+    var removeResumeBtn = document.getElementById('remove-resume-btn');
+    var removeResumeInput = document.getElementById('id_remove_resume');
+    if (removeResumeBtn && removeResumeInput) {
+        removeResumeBtn.addEventListener('click', function() {
+            removeResumeInput.value = '1';
+            removeResumeBtn.textContent = 'Will remove';
+            removeResumeBtn.classList.add('text-red-600');
+        });
+    }
+    var removeCvBtn = document.getElementById('remove-cv-btn');
+    var removeCvInput = document.getElementById('id_remove_cv');
+    if (removeCvBtn && removeCvInput) {
+        removeCvBtn.addEventListener('click', function() {
+            removeCvInput.value = '1';
+            removeCvBtn.textContent = 'Will remove';
+            removeCvBtn.classList.add('text-red-600');
+        });
+    }
+
     container.addEventListener('change', function(e) {
         if (e.target.matches('select[name*="course_selection"]')) {
             var wrap = e.target.closest('.past-course-row').querySelector('.custom-course-wrap');
             if (wrap) wrap.classList.toggle('hidden', e.target.value !== '__custom__');
+        }
+        if (e.target.matches('input[name*="-DELETE"]')) {
+            var row = e.target.closest('.past-course-row');
+            if (row) row.classList.toggle('opacity-50', e.target.checked);
+        }
+    });
+    container.addEventListener('click', function(e) {
+        if (e.target.closest('.course-delete-label')) {
+            var row = e.target.closest('.past-course-row');
+            var cb = row && row.querySelector('input[name*="-DELETE"]');
+            if (row && cb) setTimeout(function() { row.classList.toggle('opacity-50', cb.checked); }, 0);
         }
     });
 

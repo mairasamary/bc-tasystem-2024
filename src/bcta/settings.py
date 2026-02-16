@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "courses",
     "applications",
     "offers",
+    "evaluations",
     "django_gauth",
 ]
 

@@ -55,6 +55,10 @@
         }
     </script>
     <style>
+        /* Keep scrollbar space so content width is same on every page (no layout shift) */
+        html {
+            overflow-y: scroll;
+        }
         body {
             font-family: 'Inter Tight', sans-serif;
             background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
@@ -92,7 +96,7 @@
 <body class="bg-gray-50 text-gray-900 antialiased min-h-screen flex flex-col">
     {% include "components/v2/navbar.html" %}
 
-    <main class="flex-grow container mx-auto px-4 pt-24 pb-12">
+    <main class="flex-grow w-full max-w-screen-xl mx-auto px-4 pt-24 pb-12">
         {% if messages %}
         <div class="mb-6 space-y-2">
             {% for message in messages %}

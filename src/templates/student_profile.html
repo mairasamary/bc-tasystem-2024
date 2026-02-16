@@ -3,20 +3,26 @@
 {% block title %}Student Profile - BC TA System{% endblock %}
 
 {% block content %}
-<nav class="flex mb-4" aria-label="Breadcrumb">
+<!-- Breadcrumb -->
+<nav class="flex mt-4 mb-8" aria-label="Breadcrumb">
     <ol class="inline-flex items-center space-x-1 md:space-x-3">
         <li class="inline-flex items-center">
-            <a href="{% url 'dashboard_v2' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-bc-maroon">
-                <svg class="w-3 h-3 me-2.5" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z" />
+            <a href="{% url 'dashboard_v2' %}"
+                class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-bc-maroon transition-colors">
+                <svg class="w-3 h-3 me-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                    viewBox="0 0 20 20">
+                    <path
+                        d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z" />
                 </svg>
                 Dashboard
             </a>
         </li>
         <li>
             <div class="flex items-center">
-                <svg class="w-3 h-3 text-gray-400 mx-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4" />
+                <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                    fill="none" viewBox="0 0 6 10">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="m1 9 4-4-4-4" />
                 </svg>
                 <span class="ms-1 text-sm font-medium text-gray-500 md:ms-2">Profile</span>
             </div>
@@ -24,7 +30,15 @@
     </ol>
 </nav>
 
-<form method="post" enctype="multipart/form-data" class="h-[calc(100vh-12rem)] min-h-[400px] flex flex-col">
+<div class="mb-8 flex justify-between items-center animate-fade-in">
+    <div>
+        <h1 class="text-4xl font-extrabold text-bc-maroon tracking-tight">Profile</h1>
+        <p class="mt-2 text-gray-600 text-lg">Update your photo, resume, skills, and course history</p>
+    </div>
+</div>
+
+<div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden animate-fade-in">
+<form method="post" enctype="multipart/form-data" class="m-0 w-full h-[calc(100vh-12rem)] min-h-[400px] flex flex-col">
     {% csrf_token %}
 
     <div class="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-4 flex-1 min-h-0">
@@ -169,7 +183,10 @@
         </button>
     </div>
 </form>
+</div>
 
+<script type="application/json" id="profile-skills-data">{{ all_skills_json|safe }}</script>
+<script type="application/json" id="profile-selected-ids-data">{{ selected_skill_ids_json|safe }}</script>
 <script>
 (function() {
     var totalFormsInput = document.querySelector('input[name$="-TOTAL_FORMS"]');
@@ -224,8 +241,10 @@
         }
     });
 
-    var allSkills = {{ all_skills_json|safe }};
-    var selectedIds = {{ selected_skill_ids_json|safe }};
+    var skillsDataEl = document.getElementById('profile-skills-data');
+    var selectedIdsDataEl = document.getElementById('profile-selected-ids-data');
+    var allSkills = skillsDataEl ? JSON.parse(skillsDataEl.textContent || '[]') : [];
+    var selectedIds = selectedIdsDataEl ? JSON.parse(selectedIdsDataEl.textContent || '[]') : [];
     var searchInput = document.getElementById('skill-search');
     var resultsDiv = document.getElementById('skill-results');
     var bubblesDiv = document.getElementById('skill-bubbles');

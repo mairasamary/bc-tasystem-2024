@@ -42,10 +42,10 @@ class UploadView(LoginRequiredMixin, UserPassesTestMixin, View):
 
     def get_or_create_instructor(self, row):
         try:
-            instructor_first_name = row[6].split(",")[1].strip()
-            instructor_last_name = row[6].split(",")[0].strip()
+            instructor_first_name = row[5].split(",")[1].strip()
+            instructor_last_name = row[5].split(",")[0].strip()
         except:
-            instructor_first_name = row[6]
+            instructor_first_name = row[5]
             instructor_last_name = ""
 
         email = self.get_email(instructor_first_name, instructor_last_name)
@@ -73,27 +73,27 @@ class UploadView(LoginRequiredMixin, UserPassesTestMixin, View):
             "Computer Organization and Lab",
         ]
 
-        if row[5] in excluded_lectures and row[1] == "Lecture":
+        if row[4] in excluded_lectures and row[1] == "Lecture":
             return
 
-        num_tas = 1 if row[1] == "Discussion" or row[1] == "Lab" else int(row[9]) // 20
+        num_tas = 1 if row[1] == "Discussion" or row[1] == "Lab" else int(row[8]) // 20
 
         num_tas = 1 if num_tas == 0 else num_tas
 
         new_class = Course.objects.create(
             term=row[0],
             class_type=row[1],
-            course=row[3],
-            section=row[4],
-            course_title=row[5],
+            course=row[2],
+            section=row[3],
+            course_title=row[4],
             instructor_first_name=instructor.first_name,
             instructor_last_name=instructor.last_name,
-            room_name=row[7],
-            timeslot=row[8],
-            max_enroll=row[10],
-            room_size=row[11],
+            room_name=row[6],
+            timeslot=row[7],
+            max_enroll=row[8],
+            room_size=row[9],
             num_tas=num_tas,
-            description=row[5],  # TODO: Add description
+            description=row[4],  # TODO: Add description
             professor=instructor,
         )
         instructor.courses.add(new_class)

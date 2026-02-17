@@ -157,7 +157,7 @@
                     <th scope="col" class="px-6 py-3">Professor</th>
                     <th scope="col" class="px-6 py-3">Term</th>
                     <th scope="col" class="px-6 py-3">Schedule</th>
-                    <th scope="col" class="px-6 py-3">Enrolled</th>
+                    <th scope="col" class="px-6 py-3">Max Enroll / Room</th>
                     <th scope="col" class="px-6 py-3">TAs</th>
                     <th scope="col" class="px-6 py-3">Status</th>
                     <th scope="col" class="px-6 py-3">Action</th>
@@ -168,8 +168,10 @@
                 <tr class="bg-white border-b hover:bg-gray-50">
                     <td class="px-6 py-4">
                         <div class="flex flex-col">
-                            <span class="text-sm font-bold text-gray-900">{{ course.course }}</span>
-                            <span class="text-xs text-gray-500">{{ course.course_title }}</span>
+                            <a href="{% url 'course_overview_v2' course.id %}" class="inline-flex flex-col text-bc-maroon hover:text-bc-maroon-700 hover:underline">
+                                <span class="text-sm font-bold">{{ course.course }}</span>
+                                <span class="text-xs text-gray-500">{{ course.course_title }}</span>
+                            </a>
                             <div class="mt-1">
                                 {% if course.class_type == 'Lecture' %}
                                 <span
@@ -234,9 +236,9 @@
                         </div>
                     </td>
                     <td class="px-6 py-4">
-                        <div class="flex items-center gap-1">
-                            <span class="text-sm font-medium text-gray-900">{{ course.max_enroll }}</span>
-                            <span class="text-xs text-gray-400">/ {{ course.room_size }}</span>
+                        <div class="flex flex-col gap-0.5">
+                            <span class="text-xs text-gray-600">Max enroll: <span class="font-medium text-gray-900">{{ course.max_enroll }}</span></span>
+                            <span class="text-xs text-gray-600">Room capacity: <span class="font-medium text-gray-900">{{ course.room_size }}</span></span>
                         </div>
                     </td>
                     <td class="px-6 py-4">
@@ -281,6 +283,20 @@
                                     d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
                             </svg>
                             Applied
+                        </span>
+                        {% elif not course.status %}
+                        <span
+                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-gray-500 bg-gray-100 border border-gray-200">
+                            Closed
+                        </span>
+                        {% elif not student_can_apply %}
+                        <span
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-400 bg-gray-100 cursor-not-allowed border border-gray-200">
+                            Apply
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                            </svg>
                         </span>
                         {% else %}
                         <a href="{% url 'apply_to_course_v2' course.id %}"

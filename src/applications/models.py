@@ -13,11 +13,13 @@ class ApplicationStatus(Enum):
     APPROVED - The application has been accepted by the professor
     REJECTED - The application has been rejected by the professor or the offer has been rejected by the student
     CONFIRMED - The application offer has been confirmed by the student
+    WITHDRAWN - Withdrawn by student or system (e.g. accepted another TA offer)
     '''
     PENDING = 1
     ACCEPTED = 2
     REJECTED = 3
     CONFIRMED = 4
+    WITHDRAWN = 5
 
 
 class Application(models.Model):
@@ -33,6 +35,7 @@ class Application(models.Model):
 
     status = models.IntegerField(choices=[(
         tag.value, tag.name) for tag in ApplicationStatus], default=ApplicationStatus.PENDING.value)
+    withdrawal_reason = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
         return self.student.first_name + ' ' + self.student.last_name + ' - ' + self.course.course_title
@@ -57,4 +60,9 @@ class Application(models.Model):
 
     def confirm(self):
         self.status = ApplicationStatus.CONFIRMED.value
+        self.save()
+
+    def withdraw(self, reason=""):
+        self.status = ApplicationStatus.WITHDRAWN.value
+        self.withdrawal_reason = reason
         self.save()

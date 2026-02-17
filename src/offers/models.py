@@ -35,6 +35,7 @@ class Offer(models.Model):
         self.status = OfferStatus.ACCEPTED.value
         self.application.confirm()
         self.course.current_tas.add(self.recipient)
+        # Close course when it reaches full TA capacity (one of two ways courses close)
         if self.course.current_tas.count() >= self.course.num_tas:
             self.course.status = False
         self.course.save()

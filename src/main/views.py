@@ -66,33 +66,79 @@ def offers_list_v2(request):
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.db.models import Q
 from applications.models import Application, ApplicationStatus
 from courses.forms import CourseForm
 from courses.views import UploadView
 
+PER_PAGE_CHOICES = [10, 20, 50]
+
 @login_required
 def courses_list_v2(request):
     query = request.GET.get('q')
+    professor_id = request.GET.get('professor')
+    status_filter = request.GET.get('status', '')
+    class_type_filter = request.GET.get('class_type', '')
+    course_level = request.GET.get('course_level', '')
+    per_page_param = request.GET.get('per_page', '10')
     courses = Course.objects.all().order_by('course')
-    
+
     if query:
         courses = courses.filter(
-            Q(course__icontains=query) | 
+            Q(course__icontains=query) |
             Q(course_title__icontains=query) |
             Q(instructor_first_name__icontains=query) |
             Q(instructor_last_name__icontains=query)
         )
-    
-    # Get IDs of courses the current user has already applied to
+    if professor_id:
+        courses = courses.filter(professor_id=professor_id)
+    if status_filter == 'active':
+        courses = courses.filter(status=True)
+    elif status_filter == 'closed':
+        courses = courses.filter(status=False)
+    if class_type_filter:
+        courses = courses.filter(class_type=class_type_filter)
+    if course_level and course_level in ('1', '2', '3', '4', '5'):
+        courses = courses.filter(course__iregex=r'^\D*' + course_level + r'\d{3}')
+
+    if per_page_param == 'all':
+        per_page_size = 9999
+        per_page = 'all'
+    else:
+        try:
+            n = int(per_page_param)
+            per_page_size = n if n in PER_PAGE_CHOICES else 10
+            per_page = str(per_page_size)
+        except (ValueError, TypeError):
+            per_page_size = 10
+            per_page = '10'
+
+    paginator = Paginator(courses, per_page_size)
+    page_number = request.GET.get('page', 1)
+    page = paginator.get_page(page_number)
+    courses = page.object_list
+
+    professors = User.objects.filter(professor=True).order_by('last_name', 'first_name')
+
     if not request.user.is_professor:
         applied_course_ids = Application.objects.filter(student=request.user).values_list('course_id', flat=True)
     else:
         applied_course_ids = []
-        
+
+    get_copy = request.GET.copy()
+    if 'page' in get_copy:
+        del get_copy['page']
+    query_string = get_copy.urlencode()
+
     return render(request, 'courses_v2.html', {
         'courses': courses,
-        'applied_course_ids': applied_course_ids
+        'applied_course_ids': applied_course_ids,
+        'professors': professors,
+        'page': page,
+        'paginator': paginator,
+        'query_string': query_string,
+        'per_page': per_page,
     })
 
 @login_required

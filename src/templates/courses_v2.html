@@ -30,44 +30,121 @@
     </ol>
 </nav>
 
-<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 animate-fade-in">
-    <div>
-        <h1 class="text-4xl font-extrabold text-bc-maroon tracking-tight">Courses</h1>
-        <p class="mt-2 text-gray-600 text-lg">Manage course details and TA requirements</p>
-    </div>
-    <form class="flex flex-col sm:flex-row gap-3" method="GET">
-        <div class="relative">
-            <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
-                    viewBox="0 0 20 20">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
-                </svg>
-            </div>
-            <input type="text" name="q" value="{{ request.GET.q|default:'' }}" id="table-search"
-                class="block w-full sm:w-64 p-2.5 ps-10 text-sm text-gray-900 border-2 border-gray-300 rounded-lg bg-white focus:ring-bc-maroon focus:border-bc-maroon transition-all"
-                placeholder="Search courses...">
+<div class="mb-8 animate-fade-in">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+        <div>
+            <h1 class="text-4xl font-extrabold text-bc-maroon tracking-tight">Courses</h1>
+            <p class="mt-2 text-gray-600 text-lg">Manage course details and TA requirements</p>
         </div>
-        {% if user.is_superuser %}
-        <a href="{% url 'upload_courses_v2' %}"
-            class="text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-50 hover:border-bc-maroon focus:ring-4 focus:ring-gray-100 font-semibold rounded-lg text-sm px-6 py-2.5 focus:outline-none transition-all shadow-sm hover:shadow-md no-underline">
-            <span class="flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                </svg>
-                Upload Courses
-            </span>
-        </a>
-        <a href="{% url 'create_course_v2' %}"
-            class="text-white bg-gradient-to-r from-bc-maroon to-bc-maroon-700 hover:from-bc-maroon-700 hover:to-bc-maroon-800 focus:ring-4 focus:ring-bc-maroon-300 font-semibold rounded-lg text-sm px-6 py-2.5 focus:outline-none transition-all shadow-md hover:shadow-lg no-underline">
-            <span class="flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                </svg>
-                Create Course
-            </span>
-        </a>
-        {% endif %}
+    </div>
+    <form method="GET" action="{% url 'courses_v2' %}" id="courses-filter-form">
+        <div class="flex flex-col gap-4">
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="relative flex-shrink-0">
+                    <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                        <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                        </svg>
+                    </div>
+                    <input type="text" name="q" value="{{ request.GET.q|default:'' }}" id="table-search"
+                        class="block w-full sm:w-64 h-11 pl-10 pr-3 text-sm text-gray-900 border-2 border-gray-300 rounded-lg bg-white focus:ring-bc-maroon focus:border-bc-maroon transition-all"
+                        placeholder="Search courses...">
+                </div>
+                <div class="relative flex items-center gap-0 flex-shrink-0" id="add-filter-wrap">
+                    <input type="hidden" name="professor" id="form-professor" value="{{ request.GET.professor|default:'' }}">
+                    <input type="hidden" name="status" id="form-status" value="{{ request.GET.status|default:'' }}">
+                    <input type="hidden" name="class_type" id="form-class_type" value="{{ request.GET.class_type|default:'' }}">
+                    <input type="hidden" name="course_level" id="form-course_level" value="{{ request.GET.course_level|default:'' }}">
+                    <button type="button" id="add-filter-btn" aria-haspopup="true" aria-expanded="false"
+                        class="inline-flex items-center gap-2 h-11 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 focus:ring-bc-maroon focus:border-bc-maroon transition-all">
+                        Add filter
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div id="professor-panel-template" class="hidden">
+                        <select id="filter-panel-select" class="block w-full h-10 px-3 text-sm text-gray-900 border border-gray-300 rounded-lg bg-white focus:ring-bc-maroon focus:border-bc-maroon">
+                            <option value="">All professors</option>
+                            {% for p in professors %}
+                            <option value="{{ p.id }}" {% if request.GET.professor == p.id|stringformat:"s" %}selected{% endif %}>{{ p.get_full_name|default:p.email }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="hidden absolute left-0 top-full z-20 mt-1 flex border border-gray-200 rounded-lg shadow-lg ring-1 ring-black/5 overflow-hidden bg-white" id="filter-popover">
+                        <div id="filter-dropdown" class="w-56 py-1 flex-shrink-0" role="menu">
+                            <button type="button" class="filter-option flex w-full items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-100" data-filter="professor" role="menuitem">
+                                <span>Professor</span>
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                            <button type="button" class="filter-option flex w-full items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-100" data-filter="status" role="menuitem">
+                                <span>Status</span>
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                            <button type="button" class="filter-option flex w-full items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-100" data-filter="class_type" role="menuitem">
+                                <span>Course type</span>
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                            <button type="button" class="filter-option flex w-full items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-100" data-filter="course_level" role="menuitem">
+                                <span>Course level</span>
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                        </div>
+                        <div id="filter-panel" class="hidden w-64 flex-shrink-0 border-l border-gray-200 p-4 bg-white">
+                            <p id="filter-panel-title" class="text-sm font-medium text-gray-900 mb-2"></p>
+                            <div id="filter-panel-body"></div>
+                            <div class="mt-3">
+                                <button type="button" id="filter-apply" class="w-full px-3 py-2 text-sm font-medium text-white bg-bc-maroon rounded-lg hover:from-bc-maroon-700 hover:to-bc-maroon-800">Apply</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <span class="flex-1 min-w-4"></span>
+                {% if user.is_superuser %}
+                <div class="flex items-center gap-3 flex-shrink-0">
+                    <a href="{% url 'upload_courses_v2' %}"
+                        class="inline-flex items-center gap-2 h-11 px-5 text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 hover:border-bc-maroon focus:ring-4 focus:ring-gray-100 font-semibold text-sm focus:outline-none transition-all shadow-sm hover:shadow-md no-underline whitespace-nowrap">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                        </svg>
+                        Upload Courses
+                    </a>
+                    <a href="{% url 'create_course_v2' %}"
+                        class="inline-flex items-center gap-2 h-11 px-5 text-white bg-gradient-to-r from-bc-maroon to-bc-maroon-700 rounded-lg hover:from-bc-maroon-700 hover:to-bc-maroon-800 focus:ring-4 focus:ring-bc-maroon-300 font-semibold text-sm focus:outline-none transition-all shadow-md hover:shadow-lg no-underline whitespace-nowrap">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Create Course
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            {% if request.GET.professor or request.GET.status or request.GET.class_type or request.GET.course_level %}
+            <div class="flex flex-wrap items-center gap-3 pt-1 border-t border-gray-100">
+                <span class="text-sm text-gray-500 mr-1">Active filters:</span>
+                {% if request.GET.professor %}
+                <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.class_type %}class_type={{ request.GET.class_type }}&{% endif %}{% if request.GET.course_level %}course_level={{ request.GET.course_level }}&{% endif %}{% if request.GET.per_page %}per_page={{ request.GET.per_page }}{% endif %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors">
+                    Professor: {% for p in professors %}{% if request.GET.professor == p.id|stringformat:"s" %}{{ p.get_full_name|default:p.email }}{% endif %}{% endfor %} <span aria-hidden="true" class="ml-0.5">&times;</span>
+                </a>
+                {% endif %}
+                {% if request.GET.status %}
+                <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.professor %}professor={{ request.GET.professor }}&{% endif %}{% if request.GET.class_type %}class_type={{ request.GET.class_type }}&{% endif %}{% if request.GET.course_level %}course_level={{ request.GET.course_level }}&{% endif %}{% if request.GET.per_page %}per_page={{ request.GET.per_page }}{% endif %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors">
+                    Status: {{ request.GET.status|capfirst }} <span aria-hidden="true" class="ml-0.5">&times;</span>
+                </a>
+                {% endif %}
+                {% if request.GET.class_type %}
+                <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.professor %}professor={{ request.GET.professor }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.course_level %}course_level={{ request.GET.course_level }}&{% endif %}{% if request.GET.per_page %}per_page={{ request.GET.per_page }}{% endif %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors">
+                    Type: {{ request.GET.class_type }} <span aria-hidden="true" class="ml-0.5">&times;</span>
+                </a>
+                {% endif %}
+                {% if request.GET.course_level %}
+                <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.professor %}professor={{ request.GET.professor }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.class_type %}class_type={{ request.GET.class_type }}&{% endif %}{% if request.GET.per_page %}per_page={{ request.GET.per_page }}{% endif %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors">
+                    Level: {{ request.GET.course_level }}000-level <span aria-hidden="true" class="ml-0.5">&times;</span>
+                </a>
+                {% endif %}
+                <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.per_page %}per_page={{ request.GET.per_page }}{% endif %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-colors ml-2">
+                    Reset all filters
+                </a>
+            </div>
+            {% endif %}
+        </div>
     </form>
 </div>
 
@@ -80,7 +157,7 @@
                     <th scope="col" class="px-6 py-3">Professor</th>
                     <th scope="col" class="px-6 py-3">Term</th>
                     <th scope="col" class="px-6 py-3">Schedule</th>
-                    <th scope="col" class="px-6 py-3">Enrolled</th>
+                    <th scope="col" class="px-6 py-3">Max Enroll / Room</th>
                     <th scope="col" class="px-6 py-3">TAs</th>
                     <th scope="col" class="px-6 py-3">Status</th>
                     <th scope="col" class="px-6 py-3">Action</th>
@@ -91,8 +168,10 @@
                 <tr class="bg-white border-b hover:bg-gray-50">
                     <td class="px-6 py-4">
                         <div class="flex flex-col">
-                            <span class="text-sm font-bold text-gray-900">{{ course.course }}</span>
-                            <span class="text-xs text-gray-500">{{ course.course_title }}</span>
+                            <a href="{% url 'course_overview_v2' course.id %}" class="inline-flex flex-col text-bc-maroon hover:text-bc-maroon-700 hover:underline">
+                                <span class="text-sm font-bold">{{ course.course }}</span>
+                                <span class="text-xs text-gray-500">{{ course.course_title }}</span>
+                            </a>
                             <div class="mt-1">
                                 {% if course.class_type == 'Lecture' %}
                                 <span
@@ -157,15 +236,15 @@
                         </div>
                     </td>
                     <td class="px-6 py-4">
-                        <div class="flex items-center gap-1">
-                            <span class="text-sm font-medium text-gray-900">{{ course.max_enroll }}</span>
-                            <span class="text-xs text-gray-400">/ {{ course.room_size }}</span>
+                        <div class="flex flex-col gap-0.5">
+                            <span class="text-xs text-gray-600">Max enroll: <span class="font-medium text-gray-900">{{ course.max_enroll }}</span></span>
+                            <span class="text-xs text-gray-600">Room capacity: <span class="font-medium text-gray-900">{{ course.room_size }}</span></span>
                         </div>
                     </td>
                     <td class="px-6 py-4">
                         <div class="w-full bg-gray-200 rounded-full h-2 mb-1 max-w-[100px] shadow-inner">
-                            <div class="bg-gradient-to-r from-bc-maroon to-bc-maroon-700 h-2 rounded-full shadow-sm transition-all duration-500"
-                                style="width: {% if course.num_tas %}{% widthratio course.current_tas.count course.num_tas 100 %}{% else %}0{% endif %}%"></div>
+                            <div class="ta-fill-bar bg-gradient-to-r from-bc-maroon to-bc-maroon-700 h-2 rounded-full shadow-sm transition-all duration-500"
+                                data-fill-percent="{{ course.ta_fill_percent }}"></div>
                         </div>
                         <span class="text-xs font-medium text-gray-700">{{ course.current_tas.count }} / {{ course.num_tas }}
                             filled</span>
@@ -187,7 +266,7 @@
                     </td>
                     <td class="px-6 py-4">
                         {% if user.is_superuser or user.is_professor %}
-                        <a href="{% url 'admin:courses_course_change' course.id %}"
+                        <a href="{% url 'edit_course_v2' course.id %}"
                             class="text-gray-400 hover:text-bc-maroon transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -205,6 +284,20 @@
                             </svg>
                             Applied
                         </span>
+                        {% elif not course.status %}
+                        <span
+                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-gray-500 bg-gray-100 border border-gray-200">
+                            Closed
+                        </span>
+                        {% elif not student_can_apply %}
+                        <span
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-400 bg-gray-100 cursor-not-allowed border border-gray-200">
+                            Apply
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                            </svg>
+                        </span>
                         {% else %}
                         <a href="{% url 'apply_to_course_v2' course.id %}"
                             class="text-white bg-gradient-to-r from-bc-maroon to-bc-maroon-700 hover:from-bc-maroon-700 hover:to-bc-maroon-800 font-semibold text-sm inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-all shadow-md hover:shadow-lg hover:scale-105">
@@ -220,7 +313,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                    <td colspan="8" class="px-6 py-8 text-center text-gray-500">
                         No courses found. Create one to get started.
                     </td>
                 </tr>
@@ -229,50 +322,254 @@
         </table>
     </div>
 
-    <!-- Pagination (Placeholder) -->
-    <div class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
+    <!-- Pagination -->
+    {% if paginator.num_pages > 1 or page.has_other_pages %}
+    <div class="flex flex-col gap-3 border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
         <div class="flex flex-1 justify-between sm:hidden">
-            <a href="#"
+            {% if page.has_previous %}
+            <a href="{% url 'courses_v2' %}{% if query_string %}?{{ query_string }}&{% else %}?{% endif %}page={{ page.previous_page_number }}"
                 class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Previous</a>
-            <a href="#"
+            {% else %}
+            <span class="inline-flex items-center rounded-md border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">Previous</span>
+            {% endif %}
+            {% if page.has_next %}
+            <a href="{% url 'courses_v2' %}{% if query_string %}?{{ query_string }}&{% else %}?{% endif %}page={{ page.next_page_number }}"
                 class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Next</a>
+            {% else %}
+            <span class="inline-flex items-center rounded-md border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-400 cursor-not-allowed ml-3">Next</span>
+            {% endif %}
         </div>
-        <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-            <div>
+        <div class="sm:flex sm:flex-1 sm:items-center sm:justify-between">
+            <div class="flex flex-wrap items-center gap-3">
+                <form method="GET" class="inline-flex items-center gap-2" id="per-page-form">
+                    {% if request.GET.q %}<input type="hidden" name="q" value="{{ request.GET.q }}">{% endif %}
+                    {% if request.GET.professor %}<input type="hidden" name="professor" value="{{ request.GET.professor }}">{% endif %}
+                    {% if request.GET.status %}<input type="hidden" name="status" value="{{ request.GET.status }}">{% endif %}
+                    {% if request.GET.class_type %}<input type="hidden" name="class_type" value="{{ request.GET.class_type }}">{% endif %}
+                    {% if request.GET.course_level %}<input type="hidden" name="course_level" value="{{ request.GET.course_level }}">{% endif %}
+                    <label for="per-page-select" class="text-sm text-gray-700 whitespace-nowrap">Show on page</label>
+                    <select name="per_page" id="per-page-select" onchange="this.form.submit()"
+                        class="h-9 px-2.5 text-sm text-gray-900 border border-gray-300 rounded-md bg-white focus:ring-bc-maroon focus:border-bc-maroon">
+                        <option value="10" {% if per_page == '10' %}selected{% endif %}>10</option>
+                        <option value="20" {% if per_page == '20' %}selected{% endif %}>20</option>
+                        <option value="50" {% if per_page == '50' %}selected{% endif %}>50</option>
+                        <option value="all" {% if per_page == 'all' %}selected{% endif %}>All</option>
+                    </select>
+                </form>
                 <p class="text-sm text-gray-700">
-                    Showing <span class="font-medium">1</span> to <span class="font-medium">10</span> of <span
-                        class="font-medium">{{ courses|length }}</span> results
+                    Showing <span class="font-medium">{{ page.start_index }}</span> to <span class="font-medium">{{ page.end_index }}</span> of <span class="font-medium">{{ paginator.count }}</span> results
                 </p>
             </div>
-            <div>
+            <div class="mt-2 sm:mt-0">
                 <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                    <a href="#"
-                        class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+                    {% if page.has_previous %}
+                    <a href="{% url 'courses_v2' %}{% if query_string %}?{{ query_string }}&{% else %}?{% endif %}page={{ page.previous_page_number }}"
+                        class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
                         <span class="sr-only">Previous</span>
                         <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd"
-                                d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
-                                clip-rule="evenodd" />
+                            <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
                         </svg>
                     </a>
-                    <a href="#" aria-current="page"
-                        class="relative z-10 inline-flex items-center bg-gradient-to-r from-bc-maroon to-bc-maroon-700 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bc-maroon shadow-md">1</a>
-                    <a href="#"
-                        class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">2</a>
-                    <a href="#"
-                        class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">3</a>
-                    <a href="#"
-                        class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+                    {% else %}
+                    <span class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 focus:z-20">
+                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
+                        </svg>
+                    </span>
+                    {% endif %}
+                    {% for num in page.paginator.page_range %}
+                    {% if page.number == num %}
+                    <span aria-current="page" class="relative z-10 inline-flex items-center bg-gradient-to-r from-bc-maroon to-bc-maroon-700 px-4 py-2 text-sm font-semibold text-white focus:z-20 shadow-md">{{ num }}</span>
+                    {% else %}
+                    <a href="{% url 'courses_v2' %}{% if query_string %}?{{ query_string }}&{% else %}?{% endif %}page={{ num }}"
+                        class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">{{ num }}</a>
+                    {% endif %}
+                    {% endfor %}
+                    {% if page.has_next %}
+                    <a href="{% url 'courses_v2' %}{% if query_string %}?{{ query_string }}&{% else %}?{% endif %}page={{ page.next_page_number }}"
+                        class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
                         <span class="sr-only">Next</span>
                         <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd"
-                                d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
-                                clip-rule="evenodd" />
+                            <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
                         </svg>
                     </a>
+                    {% else %}
+                    <span class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 focus:z-20">
+                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+                        </svg>
+                    </span>
+                    {% endif %}
                 </nav>
             </div>
         </div>
     </div>
+    {% else %}
+    <div class="flex flex-wrap items-center gap-3 border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
+        <form method="GET" class="inline-flex items-center gap-2">
+            {% if request.GET.q %}<input type="hidden" name="q" value="{{ request.GET.q }}">{% endif %}
+            {% if request.GET.professor %}<input type="hidden" name="professor" value="{{ request.GET.professor }}">{% endif %}
+            {% if request.GET.status %}<input type="hidden" name="status" value="{{ request.GET.status }}">{% endif %}
+            {% if request.GET.class_type %}<input type="hidden" name="class_type" value="{{ request.GET.class_type }}">{% endif %}
+            {% if request.GET.course_level %}<input type="hidden" name="course_level" value="{{ request.GET.course_level }}">{% endif %}
+            <label for="per-page-select-single" class="text-sm text-gray-700 whitespace-nowrap">Show on page</label>
+            <select name="per_page" id="per-page-select-single" onchange="this.form.submit()"
+                class="h-9 px-2.5 text-sm text-gray-900 border border-gray-300 rounded-md bg-white focus:ring-bc-maroon focus:border-bc-maroon">
+                <option value="10" {% if per_page == '10' %}selected{% endif %}>10</option>
+                <option value="20" {% if per_page == '20' %}selected{% endif %}>20</option>
+                <option value="50" {% if per_page == '50' %}selected{% endif %}>50</option>
+                <option value="all" {% if per_page == 'all' %}selected{% endif %}>All</option>
+            </select>
+        </form>
+        <p class="text-sm text-gray-700">
+            Showing <span class="font-medium">{{ paginator.count }}</span> result{{ paginator.count|pluralize }}
+        </p>
+    </div>
+    {% endif %}
 </div>
+<script>
+document.querySelectorAll('.ta-fill-bar').forEach(function(el) {
+    var pct = el.getAttribute('data-fill-percent');
+    if (pct != null) el.style.width = pct + '%';
+});
+</script>
+<script>
+(function() {
+    var addBtn = document.getElementById('add-filter-btn');
+    var popover = document.getElementById('filter-popover');
+    var dropdown = document.getElementById('filter-dropdown');
+    var panel = document.getElementById('filter-panel');
+    var panelTitle = document.getElementById('filter-panel-title');
+    var panelBody = document.getElementById('filter-panel-body');
+    var applyBtn = document.getElementById('filter-apply');
+    var currentFilter = null;
+    var form = addBtn && addBtn.closest('form');
+
+    var panelConfig = {
+        professor: {
+            title: 'Professor',
+            templateId: 'professor-panel-template',
+            name: 'professor'
+        },
+        status: {
+            title: 'Status',
+            input: function() {
+                var cur = document.getElementById('form-status').value;
+                return '<select id="filter-panel-select" class="block w-full h-10 px-3 text-sm text-gray-900 border border-gray-300 rounded-lg bg-white focus:ring-bc-maroon focus:border-bc-maroon">' +
+                    '<option value="">All</option>' +
+                    '<option value="active"' + (cur === 'active' ? ' selected' : '') + '>Active</option>' +
+                    '<option value="closed"' + (cur === 'closed' ? ' selected' : '') + '>Closed</option>' +
+                    '</select>';
+            },
+            name: 'status'
+        },
+        class_type: {
+            title: 'Course type',
+            input: function() {
+                var cur = document.getElementById('form-class_type').value;
+                return '<select id="filter-panel-select" class="block w-full h-10 px-3 text-sm text-gray-900 border border-gray-300 rounded-lg bg-white focus:ring-bc-maroon focus:border-bc-maroon">' +
+                    '<option value="">All</option>' +
+                    '<option value="Lecture"' + (cur === 'Lecture' ? ' selected' : '') + '>Lecture</option>' +
+                    '<option value="Discussion"' + (cur === 'Discussion' ? ' selected' : '') + '>Discussion</option>' +
+                    '<option value="Lab"' + (cur === 'Lab' ? ' selected' : '') + '>Lab</option>' +
+                    '</select>';
+            },
+            name: 'class_type'
+        },
+        course_level: {
+            title: 'Course level',
+            input: function() {
+                var cur = document.getElementById('form-course_level').value;
+                var opts = ['1', '2', '3'];
+                var labels = ['1000-level', '2000-level', '3000-level'];
+                var html = '<select id="filter-panel-select" class="block w-full h-10 px-3 text-sm text-gray-900 border border-gray-300 rounded-lg bg-white focus:ring-bc-maroon focus:border-bc-maroon">' +
+                    '<option value="">All</option>';
+                for (var i = 0; i < opts.length; i++) {
+                    html += '<option value="' + opts[i] + '"' + (cur === opts[i] ? ' selected' : '') + '>' + labels[i] + '</option>';
+                }
+                return html + '</select>';
+            },
+            name: 'course_level'
+        }
+    };
+
+    function closeAll() {
+        popover.classList.add('hidden');
+        panel.classList.add('hidden');
+        currentFilter = null;
+        addBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    function openPanel(filterKey) {
+        var cfg = panelConfig[filterKey];
+        if (!cfg) return;
+        currentFilter = filterKey;
+        popover.classList.remove('hidden');
+        panelTitle.textContent = cfg.title;
+        if (cfg.templateId) {
+            var tpl = document.getElementById(cfg.templateId);
+            panelBody.innerHTML = tpl ? tpl.innerHTML : '';
+        } else {
+            panelBody.innerHTML = cfg.input();
+        }
+        var sel = panelBody.querySelector('#filter-panel-select');
+        if (sel) {
+            var hidden = document.getElementById('form-' + cfg.name);
+            if (hidden) sel.value = hidden.value || '';
+        }
+        panel.classList.remove('hidden');
+        addBtn.setAttribute('aria-expanded', 'true');
+    }
+
+    addBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (popover.classList.contains('hidden')) {
+            popover.classList.remove('hidden');
+            panel.classList.add('hidden');
+            currentFilter = null;
+            addBtn.setAttribute('aria-expanded', 'true');
+        } else {
+            closeAll();
+        }
+    });
+
+    dropdown.querySelectorAll('.filter-option').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            openPanel(this.getAttribute('data-filter'));
+        });
+    });
+
+    function buildFilterUrl() {
+        if (!form) return null;
+        var params = new URLSearchParams();
+        var qInput = form.querySelector('input[name=q]');
+        if (qInput && qInput.value) params.set('q', qInput.value.trim());
+        ['professor', 'status', 'class_type', 'course_level'].forEach(function(name) {
+            var el = document.getElementById('form-' + name);
+            if (el && el.value) params.set(name, el.value);
+        });
+        var action = form.getAttribute('action') || window.location.pathname;
+        return action + '?' + params.toString();
+    }
+
+    applyBtn.addEventListener('click', function() {
+        if (!currentFilter) return;
+        var cfg = panelConfig[currentFilter];
+        var hidden = document.getElementById('form-' + cfg.name);
+        var sel = panelBody.querySelector('#filter-panel-select');
+        if (hidden && sel) hidden.value = sel.value || '';
+        closeAll();
+        addBtn.setAttribute('aria-expanded', 'false');
+        var url = buildFilterUrl();
+        if (url) window.location = url;
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!document.getElementById('add-filter-wrap').contains(e.target)) {
+            closeAll();
+            addBtn.setAttribute('aria-expanded', 'false');
+        }
+    });
+})();
+</script>
 {% endblock %}

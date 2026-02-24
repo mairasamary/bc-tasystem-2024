@@ -13,7 +13,8 @@ class CourseForm(forms.ModelForm):
         model = Course
         fields = [
             'term', 'class_type', 'course', 'section', 'course_title',
-            'professor', 'room_name', 'timeslot',
+            'professor', 'instructor_first_name', 'instructor_last_name',
+            'room_name', 'timeslot',
             'max_enroll', 'room_size', 'num_tas',
             'description',
         ]
@@ -28,6 +29,8 @@ class CourseForm(forms.ModelForm):
             'section': forms.TextInput(attrs={'class': TAILWIND_INPUT, 'placeholder': 'e.g. 01'}),
             'course_title': forms.TextInput(attrs={'class': TAILWIND_INPUT, 'placeholder': 'e.g. Algorithms'}),
             'professor': forms.Select(attrs={'class': TAILWIND_SELECT}),
+            'instructor_first_name': forms.TextInput(attrs={'class': TAILWIND_INPUT, 'placeholder': 'e.g. Jane'}),
+            'instructor_last_name': forms.TextInput(attrs={'class': TAILWIND_INPUT, 'placeholder': 'e.g. Smith'}),
             'room_name': forms.TextInput(attrs={'class': TAILWIND_INPUT, 'placeholder': 'e.g. Fulton 250'}),
             'timeslot': forms.TextInput(attrs={'class': TAILWIND_INPUT, 'placeholder': 'e.g. MWF 11:00-11:50'}),
             'max_enroll': forms.NumberInput(attrs={'class': TAILWIND_INPUT, 'placeholder': 'e.g. 30', 'min': 0}),
@@ -39,6 +42,8 @@ class CourseForm(forms.ModelForm):
             'class_type': 'Class Type',
             'course': 'Course Code',
             'course_title': 'Course Title',
+            'instructor_first_name': 'Instructor First Name',
+            'instructor_last_name': 'Instructor Last Name',
             'room_name': 'Room',
             'timeslot': 'Time Slot',
             'max_enroll': 'Max Enrollment',

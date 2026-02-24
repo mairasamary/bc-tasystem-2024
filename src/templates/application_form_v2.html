@@ -1,6 +1,6 @@
 {% extends 'base_v2.html' %}
 
-{% block title %}Apply to {{ course.course }} - BC TA System{% endblock %}
+{% block title %}{% if is_edit %}Edit Application{% else %}Apply to {{ course.course }}{% endif %} - BC TA System{% endblock %}
 
 {% block content %}
 <!-- Breadcrumb -->
@@ -24,8 +24,8 @@
                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="m1 9 4-4-4-4" />
                 </svg>
-                <a href="{% url 'courses_v2' %}"
-                    class="ms-1 text-sm font-medium text-gray-700 hover:text-indigo-600 md:ms-2">Courses</a>
+                <a href="{% if is_edit %}{% url 'applications_v2' %}{% else %}{% url 'courses_v2' %}{% endif %}"
+                    class="ms-1 text-sm font-medium text-gray-700 hover:text-indigo-600 md:ms-2">{% if is_edit %}Applications{% else %}Courses{% endif %}</a>
             </div>
         </li>
         <li>
@@ -35,7 +35,7 @@
                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="m1 9 4-4-4-4" />
                 </svg>
-                <span class="ms-1 text-sm font-medium text-gray-500 md:ms-2">Apply</span>
+                <span class="ms-1 text-sm font-medium text-gray-500 md:ms-2">{% if is_edit %}Edit{% else %}Apply{% endif %}</span>
             </div>
         </li>
     </ol>
@@ -43,8 +43,8 @@
 
 <div class="max-w-3xl mx-auto">
     <div class="mb-8">
-        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Apply for TA Position</h1>
-        <p class="mt-2 text-gray-600">Submit your application for {{ course.course }}.</p>
+        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">{% if is_edit %}Edit Application{% else %}Apply for TA Position{% endif %}</h1>
+        <p class="mt-2 text-gray-600">{% if is_edit %}Update your application for {{ course.course }}.{% else %}Submit your application for {{ course.course }}.{% endif %}</p>
     </div>
 
     <!-- Course Info Card -->
@@ -104,6 +104,16 @@
             </div>
 
             <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+                {% if is_edit %}
+                <a href="{% url 'application_detail_v2' application.id %}"
+                    class="text-gray-700 bg-white border border-gray-300 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 hover:bg-gray-50 focus:z-10">
+                    Cancel
+                </a>
+                <button type="submit"
+                    class="text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none">
+                    Save Changes
+                </button>
+                {% else %}
                 <a href="{% url 'courses_v2' %}"
                     class="text-gray-700 bg-white border border-gray-300 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 hover:bg-gray-50 focus:z-10">
                     Cancel
@@ -112,6 +122,7 @@
                     class="text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none">
                     Submit Application
                 </button>
+                {% endif %}
             </div>
         </form>
     </div>

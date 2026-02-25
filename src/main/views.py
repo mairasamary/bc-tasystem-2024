@@ -7,6 +7,7 @@ from courses.models import Course
 from applications.models import Application, ApplicationStatus
 from applications.forms import ApplicationForm
 from offers.models import Offer, OfferStatus
+from users.models import StudentProfile, PastCourse
 
 User = get_user_model()
 
@@ -145,7 +146,7 @@ def offers_list_v2(request):
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, FileResponse
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
@@ -397,6 +398,12 @@ def apply_to_course_v2(request, course_id):
         messages.warning(request, "You have already applied to this course.")
         return redirect('courses_v2')
 
+    # Require profile with resume before applying
+    profile, _ = StudentProfile.objects.get_or_create(user=request.user)
+    if not profile.resume:
+        messages.error(request, "Please complete your profile before applying. Upload a resume in your Profile page.")
+        return redirect('student_profile_v2')
+
     def count_applications_for_term(student, term):
         if not term:
             return 0
@@ -431,20 +438,33 @@ def apply_to_course_v2(request, course_id):
             app.student = request.user
             app.course = course
             app.status = ApplicationStatus.PENDING.value
+            # Snapshot profile at time of application
+            app.skills_snapshot = [{"name": s.name} for s in profile.skills.all()]
+            app.courses_snapshot = [
+                {"course_name": pc.course_name, "grade": pc.grade}
+                for pc in request.user.past_courses.all()
+            ]
             app.save()
+            # Copy resume file to application snapshot (so professor sees what was submitted)
+            if profile.resume:
+                import os
+                app.resume.save(os.path.basename(profile.resume.name), profile.resume, save=True)
 
             messages.success(request, f"Successfully applied to {course.course}.")
             return redirect('courses_v2')
     else:
         form = ApplicationForm()
-        # Add Tailwind classes to the widget
-        form.fields['additional_information'].widget.attrs.update({
-            'class': 'block w-full rounded-md border-0 p-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6',
-            'rows': 4,
-            'placeholder': 'Explain your qualifications and interest...'
-        })
-        
-    return render(request, 'application_form_v2.html', {'form': form, 'course': course})
+
+    # Profile summary for template (resume link, skills, past courses)
+    profile_skills = list(profile.skills.all().order_by('name'))
+    profile_past_courses = list(request.user.past_courses.all().order_by('course_name'))
+    return render(request, 'application_form_v2.html', {
+        'form': form,
+        'course': course,
+        'profile': profile,
+        'profile_skills': profile_skills,
+        'profile_past_courses': profile_past_courses,
+    })
 
 @login_required
 def make_offer_v2(request, application_id):
@@ -525,11 +545,6 @@ def edit_application_v2(request, application_id):
     else:
         form = ApplicationForm(instance=app)
 
-    form.fields['additional_information'].widget.attrs.update({
-        'class': 'block w-full rounded-md border-0 p-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6',
-        'rows': 4,
-        'placeholder': 'Explain your qualifications and interest...',
-    })
     return render(request, 'application_form_v2.html', {
         'form': form,
         'course': course,
@@ -602,3 +617,32 @@ def application_detail_v2(request, application_id):
         return redirect('dashboard_v2')
         
     return render(request, 'application_detail_v2.html', {'app': app})
+
+
+@login_required
+def serve_application_resume(request, application_id):
+    """Serve the resume snapshot for an application (professor or superuser only)."""
+    app = get_object_or_404(Application, id=application_id)
+    if not (request.user.is_superuser or request.user == app.course.professor):
+        messages.error(request, "You are not authorized to view this resume.")
+        return redirect('dashboard_v2')
+    if not app.resume:
+        messages.warning(request, "No resume was submitted with this application.")
+        return redirect('application_detail_v2', application_id=application_id)
+    try:
+        file_handle = app.resume.open('rb')
+        filename = app.resume.name.split('/')[-1] if app.resume.name else 'resume'
+        if filename.lower().endswith('.pdf'):
+            content_type = 'application/pdf'
+        elif filename.lower().endswith('.doc'):
+            content_type = 'application/msword'
+        elif filename.lower().endswith('.docx'):
+            content_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        else:
+            content_type = 'application/octet-stream'
+        response = FileResponse(file_handle, content_type=content_type)
+        response['Content-Disposition'] = f'inline; filename="{filename}"'
+        return response
+    except (ValueError, OSError):
+        messages.error(request, "Resume file could not be found.")
+        return redirect('application_detail_v2', application_id=application_id)

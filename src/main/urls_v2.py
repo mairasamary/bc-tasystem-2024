@@ -21,5 +21,6 @@ urlpatterns = [
     path("accept-offer/<uuid:offer_id>/", views.accept_offer_v2, name="accept_offer_v2"),
     path("decline-offer/<uuid:offer_id>/", views.decline_offer_v2, name="decline_offer_v2"),
     path("application/<uuid:application_id>/", views.application_detail_v2, name="application_detail_v2"),
+    path("application/<uuid:application_id>/resume/", views.serve_application_resume, name="serve_application_resume"),
     path("evaluations/", include("evaluations.urls")),
 ]

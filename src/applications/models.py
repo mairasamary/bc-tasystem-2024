@@ -6,6 +6,11 @@ from django.urls import reverse
 import uuid
 
 
+def application_resume_upload_path(instance, filename):
+    """Store resume under application_resumes/<application_id>/ so each application has its own snapshot."""
+    return f'application_resumes/{instance.id}/{filename}'
+
+
 class ApplicationStatus(Enum):
     '''
     Enum for the status of an application
@@ -31,7 +36,17 @@ class Application(models.Model):
     course = models.ForeignKey(
         Course, on_delete=models.CASCADE, default=None, related_name='applications')
 
-    additional_information = models.TextField(max_length=500, blank=True)
+    additional_information = models.TextField(max_length=500, blank=True)  # Legacy; prefer structured fields below
+
+    # Structured short-answer fields (character limits enforced in form)
+    why_this_course = models.CharField(max_length=500, blank=True)
+    relevant_experience = models.CharField(max_length=500, blank=True)
+    other_notes = models.CharField(max_length=300, blank=True)
+
+    # Snapshot of profile at time of application (for professor review)
+    resume = models.FileField(upload_to=application_resume_upload_path, blank=True, null=True)
+    skills_snapshot = models.JSONField(default=list, blank=True)  # [{"name": "Python"}, ...]
+    courses_snapshot = models.JSONField(default=list, blank=True)  # [{"course_name": "...", "grade": "..."}]
 
     status = models.IntegerField(choices=[(
         tag.value, tag.name) for tag in ApplicationStatus], default=ApplicationStatus.PENDING.value)

@@ -110,10 +110,69 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <!-- Main Content -->
     <div class="lg:col-span-2 space-y-8">
-        <!-- Additional Info / Essay -->
+        <!-- Profile at time of application: Resume, Skills, Courses & grades -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">Additional Information</h2>
-            {% if app.additional_information %}
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Applicant profile (at time of application)</h2>
+            <div class="space-y-6">
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Resume</h3>
+                    {% if app.resume %}
+                    <a href="{% url 'serve_application_resume' app.id %}" target="_blank" rel="noopener"
+                        class="text-indigo-600 hover:text-indigo-800 font-medium">
+                        View / Download resume
+                    </a>
+                    {% else %}
+                    <p class="text-gray-500 italic">No resume submitted with this application.</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Skills</h3>
+                    {% if app.skills_snapshot %}
+                    <p class="text-gray-900">{% for s in app.skills_snapshot %}{{ s.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+                    {% else %}
+                    <p class="text-gray-500 italic">No skills recorded.</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Courses &amp; grades</h3>
+                    {% if app.courses_snapshot %}
+                    <ul class="list-disc list-inside text-gray-900 space-y-0.5">
+                        {% for c in app.courses_snapshot %}
+                        <li>{{ c.course_name }} — {{ c.grade }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-gray-500 italic">No courses recorded.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Application answers (structured short answers, or legacy additional_information) -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Application answers</h2>
+            {% if app.why_this_course or app.relevant_experience or app.other_notes %}
+            <div class="space-y-6">
+                {% if app.why_this_course %}
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Why this course?</h3>
+                    <div class="prose prose-sm max-w-none text-gray-600 leading-relaxed">{{ app.why_this_course|linebreaks }}</div>
+                </div>
+                {% endif %}
+                {% if app.relevant_experience %}
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Relevant experience</h3>
+                    <div class="prose prose-sm max-w-none text-gray-600 leading-relaxed">{{ app.relevant_experience|linebreaks }}</div>
+                </div>
+                {% endif %}
+                {% if app.other_notes %}
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Other notes</h3>
+                    <div class="prose prose-sm max-w-none text-gray-600 leading-relaxed">{{ app.other_notes|linebreaks }}</div>
+                </div>
+                {% endif %}
+            </div>
+            {% elif app.additional_information %}
             <div class="prose max-w-none text-gray-600 leading-relaxed">
                 {{ app.additional_information|linebreaks }}
             </div>
@@ -122,10 +181,10 @@
             {% endif %}
         </div>
 
-        <!-- Applicant Details (if we had more fields like resume link, grades, etc) -->
+        <!-- Applicant contact info -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">Applicant Profile</h2>
-            <div class="flex items-center gap-4 mb-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Applicant</h2>
+            <div class="flex items-center gap-4 mb-4">
                 <div
                     class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl">
                     {{ app.student.first_name|first }}{{ app.student.last_name|first }}
@@ -135,13 +194,11 @@
                     <p class="text-gray-500">{{ app.student.email }}</p>
                 </div>
             </div>
-
-            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6">
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
                 <div>
                     <dt class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Eagle ID</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ app.student.eagle_id|default:"N/A" }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900">{{ app.student.eagleid|default:"—" }}</dd>
                 </div>
-                <!-- Add more student fields if available in CustomUser model -->
             </dl>
         </div>
     </div>

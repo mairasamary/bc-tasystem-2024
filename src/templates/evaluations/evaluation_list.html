@@ -1,42 +1,41 @@
 {% extends 'base_v2.html' %}
 
-{% block title %}TA Evaluations - BC TA System{% endblock %}
+{% block title %}TA Evaluations - TA Buzz{% endblock %}
+
+{% block breadcrumb %}
+<nav class="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
+    <a href="{% url 'dashboard_v2' %}" class="hover:text-bc-maroon transition-colors">Home</a>
+    <span class="mx-1.5">/</span>
+    <span class="text-gray-800 font-medium">Evaluations</span>
+</nav>
+{% endblock %}
 
 {% block content %}
-<!-- Breadcrumb -->
-<nav class="flex mt-4 mb-8" aria-label="Breadcrumb">
-    <ol class="inline-flex items-center space-x-1 md:space-x-3">
-        <li class="inline-flex items-center">
-            <a href="{% url 'dashboard_v2' %}"
-                class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-bc-maroon transition-colors">
-                <svg class="w-3 h-3 me-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-                    viewBox="0 0 20 20">
-                    <path
-                        d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z" />
-                </svg>
-                Dashboard
-            </a>
-        </li>
-        <li>
-            <div class="flex items-center">
-                <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                    fill="none" viewBox="0 0 6 10">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="m1 9 4-4-4-4" />
-                </svg>
-                <span class="ms-1 text-sm font-medium text-gray-500 md:ms-2">TA Evaluations</span>
-            </div>
-        </li>
-    </ol>
-</nav>
+<div class="mb-8">
+    <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">TA Evaluations</h1>
+    <p class="mt-1 text-gray-500 text-sm">Evaluate TAs and view all reviews</p>
+</div>
 
-<div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-fade-in">
-    <div>
-        <h1 class="text-4xl font-extrabold text-bc-maroon tracking-tight">TA Evaluations</h1>
-        <p class="mt-2 text-gray-600 text-lg">Evaluate TAs and view all reviews</p>
-    </div>
+<div class="mb-6 flex flex-wrap items-center gap-3">
+    <form method="get" class="flex gap-3 flex-shrink-0">
+        <div class="relative">
+            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                </svg>
+            </div>
+            <input type="text" name="q" value="{{ search_query }}" maxlength="100"
+                class="block w-full sm:w-64 h-11 pl-10 pr-3 text-sm text-gray-900 border-2 border-gray-300 rounded-lg bg-white focus:ring-bc-maroon focus:border-bc-maroon transition-all"
+                placeholder="Search by TA name...">
+        </div>
+        <button type="submit"
+            class="h-11 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 focus:ring-bc-maroon focus:border-bc-maroon transition-all">
+            Search
+        </button>
+    </form>
+    <span class="flex-1 min-w-4"></span>
     <a href="{% url 'evaluations:create' %}"
-        class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-bc-maroon to-bc-maroon-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:scale-105 transition-all">
+        class="inline-flex items-center gap-2 h-11 px-5 py-2.5 text-sm font-medium text-white bg-bc-maroon rounded-lg hover:bg-bc-maroon-700 transition-colors flex-shrink-0 no-underline whitespace-nowrap">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
@@ -44,49 +43,35 @@
     </a>
 </div>
 
-<!-- Search by TA name -->
-<div class="mb-6 animate-fade-in">
-    <form method="get" class="flex gap-2">
-        <input type="text" name="q" value="{{ search_query }}"
-            placeholder="Search by TA name..." maxlength="100"
-            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bc-maroon focus:border-bc-maroon">
-        <button type="submit"
-            class="px-5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors">
-            Search
-        </button>
-    </form>
-</div>
-
 {% if search_results is not None and search_query %}
-<!-- Search results: reviews given TO this TA (by any professor) -->
-<div class="mb-8 animate-fade-in">
-    <h2 class="text-xl font-semibold text-gray-800 mb-4">Reviews for "{{ search_query }}"</h2>
-    <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+<div class="mb-8">
+    <h2 class="text-sm font-bold text-gray-900 mb-4">Reviews for "{{ search_query }}"</h2>
+    <div class="card-pro rounded-lg overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-sm text-left text-gray-500">
-                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                    <tr>
-                        <th scope="col" class="px-6 py-3">TA</th>
-                        <th scope="col" class="px-6 py-3">Course</th>
-                        <th scope="col" class="px-6 py-3">Reviewer</th>
-                        <th scope="col" class="px-6 py-3">Avg Rating</th>
-                        <th scope="col" class="px-6 py-3">Date</th>
+            <table class="w-full text-sm text-left">
+                <thead>
+                    <tr class="border-b border-gray-200 bg-gray-50/80">
+                        <th scope="col" class="px-6 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">TA</th>
+                        <th scope="col" class="px-6 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Course</th>
+                        <th scope="col" class="px-6 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Reviewer</th>
+                        <th scope="col" class="px-6 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Avg Rating</th>
+                        <th scope="col" class="px-6 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-gray-100">
                     {% for ev in search_results %}
-                    <tr class="bg-white border-b hover:bg-gray-50">
-                        <td class="px-6 py-4 font-medium text-gray-900">{{ ev.ta.get_full_name }}</td>
-                        <td class="px-6 py-4">{{ ev.course.course_title }} ({{ ev.course.section }})</td>
-                        <td class="px-6 py-4">{{ ev.reviewer.get_full_name }}</td>
-                        <td class="px-6 py-4">
+                    <tr class="bg-white hover:bg-gray-50/50 transition-colors">
+                        <td class="px-6 py-2.5 text-sm text-gray-900 font-medium">{{ ev.ta.get_full_name }}</td>
+                        <td class="px-6 py-2.5 text-sm text-gray-900">{{ ev.course.course_title }} ({{ ev.course.section }})</td>
+                        <td class="px-6 py-2.5 text-sm text-gray-900">{{ ev.reviewer.get_full_name }}</td>
+                        <td class="px-6 py-2.5 text-sm text-gray-900">
                             <span class="font-semibold text-bc-maroon">{{ ev.average_rating }}</span> / 5
                         </td>
-                        <td class="px-6 py-4">{{ ev.created_at|date:"M d, Y" }}</td>
+                        <td class="px-6 py-2.5 text-sm text-gray-900">{{ ev.created_at|date:"M d, Y" }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">No reviews found for this TA</td>
+                        <td colspan="5" class="px-6 py-2.5 text-center text-sm text-gray-500">No reviews found for this TA</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -98,37 +83,36 @@
 {% endif %}
 
 <!-- My reviews -->
-<div class="animate-fade-in">
-    <h2 class="text-xl font-semibold text-gray-800 mb-4">My Reviews</h2>
-    <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+<div>
+    <div class="card-pro rounded-lg overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-sm text-left text-gray-500">
-                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                    <tr>
-                        <th scope="col" class="px-6 py-3">TA</th>
-                        <th scope="col" class="px-6 py-3">Course</th>
-                        <th scope="col" class="px-6 py-3">Avg Rating</th>
-                        <th scope="col" class="px-6 py-3">Date</th>
-                        <th scope="col" class="px-6 py-3">Actions</th>
+            <table class="w-full text-sm text-left">
+                <thead>
+                    <tr class="border-b border-gray-200 bg-gray-50/80">
+                        <th scope="col" class="px-6 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">TA</th>
+                        <th scope="col" class="px-6 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Course</th>
+                        <th scope="col" class="px-6 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Avg Rating</th>
+                        <th scope="col" class="px-6 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                        <th scope="col" class="px-6 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-gray-100">
                     {% for ev in evaluations %}
-                    <tr class="bg-white border-b hover:bg-gray-50">
-                        <td class="px-6 py-4 font-medium text-gray-900">{{ ev.ta.get_full_name }}</td>
-                        <td class="px-6 py-4">{{ ev.course.course_title }} ({{ ev.course.section }})</td>
-                        <td class="px-6 py-4">
+                    <tr class="bg-white hover:bg-gray-50/50 transition-colors">
+                        <td class="px-6 py-2.5 text-sm text-gray-900 font-medium">{{ ev.ta.get_full_name }}</td>
+                        <td class="px-6 py-2.5 text-sm text-gray-900">{{ ev.course.course_title }} ({{ ev.course.section }})</td>
+                        <td class="px-6 py-2.5 text-sm text-gray-900">
                             <span class="font-semibold text-bc-maroon">{{ ev.average_rating }}</span> / 5
                         </td>
-                        <td class="px-6 py-4">{{ ev.created_at|date:"M d, Y" }}</td>
-                        <td class="px-6 py-4">
+                        <td class="px-6 py-2.5 text-sm text-gray-900">{{ ev.created_at|date:"M d, Y" }}</td>
+                        <td class="px-6 py-2.5 text-sm">
                             <a href="{% url 'evaluations:edit' ev.pk %}"
-                                class="font-semibold text-bc-maroon hover:text-bc-maroon-700 hover:underline transition-colors">Edit</a>
+                                class="font-medium text-bc-maroon hover:underline transition-colors">Edit</a>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">You haven't submitted any evaluations yet.</td>
+                        <td colspan="5" class="px-6 py-2.5 text-center text-sm text-gray-500">You haven't submitted any evaluations yet.</td>
                     </tr>
                     {% endfor %}
                 </tbody>

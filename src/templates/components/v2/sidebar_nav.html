@@ -1,0 +1,40 @@
+{% comment %}
+  Left sidebar nav in BC style. Pass active_url_name or check request.resolver_match.url_name.
+  Usage: {% include "components/v2/sidebar_nav.html" %}
+{% endcomment %}
+<aside class="w-56 flex-shrink-0">
+    <div class="bg-bc-navy text-white text-xs font-semibold uppercase tracking-wider px-4 py-3">
+        Navigation
+    </div>
+    <nav class="border border-t-0 border-gray-200 bg-gray-50/50">
+        <ul class="py-1">
+            <li>
+                <a href="{% url 'dashboard_v2' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 {% if request.resolver_match.url_name == 'dashboard_v2' %}sidebar-link-active{% endif %}">
+                    Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'applications_v2' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 {% if request.resolver_match.url_name == 'applications_v2' %}sidebar-link-active{% endif %}">
+                    Applications
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'offers_v2' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 {% if request.resolver_match.url_name == 'offers_v2' %}sidebar-link-active{% endif %}">
+                    Offers
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'courses_v2' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 {% if request.resolver_match.url_name == 'courses_v2' %}sidebar-link-active{% endif %}">
+                    Courses
+                </a>
+            </li>
+            {% if user.is_professor or user.is_superuser %}
+            <li>
+                <a href="{% url 'evaluations:list' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 {% if 'evaluations' in request.resolver_match.url_name %}sidebar-link-active{% endif %}">
+                    TA Evaluations
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</aside>

@@ -1,57 +1,34 @@
 {% extends 'base_v2.html' %}
 
-{% block title %}{% if is_edit %}Edit{% else %}New{% endif %} TA Evaluation - BC TA System{% endblock %}
+{% block title %}{% if is_edit %}Edit{% else %}New{% endif %} TA Evaluation - TA Buzz{% endblock %}
+
+{% block breadcrumb %}
+<nav class="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
+    <a href="{% url 'dashboard_v2' %}" class="hover:text-bc-maroon transition-colors">Home</a>
+    <span class="mx-1.5">/</span>
+    <a href="{% url 'evaluations:list' %}" class="hover:text-bc-maroon transition-colors">Evaluations</a>
+    <span class="mx-1.5">/</span>
+    <span class="text-gray-800 font-medium">{% if is_edit %}Edit{% else %}New{% endif %}</span>
+</nav>
+{% endblock %}
 
 {% block content %}
-<!-- Breadcrumb -->
-<nav class="flex mt-4 mb-8" aria-label="Breadcrumb">
-    <ol class="inline-flex items-center space-x-1 md:space-x-3">
-        <li class="inline-flex items-center">
-            <a href="{% url 'dashboard_v2' %}"
-                class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-bc-maroon transition-colors">
-                <svg class="w-3 h-3 me-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-                    viewBox="0 0 20 20">
-                    <path
-                        d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z" />
-                </svg>
-                Dashboard
-            </a>
-        </li>
-        <li>
-            <a href="{% url 'evaluations:list' %}"
-                class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-bc-maroon transition-colors">
-                <svg class="w-3 h-3 me-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
-                    viewBox="0 0 6 10">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="m1 9 4-4-4-4" />
-                </svg>
-                TA Evaluations
-            </a>
-        </li>
-        <li>
-            <div class="flex items-center">
-                <span class="ms-1 text-sm font-medium text-gray-500 md:ms-2">{% if is_edit %}Edit{% else %}New{% endif %}</span>
-            </div>
-        </li>
-    </ol>
-</nav>
-
-<div class="mb-8 animate-fade-in">
-    <h1 class="text-4xl font-extrabold text-bc-maroon tracking-tight">
+<div class="mb-8">
+    <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">
         {% if is_edit %}Edit Evaluation{% else %}New TA Evaluation{% endif %}
     </h1>
-    <p class="mt-2 text-gray-600 text-lg">
+    <p class="mt-1 text-gray-500 text-sm">
         Rate the TA from 1–5 on each dimension. The average will be computed automatically.
     </p>
 </div>
 
 {% if not is_edit and not has_tas %}
-<div class="mb-6 p-4 bg-amber-50 text-amber-800 rounded-lg">
+<div class="mb-6 p-4 bg-amber-50 text-amber-800 rounded-lg text-sm">
     You don't have any TAs assigned to your courses yet. Assign TAs through the Offers flow first, then return here to evaluate them.
 </div>
 {% endif %}
 
-<form method="post" class="bg-white rounded-xl shadow-lg border border-gray-100 p-8 animate-fade-in">
+<form method="post" class="card-pro rounded-lg p-8">
     {% csrf_token %}
 
     {% if is_edit %}

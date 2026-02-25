@@ -5,13 +5,12 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% block title %}BC TA System{% endblock %}</title>
+    <title>{% block title %}TA Buzz – Boston College{% endblock %}</title>
 
-    <!-- Google Fonts: Inter Tight -->
+    <!-- Google Fonts: Lora (serif brand) + DM Sans (body) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Lora:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
 
     <!-- Tailwind CSS (Play CDN for dev) -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -20,34 +19,48 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['"Inter Tight"', 'sans-serif'],
+                        sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
+                        serif: ['Lora', 'Georgia', 'serif'],
                     },
                     colors: {
+                        'bc-navy': {
+                            DEFAULT: '#001a44',
+                            50: '#e6eaf2',
+                            100: '#b3c0d6',
+                            200: '#8096ba',
+                            300: '#4d6c9e',
+                            400: '#1a4282',
+                            500: '#001a44',
+                            600: '#001536',
+                            700: '#001029',
+                            800: '#000b1b',
+                            900: '#00050e',
+                        },
                         'bc-maroon': {
-                            DEFAULT: '#8B0015',
-                            50: '#FFE5E9',
-                            100: '#FFB3BE',
-                            200: '#FF8193',
-                            300: '#FF4F68',
-                            400: '#E6003D',
-                            500: '#8B0015',
-                            600: '#6B0010',
-                            700: '#4B000B',
-                            800: '#2B0006',
-                            900: '#0B0001',
+                            DEFAULT: '#800000',
+                            50: '#fce8e8',
+                            100: '#f5b8b8',
+                            200: '#ed8888',
+                            300: '#e55858',
+                            400: '#c93030',
+                            500: '#800000',
+                            600: '#660000',
+                            700: '#4d0000',
+                            800: '#330000',
+                            900: '#1a0000',
                         },
                         'bc-gold': {
-                            DEFAULT: '#C8C372',
-                            50: '#FAF9F0',
-                            100: '#F2F0D9',
-                            200: '#EAE7C2',
-                            300: '#E2DEAB',
-                            400: '#DAD594',
-                            500: '#C8C372',
-                            600: '#B8AF4B',
-                            700: '#8D8738',
-                            800: '#625F27',
-                            900: '#373716',
+                            DEFAULT: '#dab273',
+                            50: '#fbf6ed',
+                            100: '#f4e6cc',
+                            200: '#e8cc99',
+                            300: '#ddb366',
+                            400: '#dab273',
+                            500: '#c99a4d',
+                            600: '#a67c35',
+                            700: '#7d5d28',
+                            800: '#533e1b',
+                            900: '#2a1f0e',
                         },
                     }
                 }
@@ -55,72 +68,83 @@
         }
     </script>
     <style>
-        /* Keep scrollbar space so content width is same on every page (no layout shift) */
-        html {
-            overflow-y: scroll;
-        }
+        html { overflow-y: scroll; }
         body {
-            font-family: 'Inter Tight', sans-serif;
-            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            font-family: 'DM Sans', system-ui, sans-serif;
+            background: #f0f4f8;
+            color: #334155;
         }
-
-        ::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #8B0015;
-            border-radius: 5px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #6B0010;
-        }
-
+        .font-bc-brand { font-family: 'Lora', Georgia, serif; }
+        h1, h2, h3, .font-heading { letter-spacing: -0.02em; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #e5e7eb; }
+        ::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(6px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        .animate-fade-in {
-            animation: fadeIn 0.3s ease-out;
+        .animate-fade-in { animation: fadeIn 0.25s ease-out; }
+        .card-pro {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
         }
+        .sidebar-link-active { background: #f3f4f6; border-left: 3px solid #800000; }
+        .form-inputs input[type="text"],
+        .form-inputs input[type="email"],
+        .form-inputs input[type="password"],
+        .form-inputs input[type="number"],
+        .form-inputs select,
+        .form-inputs textarea {
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            color: #111827;
+            background: #fff;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .form-inputs input:focus,
+        .form-inputs select:focus,
+        .form-inputs textarea:focus {
+            outline: none;
+            border-color: #001a44;
+            box-shadow: 0 0 0 2px rgba(0, 26, 68, 0.2);
+        }
+        .form-inputs input::placeholder,
+        .form-inputs textarea::placeholder { color: #9ca3af; }
     </style>
 </head>
 
-<body class="bg-gray-50 text-gray-900 antialiased min-h-screen flex flex-col">
+<body class="antialiased min-h-screen flex flex-col" style="background: #f0f4f8;">
     {% include "components/v2/navbar.html" %}
 
-    <main class="flex-grow w-full max-w-screen-xl mx-auto px-4 pt-24 pb-12">
+    <main class="flex-grow w-full pt-16">
+        <div class="max-w-6xl mx-auto px-5 sm:px-6 py-8 pb-14">
         {% if messages %}
         <div class="mb-6 space-y-2">
             {% for message in messages %}
-            <div class="p-4 mb-4 text-sm rounded-lg {% if message.tags == 'error' %}bg-red-50 text-red-800{% else %}bg-green-50 text-green-800{% endif %}"
-                role="alert">
+            <div class="p-3.5 text-sm rounded-md border {% if message.tags == 'error' %}bg-red-50/80 border-red-200 text-red-800{% else %}bg-emerald-50/80 border-emerald-200 text-emerald-800{% endif %}" role="alert">
                 {{ message }}
             </div>
             {% endfor %}
         </div>
         {% endif %}
 
+        {% block breadcrumb %}{% endblock %}
         {% block content %}
         {% endblock %}
+        </div>
     </main>
 
-    <footer class="bg-white border-t-4 border-bc-maroon mt-auto">
-        <div class="w-full max-w-screen-xl mx-auto p-6 md:py-8">
-            <div class="sm:flex sm:items-center sm:justify-between">
-                <span class="text-sm text-gray-500 sm:text-center">
-                    © 2026 <span class="font-bold text-bc-maroon">Boston College</span> TA System. All Rights Reserved.
-                </span>
-                <div class="flex mt-4 space-x-5 sm:justify-center sm:mt-0">
-                    <span class="text-sm text-gray-500">140 Commonwealth Avenue, Chestnut Hill, MA 02467</span>
-                </div>
+    <footer class="bg-gray-50 border-t border-gray-200 mt-auto">
+        <div class="max-w-6xl mx-auto px-5 py-5">
+            <div class="sm:flex sm:items-center sm:justify-between text-sm text-gray-600">
+                <span>© 2026 <span class="font-semibold text-gray-600">Boston College</span> TA Buzz</span>
+                <span class="mt-2 sm:mt-0">140 Commonwealth Avenue, Chestnut Hill, MA 02467</span>
             </div>
         </div>
     </footer>

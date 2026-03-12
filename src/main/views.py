@@ -124,11 +124,10 @@ def admin_dashboard_v2(request):
 
 @login_required
 def applications_list_v2(request):
-    # Professors see only applications for their courses (even if also superuser)
-    if request.user.is_professor:
-        apps = Application.objects.filter(course__professor=request.user).select_related('student', 'course').order_by('-id')
-    elif request.user.is_superuser:
+    if request.user.is_superuser:
         apps = Application.objects.select_related('student', 'course').order_by('-id')
+    elif request.user.is_professor:
+        apps = Application.objects.filter(course__professor=request.user).select_related('student', 'course').order_by('-id')
     else:
         apps = Application.objects.filter(student=request.user).select_related('student', 'course').order_by('-id')
     return render(request, 'applications_v2.html', {'apps': apps})

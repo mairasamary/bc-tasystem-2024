@@ -1,10 +1,10 @@
-{% extends 'base_v2.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Dashboard - TA Buzz{% endblock %}
 
 {% block breadcrumb %}
 <nav class="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
-    <a href="{% url 'dashboard_v2' %}" class="hover:text-bc-maroon transition-colors">Home</a>
+    <a href="{% url 'dashboard' %}" class="hover:text-bc-maroon transition-colors">Home</a>
     <span class="mx-1.5">/</span>
     <span class="text-gray-800 font-medium">Dashboard</span>
 </nav>
@@ -46,7 +46,7 @@
     <div class="card-pro rounded-xl overflow-hidden border border-gray-200/80 shadow-sm">
         <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center bg-white">
             <h2 class="text-sm font-bold text-gray-900">Recent pending applications</h2>
-            <a href="{% url 'applications_v2' %}" class="text-xs font-medium text-bc-maroon hover:underline">View all</a>
+            <a href="{% url 'applications' %}" class="text-xs font-medium text-bc-maroon hover:underline">View all</a>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
@@ -62,7 +62,7 @@
                     <tr class="bg-white hover:bg-gray-50/50 transition-colors">
                         <td class="px-6 py-4 font-medium text-gray-900">{{ app.student.get_full_name }}</td>
                         <td class="px-6 py-4 text-gray-600">{{ app.course.course }}</td>
-                        <td class="px-6 py-4 text-right"><a href="{% url 'application_detail_v2' app.id %}" class="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">Review</a></td>
+                        <td class="px-6 py-4 text-right"><a href="{% url 'application_detail' app.id %}" class="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">Review</a></td>
                     </tr>
                     {% empty %}
                     <tr><td colspan="3" class="px-6 py-8 text-center">
@@ -81,7 +81,7 @@
     <div class="card-pro rounded-xl overflow-hidden border border-gray-200/80 shadow-sm">
         <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center bg-white">
             <h2 class="text-sm font-bold text-gray-900">Recent offers</h2>
-            <a href="{% url 'offers_v2' %}" class="text-xs font-medium text-bc-maroon hover:underline">View all</a>
+            <a href="{% url 'offers' %}" class="text-xs font-medium text-bc-maroon hover:underline">View all</a>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">

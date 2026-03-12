@@ -1,10 +1,10 @@
-{% extends 'base_v2.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Applications - TA Buzz{% endblock %}
 
 {% block breadcrumb %}
 <nav class="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
-    <a href="{% url 'dashboard_v2' %}" class="hover:text-bc-maroon transition-colors">Home</a>
+    <a href="{% url 'dashboard' %}" class="hover:text-bc-maroon transition-colors">Home</a>
     <span class="mx-1.5">/</span>
     <span class="text-gray-800 font-medium">Applications</span>
 </nav>
@@ -49,16 +49,16 @@
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center justify-end gap-2 flex-wrap">
-                            <a href="{% url 'application_detail_v2' app.id %}" class="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">View details</a>
+                            <a href="{% url 'application_detail' app.id %}" class="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">View details</a>
                             {% if user.is_professor and app.get_status == 'PENDING' or user.is_superuser and app.get_status == 'PENDING' %}
-                            <form action="{% url 'make_offer_v2' app.id %}" method="POST" class="inline">
+                            <form action="{% url 'make_offer' app.id %}" method="POST" class="inline">
                                 {% csrf_token %}
                                 <button type="submit" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-bc-navy hover:bg-bc-navy-600 active:bg-bc-navy-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-bc-navy-400 focus:ring-offset-2">Make offer</button>
                             </form>
                             {% endif %}
                             {% if user == app.student and app.get_status == 'PENDING' or user == app.student and app.get_status == 'ACCEPTED' %}
-                            <a href="{% url 'edit_application_v2' app.id %}" class="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">Edit</a>
-                            <form action="{% url 'withdraw_application_v2' app.id %}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to withdraw this application?');">
+                            <a href="{% url 'edit_application' app.id %}" class="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">Edit</a>
+                            <form action="{% url 'withdraw_application' app.id %}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to withdraw this application?');">
                                 {% csrf_token %}
                                 <button type="submit" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:ring-offset-2 border border-transparent hover:border-red-200">Withdraw</button>
                             </form>

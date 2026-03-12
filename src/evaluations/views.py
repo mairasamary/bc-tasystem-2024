@@ -17,7 +17,7 @@ def _professor_required(view_func):
             return redirect("users:login")
         if not (request.user.is_professor or request.user.is_superuser):
             messages.error(request, "Only professors can access TA evaluations.")
-            return redirect("dashboard_v2")
+            return redirect("dashboard")
         return view_func(request, *args, **kwargs)
     return wrapped
 

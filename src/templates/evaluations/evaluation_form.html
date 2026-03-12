@@ -1,10 +1,10 @@
-{% extends 'base_v2.html' %}
+{% extends 'base.html' %}
 
 {% block title %}{% if is_edit %}Edit{% else %}New{% endif %} TA Evaluation - TA Buzz{% endblock %}
 
 {% block breadcrumb %}
 <nav class="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
-    <a href="{% url 'dashboard_v2' %}" class="hover:text-bc-maroon transition-colors">Home</a>
+    <a href="{% url 'dashboard' %}" class="hover:text-bc-maroon transition-colors">Home</a>
     <span class="mx-1.5">/</span>
     <a href="{% url 'evaluations:list' %}" class="hover:text-bc-maroon transition-colors">Evaluations</a>
     <span class="mx-1.5">/</span>
@@ -173,7 +173,7 @@
 
     <div class="mt-8 flex gap-4">
         <button type="submit"
-            class="px-6 py-2.5 bg-gradient-to-r from-bc-maroon to-bc-maroon-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all">
+            class="px-6 py-2.5 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all border-0 bg-bc-maroon hover:bg-bc-maroon-700 focus:ring-2 focus:ring-bc-maroon-400 focus:ring-offset-2">
             {% if is_edit %}Update{% else %}Submit{% endif %} Evaluation
         </button>
         <a href="{% url 'evaluations:list' %}"

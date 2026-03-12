@@ -1,10 +1,10 @@
-{% extends 'base_v2.html' %}
+{% extends 'base.html' %}
 
 {% block title %}TA Evaluations - TA Buzz{% endblock %}
 
 {% block breadcrumb %}
 <nav class="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
-    <a href="{% url 'dashboard_v2' %}" class="hover:text-bc-maroon transition-colors">Home</a>
+    <a href="{% url 'dashboard' %}" class="hover:text-bc-maroon transition-colors">Home</a>
     <span class="mx-1.5">/</span>
     <span class="text-gray-800 font-medium">Evaluations</span>
 </nav>
@@ -35,7 +35,7 @@
     </form>
     <span class="flex-1 min-w-4"></span>
     <a href="{% url 'evaluations:create' %}"
-        class="inline-flex items-center gap-2 h-11 px-5 py-2.5 text-sm font-medium text-white bg-bc-maroon rounded-lg hover:bg-bc-maroon-700 transition-colors flex-shrink-0 no-underline whitespace-nowrap">
+        class="inline-flex items-center gap-2 h-11 px-5 py-2.5 text-sm font-medium text-white flex-shrink-0 no-underline whitespace-nowrap rounded-lg shadow-md hover:shadow-lg transition-all border-0 bg-bc-maroon hover:bg-bc-maroon-700 focus:ring-2 focus:ring-bc-maroon-400 focus:ring-offset-2">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>

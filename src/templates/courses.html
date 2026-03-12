@@ -1,10 +1,10 @@
-{% extends 'base_v2.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Courses - TA Buzz{% endblock %}
 
 {% block breadcrumb %}
 <nav class="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
-    <a href="{% url 'dashboard_v2' %}" class="hover:text-bc-maroon transition-colors">Home</a>
+    <a href="{% url 'dashboard' %}" class="hover:text-bc-maroon transition-colors">Home</a>
     <span class="mx-1.5">/</span>
     <span class="text-gray-800 font-medium">Courses</span>
 </nav>
@@ -16,7 +16,7 @@
     <p class="mt-1 text-gray-500 text-sm">Browse and apply to TA positions</p>
 </div>
 <div class="mb-6">
-    <form method="GET" action="{% url 'courses_v2' %}" id="courses-filter-form">
+    <form method="GET" action="{% url 'courses' %}" id="courses-filter-form">
         <div class="flex flex-col gap-4">
             <div class="flex flex-wrap items-center gap-3">
                 <div class="relative flex-shrink-0">
@@ -30,6 +30,7 @@
                         placeholder="Search courses...">
                 </div>
                 <div class="relative flex items-center gap-0 flex-shrink-0" id="add-filter-wrap">
+                    <input type="hidden" name="term" id="form-term" value="{{ request.GET.term|default:'' }}">
                     <input type="hidden" name="professor" id="form-professor" value="{{ request.GET.professor|default:'' }}">
                     <input type="hidden" name="status" id="form-status" value="{{ request.GET.status|default:'' }}">
                     <input type="hidden" name="class_type" id="form-class_type" value="{{ request.GET.class_type|default:'' }}">
@@ -39,6 +40,14 @@
                         Add filter
                         <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
+                    <div id="term-panel-template" class="hidden">
+                        <select id="filter-panel-select" class="block w-full h-10 px-3 text-sm text-gray-900 border border-gray-300 rounded-lg bg-white focus:ring-bc-maroon focus:border-bc-maroon">
+                            <option value="">All terms</option>
+                            {% for t in terms %}
+                            <option value="{{ t }}" {% if request.GET.term == t %}selected{% endif %}>{{ t }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                     <div id="professor-panel-template" class="hidden">
                         <select id="filter-panel-select" class="block w-full h-10 px-3 text-sm text-gray-900 border border-gray-300 rounded-lg bg-white focus:ring-bc-maroon focus:border-bc-maroon">
                             <option value="">All professors</option>
@@ -49,6 +58,10 @@
                     </div>
                     <div class="hidden absolute left-0 top-full z-20 mt-1 flex border border-gray-200 rounded-lg shadow-lg ring-1 ring-black/5 overflow-hidden bg-white" id="filter-popover">
                         <div id="filter-dropdown" class="w-56 py-1 flex-shrink-0" role="menu">
+                            <button type="button" class="filter-option flex w-full items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-100" data-filter="term" role="menuitem">
+                                <span>Term</span>
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
                             <button type="button" class="filter-option flex w-full items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-100" data-filter="professor" role="menuitem">
                                 <span>Professor</span>
                                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
@@ -78,15 +91,22 @@
                 <span class="flex-1 min-w-4"></span>
                 {% if user.is_superuser %}
                 <div class="flex items-center gap-3 flex-shrink-0">
-                    <a href="{% url 'upload_courses_v2' %}"
+                    <a href="{% url 'export_schedule' %}?{{ request.GET.urlencode }}"
                         class="inline-flex items-center gap-2 h-11 px-5 text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 hover:border-bc-maroon focus:ring-4 focus:ring-gray-100 font-semibold text-sm focus:outline-none transition-all shadow-sm hover:shadow-md no-underline whitespace-nowrap">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        Export Schedule
+                    </a>
+                    <a href="{% url 'upload_courses' %}"
+                        class="inline-flex items-center gap-2 h-11 px-5 py-2.5 text-white font-medium text-sm no-underline whitespace-nowrap rounded-lg shadow-md hover:shadow-lg transition-all border-0 bg-bc-maroon hover:bg-bc-maroon-700 focus:ring-2 focus:ring-bc-maroon-400 focus:ring-offset-2">
                         <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
                         </svg>
                         Upload Courses
                     </a>
-                    <a href="{% url 'create_course_v2' %}"
-                        class="inline-flex items-center gap-2 h-11 px-5 py-2.5 text-white bg-bc-maroon rounded-lg hover:bg-bc-maroon-700 font-medium text-sm no-underline whitespace-nowrap">
+                    <a href="{% url 'create_course' %}"
+                        class="inline-flex items-center gap-2 h-11 px-5 py-2.5 text-white font-medium text-sm no-underline whitespace-nowrap rounded-lg shadow-md hover:shadow-lg transition-all border-0 bg-bc-maroon hover:bg-bc-maroon-700 focus:ring-2 focus:ring-bc-maroon-400 focus:ring-offset-2">
                         <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>
@@ -95,26 +115,31 @@
                 </div>
                 {% endif %}
             </div>
-            {% if request.GET.professor or request.GET.status or request.GET.class_type or request.GET.course_level %}
+            {% if request.GET.term or request.GET.professor or request.GET.status or request.GET.class_type or request.GET.course_level %}
             <div class="flex flex-wrap items-center gap-3 pt-1 border-t border-gray-100">
                 <span class="text-sm text-gray-500 mr-1">Active filters:</span>
+                {% if request.GET.term %}
+                <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.professor %}professor={{ request.GET.professor }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.class_type %}class_type={{ request.GET.class_type }}&{% endif %}{% if request.GET.course_level %}course_level={{ request.GET.course_level }}&{% endif %}{% if request.GET.per_page %}per_page={{ request.GET.per_page }}{% endif %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors">
+                    Term: {{ request.GET.term }} <span aria-hidden="true" class="ml-0.5">&times;</span>
+                </a>
+                {% endif %}
                 {% if request.GET.professor %}
-                <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.class_type %}class_type={{ request.GET.class_type }}&{% endif %}{% if request.GET.course_level %}course_level={{ request.GET.course_level }}&{% endif %}{% if request.GET.per_page %}per_page={{ request.GET.per_page }}{% endif %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors">
+                <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.term %}term={{ request.GET.term }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.class_type %}class_type={{ request.GET.class_type }}&{% endif %}{% if request.GET.course_level %}course_level={{ request.GET.course_level }}&{% endif %}{% if request.GET.per_page %}per_page={{ request.GET.per_page }}{% endif %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors">
                     Professor: {% for p in professors %}{% if request.GET.professor == p.id|stringformat:"s" %}{{ p.get_full_name|default:p.email }}{% endif %}{% endfor %} <span aria-hidden="true" class="ml-0.5">&times;</span>
                 </a>
                 {% endif %}
                 {% if request.GET.status %}
-                <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.professor %}professor={{ request.GET.professor }}&{% endif %}{% if request.GET.class_type %}class_type={{ request.GET.class_type }}&{% endif %}{% if request.GET.course_level %}course_level={{ request.GET.course_level }}&{% endif %}{% if request.GET.per_page %}per_page={{ request.GET.per_page }}{% endif %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors">
+                <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.term %}term={{ request.GET.term }}&{% endif %}{% if request.GET.professor %}professor={{ request.GET.professor }}&{% endif %}{% if request.GET.class_type %}class_type={{ request.GET.class_type }}&{% endif %}{% if request.GET.course_level %}course_level={{ request.GET.course_level }}&{% endif %}{% if request.GET.per_page %}per_page={{ request.GET.per_page }}{% endif %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors">
                     Status: {{ request.GET.status|capfirst }} <span aria-hidden="true" class="ml-0.5">&times;</span>
                 </a>
                 {% endif %}
                 {% if request.GET.class_type %}
-                <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.professor %}professor={{ request.GET.professor }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.course_level %}course_level={{ request.GET.course_level }}&{% endif %}{% if request.GET.per_page %}per_page={{ request.GET.per_page }}{% endif %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors">
+                <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.term %}term={{ request.GET.term }}&{% endif %}{% if request.GET.professor %}professor={{ request.GET.professor }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.course_level %}course_level={{ request.GET.course_level }}&{% endif %}{% if request.GET.per_page %}per_page={{ request.GET.per_page }}{% endif %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors">
                     Type: {{ request.GET.class_type }} <span aria-hidden="true" class="ml-0.5">&times;</span>
                 </a>
                 {% endif %}
                 {% if request.GET.course_level %}
-                <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.professor %}professor={{ request.GET.professor }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.class_type %}class_type={{ request.GET.class_type }}&{% endif %}{% if request.GET.per_page %}per_page={{ request.GET.per_page }}{% endif %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors">
+                <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.term %}term={{ request.GET.term }}&{% endif %}{% if request.GET.professor %}professor={{ request.GET.professor }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.class_type %}class_type={{ request.GET.class_type }}&{% endif %}{% if request.GET.per_page %}per_page={{ request.GET.per_page }}{% endif %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors">
                     Level: {{ request.GET.course_level }}000-level <span aria-hidden="true" class="ml-0.5">&times;</span>
                 </a>
                 {% endif %}
@@ -126,6 +151,153 @@
         </div>
     </form>
 </div>
+
+{% if user.is_superuser and course_stats %}
+<div class="mb-6 space-y-6" aria-label="Course dashboard">
+    <button type="button" id="dashboard-charts-toggle" aria-expanded="true" aria-controls="dashboard-charts"
+        class="w-full flex items-center gap-1.5 py-1 -mb-1 text-left text-xs font-medium text-gray-500 hover:text-gray-700 focus:outline-none focus:text-bc-maroon transition-colors">
+        <svg id="dashboard-charts-toggle-icon" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        <span id="dashboard-charts-toggle-text">Charts</span>
+    </button>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Total courses</p>
+            <p class="mt-1 text-2xl font-bold text-gray-900">{{ course_stats.total_courses }}</p>
+        </div>
+        <a href="{% if staffing_filter == 'understaffed' %}{{ staffing_filter_urls.clear }}{% else %}{{ staffing_filter_urls.understaffed }}{% endif %}" class="rounded-xl border-2 p-4 shadow-sm block no-underline transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-bc-maroon focus:ring-offset-2 {% if staffing_filter == 'understaffed' %}border-bc-maroon ring-2 ring-bc-maroon/30 bg-amber-50{% else %}border-amber-200 bg-amber-50/50 hover:border-amber-300{% endif %}" title="{% if staffing_filter == 'understaffed' %}Click to clear filter{% else %}Filter table by understaffed courses{% endif %}">
+            <p class="text-xs font-semibold uppercase tracking-wider text-amber-700">Need more TAs</p>
+            <p class="mt-1 text-2xl font-bold text-amber-800">{{ course_stats.understaffed }}</p>
+            <p class="text-xs text-amber-600 mt-0.5">understaffed</p>
+        </a>
+        <a href="{% if staffing_filter == 'no_tas' %}{{ staffing_filter_urls.clear }}{% else %}{{ staffing_filter_urls.no_tas }}{% endif %}" class="rounded-xl border-2 p-4 shadow-sm block no-underline transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-bc-maroon focus:ring-offset-2 {% if staffing_filter == 'no_tas' %}border-bc-maroon ring-2 ring-bc-maroon/30 bg-orange-50{% else %}border-orange-200 bg-orange-50/50 hover:border-orange-300{% endif %}" {% if staffing_filter == 'no_tas' %}title="Click to clear filter"{% endif %}>
+            <p class="text-xs font-semibold uppercase tracking-wider text-orange-700">No TAs yet</p>
+            <p class="mt-1 text-2xl font-bold text-orange-800">{{ course_stats.no_tas_yet }}</p>
+        </a>
+        <a href="{% if staffing_filter == 'fully_staffed' %}{{ staffing_filter_urls.clear }}{% else %}{{ staffing_filter_urls.fully_staffed }}{% endif %}" class="rounded-xl border-2 p-4 shadow-sm block no-underline transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-bc-maroon focus:ring-offset-2 {% if staffing_filter == 'fully_staffed' %}border-bc-maroon ring-2 ring-bc-maroon/30 bg-emerald-50{% else %}border-emerald-200 bg-emerald-50/50 hover:border-emerald-300{% endif %}" {% if staffing_filter == 'fully_staffed' %}title="Click to clear filter"{% endif %}>
+            <p class="text-xs font-semibold uppercase tracking-wider text-emerald-700">Fully staffed</p>
+            <p class="mt-1 text-2xl font-bold text-emerald-800">{{ course_stats.fully_staffed }}</p>
+        </a>
+        <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">TA slots</p>
+            <p class="mt-1 text-2xl font-bold text-gray-900">{{ course_stats.filled_ta_slots }}<span class="text-lg font-medium text-gray-500">/{{ course_stats.total_ta_slots }}</span></p>
+            <p class="text-xs text-gray-500">filled / total</p>
+        </div>
+    </div>
+
+    <div id="dashboard-charts" class="grid grid-cols-1 lg:grid-cols-3 gap-6 transition-all duration-200">
+        {% if understaffed_by_professor and not request.GET.professor %}
+        <div class="lg:col-span-1 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <h3 class="text-sm font-semibold text-gray-700 mb-4">Understaffed by professor</h3>
+            <div class="overflow-auto max-h-56 min-h-[8rem]">
+                <div class="relative min-w-0" style="height: {% widthratio understaffed_by_professor|length 1 32 %}px; min-height: 200px;">
+                    <canvas id="chart-by-professor" aria-label="Understaffed course count by professor"></canvas>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% if courses_needing_tas %}
+        <div class="{% if request.GET.professor %}lg:col-span-3{% else %}lg:col-span-2{% endif %} rounded-xl border border-amber-200 bg-amber-50/30 p-5 shadow-sm">
+            <h3 class="text-sm font-semibold text-amber-800 mb-3">Courses needing TAs</h3>
+            <div class="overflow-x-auto max-h-56 overflow-y-auto">
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="text-left text-gray-500 border-b border-amber-200/60">
+                            <th class="pb-2 pr-2 font-medium">Course</th>
+                            <th class="pb-2 pr-2 font-medium">Professor</th>
+                            <th class="pb-2 pr-2 font-medium text-center">TAs</th>
+                            <th class="pb-2 font-medium"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in courses_needing_tas %}
+                        <tr class="border-b border-amber-100/80 hover:bg-amber-50/50">
+                            <td class="py-1.5 pr-2"><span class="font-medium text-gray-900">{{ c.course }}</span> {{ c.section }}</td>
+                            <td class="py-1.5 pr-2 text-gray-600">{{ c.professor_name }}</td>
+                            <td class="py-1.5 pr-2 text-center"><span class="text-amber-700 font-medium">{{ c.ta_count }}/{{ c.num_tas }}</span></td>
+                            <td class="py-1.5"><a href="{% url 'course_overview' c.id %}" class="text-bc-maroon hover:underline font-medium">Manage</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% if staffing_filter and user.is_superuser %}
+    <p class="text-xs text-gray-500 mt-2">
+        Table filtered by staffing: <strong>{{ staffing_filter }}</strong>
+        <a href="{{ staffing_filter_urls.clear }}" class="ml-2 text-bc-maroon hover:underline">Clear filter</a>
+    </p>
+    {% endif %}
+</div>
+{{ understaffed_by_professor|json_script:"by-professor-data" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+    var STORAGE_KEY = 'courses_dashboard_charts_visible';
+    var chartsEl = document.getElementById('dashboard-charts');
+    var toggleBtn = document.getElementById('dashboard-charts-toggle');
+    var toggleIcon = document.getElementById('dashboard-charts-toggle-icon');
+
+    function setChartsVisible(visible) {
+        if (!chartsEl || !toggleBtn) return;
+        chartsEl.style.display = visible ? '' : 'none';
+        toggleBtn.setAttribute('aria-expanded', visible ? 'true' : 'false');
+        if (toggleIcon) {
+            toggleIcon.innerHTML = visible
+                ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>'
+                : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>';
+        }
+        try { localStorage.setItem(STORAGE_KEY, visible ? '1' : '0'); } catch (e) {}
+    }
+
+    var saved = null;
+    try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+    var startVisible = saved !== '0';
+    setChartsVisible(startVisible);
+
+    if (toggleBtn) toggleBtn.addEventListener('click', function() {
+        var visible = chartsEl.style.display === 'none';
+        setChartsVisible(visible);
+    });
+
+    var byProfessorEl = document.getElementById('chart-by-professor');
+    if (byProfessorEl) {
+        var byProfessor = [];
+        try {
+            var dataEl = document.getElementById('by-professor-data');
+            if (dataEl) byProfessor = JSON.parse(dataEl.textContent);
+        } catch (e) {}
+        if (byProfessor.length) {
+            new Chart(byProfessorEl, {
+                type: 'bar',
+                data: {
+                    labels: byProfessor.map(function(p) { return p.name || '—'; }),
+                    datasets: [{ label: 'Understaffed courses', data: byProfessor.map(function(p) { return p.count; }), backgroundColor: '#f59e0b' }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { stepSize: 1 } },
+                        y: {
+                            ticks: {
+                                autoSkip: false,
+                                font: { size: 11 },
+                                maxRotation: 0,
+                                minRotation: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+})();
+</script>
+{% endif %}
 
 <div class="card-pro rounded-xl overflow-hidden border border-gray-200/80 shadow-sm animate-fade-in">
     <div class="min-w-0 overflow-x-auto">
@@ -147,7 +319,7 @@
                 <tr class="bg-white hover:bg-gray-50/50 transition-colors">
                     <td class="pl-3 pr-2 py-2.5 align-middle text-left">
                         <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0">
-                            <a href="{% url 'course_overview_v2' course.id %}" class="inline-flex flex-wrap items-baseline gap-x-1.5 text-bc-maroon hover:text-bc-maroon-700 hover:underline min-w-0">
+                            <a href="{% url 'course_overview' course.id %}" class="inline-flex flex-wrap items-baseline gap-x-1.5 text-bc-maroon hover:text-bc-maroon-700 hover:underline min-w-0">
                                 <span class="text-sm font-bold">{{ course.course }}</span>
                                 <span class="text-xs text-gray-500">{{ course.course_title }}</span>
                             </a>
@@ -220,7 +392,7 @@
                     </td>
                     <td class="pl-2 pr-3 py-2.5 align-middle text-left">
                         {% if user.is_superuser or user.is_professor %}
-                        <a href="{% url 'edit_course_v2' course.id %}"
+                        <a href="{% url 'edit_course' course.id %}"
                             class="inline-block text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded py-1 leading-none">
                             Manage
                         </a>
@@ -238,7 +410,7 @@
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
                         </span>
                         {% else %}
-                        <a href="{% url 'apply_to_course_v2' course.id %}"
+                        <a href="{% url 'apply_to_course' course.id %}"
                             class="text-white bg-bc-maroon hover:bg-bc-maroon-800 font-medium text-xs inline-flex items-center gap-1 px-2.5 py-1.5 rounded">
                             Apply
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
@@ -267,13 +439,13 @@
     <div class="flex flex-col gap-3 border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
         <div class="flex flex-1 justify-between sm:hidden">
             {% if page.has_previous %}
-            <a href="{% url 'courses_v2' %}{% if query_string %}?{{ query_string }}&{% else %}?{% endif %}page={{ page.previous_page_number }}"
+            <a href="{% url 'courses' %}{% if query_string %}?{{ query_string }}&{% else %}?{% endif %}page={{ page.previous_page_number }}"
                 class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Previous</a>
             {% else %}
             <span class="inline-flex items-center rounded-md border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-400 cursor-not-allowed">Previous</span>
             {% endif %}
             {% if page.has_next %}
-            <a href="{% url 'courses_v2' %}{% if query_string %}?{{ query_string }}&{% else %}?{% endif %}page={{ page.next_page_number }}"
+            <a href="{% url 'courses' %}{% if query_string %}?{{ query_string }}&{% else %}?{% endif %}page={{ page.next_page_number }}"
                 class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Next</a>
             {% else %}
             <span class="inline-flex items-center rounded-md border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-400 cursor-not-allowed ml-3">Next</span>
@@ -283,6 +455,7 @@
             <div class="flex flex-wrap items-center gap-3">
                 <form method="GET" class="inline-flex items-center gap-2" id="per-page-form">
                     {% if request.GET.q %}<input type="hidden" name="q" value="{{ request.GET.q }}">{% endif %}
+                    {% if request.GET.term %}<input type="hidden" name="term" value="{{ request.GET.term }}">{% endif %}
                     {% if request.GET.professor %}<input type="hidden" name="professor" value="{{ request.GET.professor }}">{% endif %}
                     {% if request.GET.status %}<input type="hidden" name="status" value="{{ request.GET.status }}">{% endif %}
                     {% if request.GET.class_type %}<input type="hidden" name="class_type" value="{{ request.GET.class_type }}">{% endif %}
@@ -303,7 +476,7 @@
             <div class="mt-2 sm:mt-0">
                 <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
                     {% if page.has_previous %}
-                    <a href="{% url 'courses_v2' %}{% if query_string %}?{{ query_string }}&{% else %}?{% endif %}page={{ page.previous_page_number }}"
+                    <a href="{% url 'courses' %}{% if query_string %}?{{ query_string }}&{% else %}?{% endif %}page={{ page.previous_page_number }}"
                         class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
                         <span class="sr-only">Previous</span>
                         <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -321,12 +494,12 @@
                     {% if page.number == num %}
                     <span aria-current="page" class="relative z-10 inline-flex items-center bg-gradient-to-r from-bc-maroon to-bc-maroon-700 px-4 py-2 text-sm font-semibold text-white focus:z-20 shadow-md">{{ num }}</span>
                     {% else %}
-                    <a href="{% url 'courses_v2' %}{% if query_string %}?{{ query_string }}&{% else %}?{% endif %}page={{ num }}"
+                    <a href="{% url 'courses' %}{% if query_string %}?{{ query_string }}&{% else %}?{% endif %}page={{ num }}"
                         class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">{{ num }}</a>
                     {% endif %}
                     {% endfor %}
                     {% if page.has_next %}
-                    <a href="{% url 'courses_v2' %}{% if query_string %}?{{ query_string }}&{% else %}?{% endif %}page={{ page.next_page_number }}"
+                    <a href="{% url 'courses' %}{% if query_string %}?{{ query_string }}&{% else %}?{% endif %}page={{ page.next_page_number }}"
                         class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
                         <span class="sr-only">Next</span>
                         <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -348,6 +521,7 @@
     <div class="flex flex-wrap items-center gap-3 border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
         <form method="GET" class="inline-flex items-center gap-2">
             {% if request.GET.q %}<input type="hidden" name="q" value="{{ request.GET.q }}">{% endif %}
+            {% if request.GET.term %}<input type="hidden" name="term" value="{{ request.GET.term }}">{% endif %}
             {% if request.GET.professor %}<input type="hidden" name="professor" value="{{ request.GET.professor }}">{% endif %}
             {% if request.GET.status %}<input type="hidden" name="status" value="{{ request.GET.status }}">{% endif %}
             {% if request.GET.class_type %}<input type="hidden" name="class_type" value="{{ request.GET.class_type }}">{% endif %}
@@ -388,6 +562,11 @@ document.querySelectorAll('.ta-fill-bar').forEach(function(el) {
     var form = addBtn && addBtn.closest('form');
 
     var panelConfig = {
+        term: {
+            title: 'Term',
+            templateId: 'term-panel-template',
+            name: 'term'
+        },
         professor: {
             title: 'Professor',
             templateId: 'professor-panel-template',
@@ -486,7 +665,7 @@ document.querySelectorAll('.ta-fill-bar').forEach(function(el) {
         var params = new URLSearchParams();
         var qInput = form.querySelector('input[name=q]');
         if (qInput && qInput.value) params.set('q', qInput.value.trim());
-        ['professor', 'status', 'class_type', 'course_level'].forEach(function(name) {
+        ['term', 'professor', 'status', 'class_type', 'course_level'].forEach(function(name) {
             var el = document.getElementById('form-' + name);
             if (el && el.value) params.set(name, el.value);
         });

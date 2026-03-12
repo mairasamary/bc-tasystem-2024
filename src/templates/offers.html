@@ -1,10 +1,10 @@
-{% extends 'base_v2.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Offers - TA Buzz{% endblock %}
 
 {% block breadcrumb %}
 <nav class="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
-    <a href="{% url 'dashboard_v2' %}" class="hover:text-bc-maroon transition-colors">Home</a>
+    <a href="{% url 'dashboard' %}" class="hover:text-bc-maroon transition-colors">Home</a>
     <span class="mx-1.5">/</span>
     <span class="text-gray-800 font-medium">Offers</span>
 </nav>
@@ -48,16 +48,16 @@
                     <td class="px-6 py-4">
                         <div class="flex items-center justify-end gap-2 flex-wrap">
                             {% if user == offer.recipient and offer.get_status == 'PENDING' %}
-                            <form action="{% url 'accept_offer_v2' offer.id %}" method="POST" class="inline">
+                            <form action="{% url 'accept_offer' offer.id %}" method="POST" class="inline">
                                 {% csrf_token %}
                                 <button type="submit" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-bc-navy hover:bg-bc-navy-600 active:bg-bc-navy-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-bc-navy-400 focus:ring-offset-2">Accept</button>
                             </form>
-                            <form action="{% url 'decline_offer_v2' offer.id %}" method="POST" class="inline">
+                            <form action="{% url 'decline_offer' offer.id %}" method="POST" class="inline">
                                 {% csrf_token %}
                                 <button type="submit" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:ring-offset-2 border border-transparent hover:border-red-200">Decline</button>
                             </form>
                             {% else %}
-                            <a href="{% url 'application_detail_v2' offer.application.id %}" class="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">View details</a>
+                            <a href="{% url 'application_detail' offer.application.id %}" class="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">View details</a>
                             {% endif %}
                         </div>
                     </td>

@@ -1,12 +1,12 @@
-{% extends 'base_v2.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Application Details - TA Buzz{% endblock %}
 
 {% block breadcrumb %}
 <nav class="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
-    <a href="{% url 'dashboard_v2' %}" class="hover:text-bc-maroon transition-colors">Home</a>
+    <a href="{% url 'dashboard' %}" class="hover:text-bc-maroon transition-colors">Home</a>
     <span class="mx-1.5">/</span>
-    <a href="{% url 'applications_v2' %}" class="hover:text-bc-maroon transition-colors">Applications</a>
+    <a href="{% url 'applications' %}" class="hover:text-bc-maroon transition-colors">Applications</a>
     <span class="mx-1.5">/</span>
     <span class="text-gray-800 font-medium">Application Details</span>
 </nav>
@@ -33,19 +33,19 @@
             {% if app.get_status == 'WITHDRAWN' and app.withdrawal_reason %}
             <p class="mt-2 text-sm text-gray-500">{{ app.withdrawal_reason }}</p>
             {% endif %}
-            <p class="mt-2 text-lg text-gray-600">Applying for <a href="{% url 'course_overview_v2' app.course.id %}" class="font-semibold text-bc-maroon hover:text-bc-maroon-700 hover:underline">{{ app.course.course }} - {{ app.course.course_title }}</a></p>
+            <p class="mt-2 text-lg text-gray-600">Applying for <a href="{% url 'course_overview' app.course.id %}" class="font-semibold text-bc-maroon hover:text-bc-maroon-700 hover:underline">{{ app.course.course }} - {{ app.course.course_title }}</a></p>
         </div>
 
         {% if user.is_professor and app.get_status == 'PENDING' or user.is_superuser and app.get_status == 'PENDING' %}
         <div class="flex items-center gap-2">
-            <form action="{% url 'make_offer_v2' app.id %}" method="POST">
+            <form action="{% url 'make_offer' app.id %}" method="POST">
                 {% csrf_token %}
                 <button type="submit"
                     class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-white bg-bc-navy hover:bg-bc-navy-600 active:bg-bc-navy-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-bc-navy-400 focus:ring-offset-2">
                     Make offer
                 </button>
             </form>
-            <form action="{% url 'reject_application_v2' app.id %}" method="POST"
+            <form action="{% url 'reject_application' app.id %}" method="POST"
                 onsubmit="return confirm('Are you sure you want to reject this application?');">
                 {% csrf_token %}
                 <button type="submit"
@@ -58,11 +58,11 @@
         {% if user == app.student %}
         {% if app.get_status == 'PENDING' or app.get_status == 'ACCEPTED' %}
         <div class="flex items-center gap-2">
-            <a href="{% url 'edit_application_v2' app.id %}"
+            <a href="{% url 'edit_application' app.id %}"
                 class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-white bg-bc-navy hover:bg-bc-navy-600 active:bg-bc-navy-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-bc-navy-400 focus:ring-offset-2">
                 Edit application
             </a>
-            <form action="{% url 'withdraw_application_v2' app.id %}" method="POST"
+            <form action="{% url 'withdraw_application' app.id %}" method="POST"
                 onsubmit="return confirm('Are you sure you want to withdraw this application?');">
                 {% csrf_token %}
                 <button type="submit"

@@ -1,10 +1,10 @@
-{% extends 'base_v2.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Dashboard - TA Buzz{% endblock %}
 
 {% block breadcrumb %}
 <nav class="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
-    <a href="{% url 'dashboard_v2' %}" class="hover:text-bc-maroon transition-colors">Home</a>
+    <a href="{% url 'dashboard' %}" class="hover:text-bc-maroon transition-colors">Home</a>
     <span class="mx-1.5">/</span>
     <span class="text-gray-800 font-medium">Dashboard</span>
 </nav>
@@ -61,7 +61,7 @@
         {% if applications_active_this_term >= 5 or has_accepted_offer_this_term %}
         <span class="text-xs text-gray-400">Browse Courses</span>
         {% else %}
-        <a href="{% url 'courses_v2' %}" class="text-xs font-medium text-bc-maroon hover:underline">View all</a>
+        <a href="{% url 'courses' %}" class="text-xs font-medium text-bc-maroon hover:underline">View all</a>
         {% endif %}
     </div>
     <div class="overflow-x-auto">
@@ -92,7 +92,7 @@
                         <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 ring-1 ring-gray-200/60">{{ app.get_status }}</span>
                         {% endif %}
                     </td>
-                    <td class="px-6 py-4 text-right"><a href="{% url 'application_detail_v2' app.id %}" class="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">View</a></td>
+                    <td class="px-6 py-4 text-right"><a href="{% url 'application_detail' app.id %}" class="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">View</a></td>
                 </tr>
                 {% empty %}
                 <tr><td colspan="3" class="px-6 py-8 text-center">
@@ -112,7 +112,7 @@
 <div class="mt-6 card-pro rounded-xl overflow-hidden border border-gray-200/80 shadow-sm">
     <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center bg-white">
         <h2 class="text-sm font-bold text-gray-900">My Offers</h2>
-        <a href="{% url 'offers_v2' %}" class="text-xs font-medium text-bc-maroon hover:underline">View all</a>
+        <a href="{% url 'offers' %}" class="text-xs font-medium text-bc-maroon hover:underline">View all</a>
     </div>
     <div class="overflow-x-auto">
         <table class="w-full text-sm text-left">

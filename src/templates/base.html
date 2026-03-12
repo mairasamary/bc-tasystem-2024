@@ -1,38 +1,153 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <script src="https://apis.google.com/js/platform.js" async defer></script>
 
-    <meta name="google-signin-client_id" content="377325264298-uas94rjfinkvg8isi374m3d0kb6424t6.apps.googleusercontent.com">
-
+<head>
     <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, shrink-to-fit=no"
-    />
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}TA Buzz – Boston College{% endblock %}</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts: Lora (serif brand) + DM Sans (body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Lora:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
 
+    <!-- Tailwind CSS (Play CDN for dev) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
+                        serif: ['Lora', 'Georgia', 'serif'],
+                    },
+                    colors: {
+                        'bc-navy': {
+                            DEFAULT: '#001a44',
+                            50: '#e6eaf2',
+                            100: '#b3c0d6',
+                            200: '#8096ba',
+                            300: '#4d6c9e',
+                            400: '#1a4282',
+                            500: '#001a44',
+                            600: '#001536',
+                            700: '#001029',
+                            800: '#000b1b',
+                            900: '#00050e',
+                        },
+                        'bc-maroon': {
+                            DEFAULT: '#800000',
+                            50: '#fce8e8',
+                            100: '#f5b8b8',
+                            200: '#ed8888',
+                            300: '#e55858',
+                            400: '#c93030',
+                            500: '#800000',
+                            600: '#660000',
+                            700: '#4d0000',
+                            800: '#330000',
+                            900: '#1a0000',
+                        },
+                        'bc-gold': {
+                            DEFAULT: '#dab273',
+                            50: '#fbf6ed',
+                            100: '#f4e6cc',
+                            200: '#e8cc99',
+                            300: '#ddb366',
+                            400: '#dab273',
+                            500: '#c99a4d',
+                            600: '#a67c35',
+                            700: '#7d5d28',
+                            800: '#533e1b',
+                            900: '#2a1f0e',
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        html { overflow-y: scroll; }
+        body {
+            font-family: 'DM Sans', system-ui, sans-serif;
+            background: #f0f4f8;
+            color: #334155;
+        }
+        .font-bc-brand { font-family: 'Lora', Georgia, serif; }
+        h1, h2, h3, .font-heading { letter-spacing: -0.02em; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #e5e7eb; }
+        ::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeIn 0.25s ease-out; }
+        .card-pro {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .sidebar-link-active { background: #f3f4f6; border-left: 3px solid #800000; }
+        .form-inputs input[type="text"],
+        .form-inputs input[type="email"],
+        .form-inputs input[type="password"],
+        .form-inputs input[type="number"],
+        .form-inputs select,
+        .form-inputs textarea {
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            color: #111827;
+            background: #fff;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .form-inputs input:focus,
+        .form-inputs select:focus,
+        .form-inputs textarea:focus {
+            outline: none;
+            border-color: #001a44;
+            box-shadow: 0 0 0 2px rgba(0, 26, 68, 0.2);
+        }
+        .form-inputs input::placeholder,
+        .form-inputs textarea::placeholder { color: #9ca3af; }
+    </style>
+</head>
 
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
-
-    
-    <title>TA Buzz – Boston College</title>
-  </head>
-  <body>
+<body class="antialiased min-h-screen flex flex-col" style="background: #f0f4f8;">
     {% include "components/navbar.html" %}
-    <main role="main" class="container min-vh-100">
-        {% include "components/messages.html" %}
+
+    <main class="flex-grow w-full pt-16">
+        <div class="max-w-6xl mx-auto px-5 sm:px-6 py-8 pb-14">
+        {% if messages %}
+        <div class="mb-6 space-y-2">
+            {% for message in messages %}
+            <div class="p-3.5 text-sm rounded-md border {% if message.tags == 'error' %}bg-red-50/80 border-red-200 text-red-800{% else %}bg-emerald-50/80 border-emerald-200 text-emerald-800{% endif %}" role="alert">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block breadcrumb %}{% endblock %}
         {% block content %}
         {% endblock %}
+        </div>
     </main>
 
-    {% include "components/footer.html" %}
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <footer class="bg-gray-50 border-t border-gray-200 mt-auto">
+        <div class="max-w-6xl mx-auto px-5 py-5">
+            <div class="sm:flex sm:items-center sm:justify-between text-sm text-gray-600">
+                <span>© 2026 <span class="font-semibold text-gray-600">Boston College</span> TA Buzz</span>
+                <span class="mt-2 sm:mt-0">140 Commonwealth Avenue, Chestnut Hill, MA 02467</span>
+            </div>
+        </div>
+    </footer>
 </body>
+
 </html>

@@ -1,12 +1,12 @@
-{% extends 'base_v2.html' %}
+{% extends 'base.html' %}
 
 {% block title %}{% if is_edit %}Edit Application{% else %}Apply to {{ course.course }}{% endif %} - TA Buzz{% endblock %}
 
 {% block breadcrumb %}
 <nav class="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
-    <a href="{% url 'dashboard_v2' %}" class="hover:text-bc-maroon transition-colors">Home</a>
+    <a href="{% url 'dashboard' %}" class="hover:text-bc-maroon transition-colors">Home</a>
     <span class="mx-1.5">/</span>
-    <a href="{% if is_edit %}{% url 'applications_v2' %}{% else %}{% url 'courses_v2' %}{% endif %}" class="hover:text-bc-maroon transition-colors">{% if is_edit %}Applications{% else %}Courses{% endif %}</a>
+    <a href="{% if is_edit %}{% url 'applications' %}{% else %}{% url 'courses' %}{% endif %}" class="hover:text-bc-maroon transition-colors">{% if is_edit %}Applications{% else %}Courses{% endif %}</a>
     <span class="mx-1.5">/</span>
     <span class="text-gray-800 font-medium">{% if is_edit %}Edit{% else %}Apply{% endif %}</span>
 </nav>
@@ -72,7 +72,7 @@
                     </a>
                 </p>
                 {% else %}
-                <p class="mt-1 text-amber-600">No resume uploaded. <a href="{% url 'student_profile_v2' %}" class="underline">Complete your profile</a> first.</p>
+                <p class="mt-1 text-amber-600">No resume uploaded. <a href="{% url 'student_profile' %}" class="underline">Complete your profile</a> first.</p>
                 {% endif %}
             </div>
             <div>
@@ -142,7 +142,7 @@
 
             <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 mt-4">
                 {% if is_edit %}
-                <a href="{% url 'application_detail_v2' application.id %}"
+                <a href="{% url 'application_detail' application.id %}"
                     class="text-slate-600 hover:text-slate-900 font-medium text-sm px-4 py-2 rounded-md hover:bg-slate-100">
                     Cancel
                 </a>
@@ -151,7 +151,7 @@
                     Save changes
                 </button>
                 {% else %}
-                <a href="{% url 'courses_v2' %}"
+                <a href="{% url 'courses' %}"
                     class="text-slate-600 hover:text-slate-900 font-medium text-sm px-4 py-2 rounded-md hover:bg-slate-100">
                     Cancel
                 </a>

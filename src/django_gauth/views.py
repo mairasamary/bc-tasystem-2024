@@ -12,7 +12,7 @@ def google_login(request):
 
 def google_callback(request):
     if 'error' in request.GET:
-        return redirect('dashboard')
+        return redirect('home')
 
     if 'code' in request.GET:
         user = authenticate(request, code=request.GET.get(
@@ -21,4 +21,4 @@ def google_callback(request):
             login(request, user=user)
         else:
             messages.error(request, "You are not Authorized to Login ")
-        return redirect('dashboard')
+        return redirect('home')

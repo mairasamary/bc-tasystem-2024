@@ -14,6 +14,7 @@ from applications.models import Application, ApplicationStatus
 from applications.forms import ApplicationForm
 from offers.models import Offer, OfferStatus
 from users.models import StudentProfile, PastCourse
+from main.utils import send_notification_email
 
 User = get_user_model()
 
@@ -678,7 +679,19 @@ def make_offer_v2(request, application_id):
         app.save()
         
         messages.success(request, f"Offer sent to {app.student.get_full_name()} for {app.course.course}.")
-        
+
+        # Email notification to student
+        if app.student.email:
+            send_notification_email(
+                subject=f"TA Offer for {app.course.course}",
+                recipients=app.student.email,
+                message_lines=[
+                    f"Dear {app.student.get_full_name()},",
+                    f"Congratulations! You have received a TA offer for {app.course.course} — {app.course.course_title}.",
+                    "Please log in to TA Buzz to review and respond to this offer.",
+                ],
+            )
+
     return redirect('applications')
 
 @login_required
@@ -694,7 +707,19 @@ def reject_application_v2(request, application_id):
         app.reject()
         
         messages.success(request, f"Application for {app.student.get_full_name()} has been rejected.")
-        
+
+        # Email notification to student
+        if app.student.email:
+            send_notification_email(
+                subject=f"Application Update for {app.course.course}",
+                recipients=app.student.email,
+                message_lines=[
+                    f"Dear {app.student.get_full_name()},",
+                    f"We regret to inform you that your TA application for {app.course.course} — {app.course.course_title} has been rejected.",
+                    "You may browse and apply to other open courses on TA Buzz.",
+                ],
+            )
+
     return redirect('applications')
 
 @login_required
@@ -710,6 +735,18 @@ def withdraw_application_v2(request, application_id):
         return redirect('applications')
     app.withdraw("Withdrawn by student")
     messages.success(request, "Your application has been withdrawn.")
+
+    # Email notification to professor
+    if app.course.professor and app.course.professor.email:
+        send_notification_email(
+            subject=f"Application Withdrawn for {app.course.course}",
+            recipients=app.course.professor.email,
+            message_lines=[
+                f"Dear {app.course.professor.get_full_name()},",
+                f"{app.student.get_full_name()} has withdrawn their TA application for {app.course.course} — {app.course.course_title}.",
+            ],
+        )
+
     return redirect('applications')
 
 
@@ -780,6 +817,19 @@ def accept_offer_v2(request, offer_id):
                     status=OfferStatus.PENDING.value,
                 ).exclude(id=offer.id).update(status=OfferStatus.REJECTED.value)
         messages.success(request, f"Congratulations! You are now a TA for {offer.course.course}.")
+
+        # Email notification to professor
+        if offer.course.professor and offer.course.professor.email:
+            send_notification_email(
+                subject=f"TA Offer Accepted for {offer.course.course}",
+                recipients=offer.course.professor.email,
+                message_lines=[
+                    f"Dear {offer.course.professor.get_full_name()},",
+                    f"{offer.recipient.get_full_name()} has accepted your TA offer for {offer.course.course} — {offer.course.course_title}.",
+                    "They are now assigned as a TA for this course.",
+                ],
+            )
+
     return redirect('offers')
 
 @login_required
@@ -791,6 +841,19 @@ def decline_offer_v2(request, offer_id):
             return redirect('offers')
         offer.reject()
         messages.info(request, f"You have declined the offer for {offer.course.course}.")
+
+        # Email notification to professor
+        if offer.course.professor and offer.course.professor.email:
+            send_notification_email(
+                subject=f"TA Offer Declined for {offer.course.course}",
+                recipients=offer.course.professor.email,
+                message_lines=[
+                    f"Dear {offer.course.professor.get_full_name()},",
+                    f"{offer.recipient.get_full_name()} has declined your TA offer for {offer.course.course} — {offer.course.course_title}.",
+                    "You may consider making offers to other applicants.",
+                ],
+            )
+
     return redirect('offers')
 
 @login_required

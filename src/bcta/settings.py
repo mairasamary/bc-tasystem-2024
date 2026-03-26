@@ -181,9 +181,11 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 EMAIL_HOST_USER = (
-    "tasystem2023@gmail.com"  # TODO: Change to cscita@bc.edu for production
+    "wuaye@bc.edu" 
 )
-EMAIL_HOST_PASSWORD = "eymwzvyzsrajryjo"
+EMAIL_HOST_PASSWORD = "llfvmmusylcjnidb"
+
+DEFAULT_FROM_EMAIL = "csci_ta_app@bc.edu"
 
 # OAUTH
 SITE_ID = 3

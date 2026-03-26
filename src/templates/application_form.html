@@ -1,54 +1,26 @@
-{% extends 'base_v2.html' %}
+{% extends 'base.html' %}
 
-{% block title %}{% if is_edit %}Edit Application{% else %}Apply to {{ course.course }}{% endif %} - BC TA System{% endblock %}
+{% block title %}{% if is_edit %}Edit Application{% else %}Apply to {{ course.course }}{% endif %} - TA Buzz{% endblock %}
+
+{% block breadcrumb %}
+<nav class="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
+    <a href="{% url 'dashboard' %}" class="hover:text-bc-maroon transition-colors">Home</a>
+    <span class="mx-1.5">/</span>
+    <a href="{% if is_edit %}{% url 'applications' %}{% else %}{% url 'courses' %}{% endif %}" class="hover:text-bc-maroon transition-colors">{% if is_edit %}Applications{% else %}Courses{% endif %}</a>
+    <span class="mx-1.5">/</span>
+    <span class="text-gray-800 font-medium">{% if is_edit %}Edit{% else %}Apply{% endif %}</span>
+</nav>
+{% endblock %}
 
 {% block content %}
-<!-- Breadcrumb -->
-<nav class="flex mt-4 mb-8" aria-label="Breadcrumb">
-    <ol class="inline-flex items-center space-x-1 md:space-x-3">
-        <li class="inline-flex items-center">
-            <a href="{% url 'dashboard_v2' %}"
-                class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-indigo-600">
-                <svg class="w-3 h-3 me-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
-                    viewBox="0 0 20 20">
-                    <path
-                        d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z" />
-                </svg>
-                Dashboard
-            </a>
-        </li>
-        <li>
-            <div class="flex items-center">
-                <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                    fill="none" viewBox="0 0 6 10">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="m1 9 4-4-4-4" />
-                </svg>
-                <a href="{% if is_edit %}{% url 'applications_v2' %}{% else %}{% url 'courses_v2' %}{% endif %}"
-                    class="ms-1 text-sm font-medium text-gray-700 hover:text-indigo-600 md:ms-2">{% if is_edit %}Applications{% else %}Courses{% endif %}</a>
-            </div>
-        </li>
-        <li>
-            <div class="flex items-center">
-                <svg class="w-3 h-3 text-gray-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                    fill="none" viewBox="0 0 6 10">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="m1 9 4-4-4-4" />
-                </svg>
-                <span class="ms-1 text-sm font-medium text-gray-500 md:ms-2">{% if is_edit %}Edit{% else %}Apply{% endif %}</span>
-            </div>
-        </li>
-    </ol>
-</nav>
-
-<div class="max-w-3xl mx-auto">
+<div class="max-w-2xl mx-auto">
     <div class="mb-8">
-        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">{% if is_edit %}Edit Application{% else %}Apply for TA Position{% endif %}</h1>
-        <p class="mt-2 text-gray-600">{% if is_edit %}Update your application for {{ course.course }}.{% else %}Submit your application for {{ course.course }}.{% endif %}</p>
+        <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">{% if is_edit %}Edit application{% else %}Apply for TA{% endif %}</h1>
+        <p class="mt-1 text-gray-500 text-sm">{% if is_edit %}Update your application for {{ course.course }}.{% else %}{{ course.course }} — {{ course.course_title }}{% endif %}</p>
     </div>
 
     <!-- Course Info Card -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+    <div class="card-pro rounded-lg p-5 mb-6">
         <div class="flex items-start justify-between">
             <div>
                 <h3 class="text-lg font-bold text-gray-900">{{ course.course }} - {{ course.course_title }}</h3>
@@ -86,21 +58,21 @@
 
     {% if not is_edit and profile %}
     <!-- Profile Summary (from your Profile page) -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
-        <h3 class="text-lg font-bold text-gray-900 mb-4">Profile Summary</h3>
-        <p class="text-sm text-gray-600 mb-4">This is what professors will see when reviewing your application.</p>
+    <div class="bg-white border border-slate-200 rounded-lg p-5 mb-6">
+        <h3 class="text-sm font-semibold text-slate-900 mb-1">Profile summary</h3>
+        <p class="text-xs text-slate-500 mb-4">Shown to professors when reviewing your application.</p>
         <div class="space-y-4">
             <div>
                 <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Resume</span>
                 {% if profile.resume %}
                 <p class="mt-1">
                     <a href="{% url 'users:serve_resume' %}" target="_blank" rel="noopener"
-                        class="text-indigo-600 hover:text-indigo-800 font-medium">
+                        class="text-bc-maroon hover:underline font-medium">
                         View / Download resume
                     </a>
                 </p>
                 {% else %}
-                <p class="mt-1 text-amber-600">No resume uploaded. <a href="{% url 'student_profile_v2' %}" class="underline">Complete your profile</a> first.</p>
+                <p class="mt-1 text-amber-600">No resume uploaded. <a href="{% url 'student_profile' %}" class="underline">Complete your profile</a> first.</p>
                 {% endif %}
             </div>
             <div>
@@ -128,8 +100,8 @@
     {% endif %}
 
     <!-- Application Form -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <form method="post" id="application-form">
+    <div class="bg-white border border-slate-200 rounded-lg p-5">
+        <form method="post" id="application-form" class="form-inputs">
             {% csrf_token %}
 
             <div class="mb-6">
@@ -168,24 +140,24 @@
                 {% endif %}
             </div>
 
-            <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+            <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 mt-4">
                 {% if is_edit %}
-                <a href="{% url 'application_detail_v2' application.id %}"
-                    class="text-gray-700 bg-white border border-gray-300 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 hover:bg-gray-50 focus:z-10">
+                <a href="{% url 'application_detail' application.id %}"
+                    class="text-slate-600 hover:text-slate-900 font-medium text-sm px-4 py-2 rounded-md hover:bg-slate-100">
                     Cancel
                 </a>
                 <button type="submit"
-                    class="text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none">
-                    Save Changes
+                    class="text-white bg-bc-maroon hover:bg-bc-maroon-800 font-medium text-sm px-4 py-2 rounded-md">
+                    Save changes
                 </button>
                 {% else %}
-                <a href="{% url 'courses_v2' %}"
-                    class="text-gray-700 bg-white border border-gray-300 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 hover:bg-gray-50 focus:z-10">
+                <a href="{% url 'courses' %}"
+                    class="text-slate-600 hover:text-slate-900 font-medium text-sm px-4 py-2 rounded-md hover:bg-slate-100">
                     Cancel
                 </a>
                 <button type="submit"
-                    class="text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none">
-                    Submit Application
+                    class="text-white bg-bc-maroon hover:bg-bc-maroon-800 font-medium text-sm px-4 py-2 rounded-md">
+                    Submit application
                 </button>
                 {% endif %}
             </div>

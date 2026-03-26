@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Offers - TA Buzz{% endblock %}
+
+{% block breadcrumb %}
+<nav class="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
+    <a href="{% url 'dashboard' %}" class="hover:text-bc-maroon transition-colors">Home</a>
+    <span class="mx-1.5">/</span>
+    <span class="text-gray-800 font-medium">Offers</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">Offers</h1>
+    <p class="mt-1 text-gray-500 text-sm">All offers sent</p>
+</div>
+
+<div class="card-pro rounded-xl overflow-hidden border border-gray-200/80 shadow-sm">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left">
+            <thead>
+                <tr class="border-b border-gray-200 bg-gray-50/80">
+                    <th scope="col" class="px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Recipient</th>
+                    <th scope="col" class="px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Course</th>
+                    <th scope="col" class="px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date Sent</th>
+                    <th scope="col" class="px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                    <th scope="col" class="px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Action</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for offer in offers %}
+                <tr class="bg-white hover:bg-gray-50/50 transition-colors">
+                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ offer.recipient.get_full_name }}</td>
+                    <td class="px-6 py-4 text-gray-600">{{ offer.course.course }}</td>
+                    <td class="px-6 py-4 text-gray-600">{{ offer.created_at|date:"M d, Y" }}</td>
+                    <td class="px-6 py-4">
+                        {% if offer.get_status == 'PENDING' %}
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-amber-50 text-amber-800 ring-1 ring-amber-200/60">Pending</span>
+                        {% elif offer.get_status == 'ACCEPTED' %}
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200/60">Accepted</span>
+                        {% elif offer.get_status == 'REJECTED' %}
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-red-50 text-red-800 ring-1 ring-red-200/60">Rejected</span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 ring-1 ring-gray-200/60">{{ offer.get_status }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center justify-end gap-2 flex-wrap">
+                            {% if user == offer.recipient and offer.get_status == 'PENDING' %}
+                            <form action="{% url 'accept_offer' offer.id %}" method="POST" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-bc-navy hover:bg-bc-navy-600 active:bg-bc-navy-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-bc-navy-400 focus:ring-offset-2">Accept</button>
+                            </form>
+                            <form action="{% url 'decline_offer' offer.id %}" method="POST" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:ring-offset-2 border border-transparent hover:border-red-200">Decline</button>
+                            </form>
+                            {% else %}
+                            <a href="{% url 'application_detail' offer.application.id %}" class="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">View details</a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-6 py-12 text-center">
+                        <div class="flex flex-col items-center gap-2 text-gray-500">
+                            <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                            <p class="text-sm font-medium">No offers found</p>
+                            <p class="text-xs text-gray-400">Offers sent to students will appear here</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

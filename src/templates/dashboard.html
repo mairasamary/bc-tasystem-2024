@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - TA Buzz{% endblock %}
+
+{% block breadcrumb %}
+<nav class="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
+    <a href="{% url 'dashboard' %}" class="hover:text-bc-maroon transition-colors">Home</a>
+    <span class="mx-1.5">/</span>
+    <span class="text-gray-800 font-medium">Dashboard</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="mb-8">
+    <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">Dashboard</h1>
+    <p class="mt-1 text-gray-500 text-sm">Overview of the TA application system</p>
+</div>
+
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="card-pro rounded-lg p-5">
+        <p class="text-xs font-bold text-gray-900 uppercase tracking-wider">Pending applications</p>
+        <p class="text-2xl font-semibold text-gray-900 mt-1">{{ pending_apps_count }}</p>
+        <p class="text-xs text-blue-600 mt-1">Action required</p>
+    </div>
+    <div class="card-pro rounded-lg p-5">
+        <p class="text-xs font-bold text-gray-900 uppercase tracking-wider">Total offers</p>
+        <p class="text-2xl font-semibold text-gray-900 mt-1">{{ total_offers_count }}</p>
+        <p class="text-xs text-blue-600 mt-1">Extended to students</p>
+    </div>
+    <div class="card-pro rounded-lg p-5">
+        <p class="text-xs font-bold text-gray-900 uppercase tracking-wider">Active courses</p>
+        <p class="text-2xl font-semibold text-gray-900 mt-1">{{ active_courses_count }}</p>
+        <p class="text-xs text-blue-600 mt-1">Seeking TAs</p>
+    </div>
+    <div class="card-pro rounded-lg p-5">
+        <p class="text-xs font-bold text-gray-900 uppercase tracking-wider">Total users</p>
+        <p class="text-2xl font-semibold text-gray-900 mt-1">{{ total_users_count }}</p>
+        <p class="text-xs text-blue-600 mt-1">Students & professors</p>
+    </div>
+</div>
+
+<!-- Main Content Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card-pro rounded-xl overflow-hidden border border-gray-200/80 shadow-sm">
+        <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center bg-white">
+            <h2 class="text-sm font-bold text-gray-900">Recent pending applications</h2>
+            <a href="{% url 'applications' %}" class="text-xs font-medium text-bc-maroon hover:underline">View all</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead>
+                    <tr class="border-b border-gray-200 bg-gray-50/80">
+                        <th class="px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Student</th>
+                        <th class="px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Course</th>
+                        <th class="px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for app in pending_apps %}
+                    <tr class="bg-white hover:bg-gray-50/50 transition-colors">
+                        <td class="px-6 py-4 font-medium text-gray-900">{{ app.student.get_full_name }}</td>
+                        <td class="px-6 py-4 text-gray-600">{{ app.course.course }}</td>
+                        <td class="px-6 py-4 text-right"><a href="{% url 'application_detail' app.id %}" class="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">Review</a></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="px-6 py-8 text-center">
+                        <div class="flex flex-col items-center gap-2 text-gray-500">
+                            <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            <p class="text-sm">No pending applications</p>
+                            <p class="text-xs text-gray-400">New applications will appear here</p>
+                        </div>
+                    </td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card-pro rounded-xl overflow-hidden border border-gray-200/80 shadow-sm">
+        <div class="px-5 py-4 border-b border-gray-200 flex justify-between items-center bg-white">
+            <h2 class="text-sm font-bold text-gray-900">Recent offers</h2>
+            <a href="{% url 'offers' %}" class="text-xs font-medium text-bc-maroon hover:underline">View all</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead>
+                    <tr class="border-b border-gray-200 bg-gray-50/80">
+                        <th class="px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Recipient</th>
+                        <th class="px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Course</th>
+                        <th class="px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for offer in recent_offers %}
+                    <tr class="bg-white hover:bg-gray-50/50 transition-colors">
+                        <td class="px-6 py-4 font-medium text-gray-900">{{ offer.recipient.get_full_name }}</td>
+                        <td class="px-6 py-4 text-gray-600">{{ offer.course.course }}</td>
+                        <td class="px-6 py-4">
+                            {% if offer.get_status == 'PENDING' %}<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-amber-50 text-amber-800 ring-1 ring-amber-200/60">Pending</span>
+                            {% elif offer.get_status == 'ACCEPTED' %}<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200/60">Accepted</span>
+                            {% elif offer.get_status == 'REJECTED' %}<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-red-50 text-red-800 ring-1 ring-red-200/60">Rejected</span>
+                            {% else %}<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 ring-1 ring-gray-200/60">{{ offer.get_status }}</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="px-6 py-8 text-center">
+                        <div class="flex flex-col items-center gap-2 text-gray-500">
+                            <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                            <p class="text-sm">No offers yet</p>
+                            <p class="text-xs text-gray-400">Offers you send will appear here</p>
+                        </div>
+                    </td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

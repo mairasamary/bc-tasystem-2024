@@ -35,7 +35,7 @@ class Course(models.Model):
         return f"{self.course_title} ({self.section}) - {self.class_type}"
 
     def get_absolute_url(self):
-        return reverse('home')
+        return reverse('dashboard')
 
     def get_object(self):
         return self

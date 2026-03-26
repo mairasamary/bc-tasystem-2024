@@ -5,9 +5,8 @@ from django.views.generic import RedirectView
 from django.views.static import serve
 
 urlpatterns = [
-    path("", RedirectView.as_view(pattern_name="dashboard_v2", permanent=False)),
-    path("", include("main.urls_v2")),
-    path("v0/", include("main.urls_v0")),
+    path("", RedirectView.as_view(pattern_name="dashboard", permanent=False)),
+    path("", include("main.urls")),
     path("admin/", admin.site.urls),
     path("users/", include("users.urls")),
     path("oauth/", include("django_gauth.urls")),

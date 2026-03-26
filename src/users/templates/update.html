@@ -1,21 +1,30 @@
 {% extends "base.html" %}
-{% load bootstrapify %}
+{% block title %}Update Profile – TA Buzz{% endblock %}
+{% block breadcrumb %}
+<nav class="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
+    <a href="{% url 'dashboard' %}" class="hover:text-bc-maroon transition-colors">Home</a>
+    <span class="mx-1.5">/</span>
+    <span class="text-gray-800 font-medium">Profile</span>
+</nav>
+{% endblock %}
 {% block content %}
-
-<h2 class="fw-normal mb-4">Profile</h2>
-<form method="post" class="form-group mb-4">
+<div class="mb-8">
+    <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">Profile</h1>
+    <p class="mt-1 text-gray-500 text-sm">Update your profile information</p>
+</div>
+<form method="post" class="form-inputs max-w-xl space-y-4">
     {% csrf_token %}
     {% for field in form %}
-        <div class="mb-3">
-            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-            {% if field.field.widget.input_type == "checkbox" %}
-                {{ field }}
-            {% else %}
-                {{ field|bootstrap }}
-            {% endif %}
-        </div>
+    <div>
+        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
+        {% if field.field.widget.input_type == "checkbox" %}
+        <input type="checkbox" name="{{ field.name }}" id="{{ field.id_for_label }}" {% if field.value %}checked{% endif %} class="rounded border-gray-300 text-bc-maroon focus:ring-bc-maroon">
+        {% else %}
+        {{ field }}
+        {% endif %}
+        {% if field.errors %}<p class="mt-1 text-sm text-red-600">{{ field.errors.0 }}</p>{% endif %}
+    </div>
     {% endfor %}
-    <button type="submit" class="btn btn-outline-primary mt-2">Update</button>
+    <button type="submit" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-bc-maroon rounded-lg hover:bg-bc-maroon-700 transition-colors">Update</button>
 </form>
-
 {% endblock %}

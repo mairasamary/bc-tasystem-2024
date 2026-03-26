@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Courses - TA Buzz{% endblock %}
+
+{% block breadcrumb %}
+<nav class="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
+    <a href="{% url 'dashboard' %}" class="hover:text-bc-maroon transition-colors">Home</a>
+    <span class="mx-1.5">/</span>
+    <a href="{% url 'courses' %}" class="hover:text-bc-maroon transition-colors">Courses</a>
+    <span class="mx-1.5">/</span>
+    <span class="text-gray-800 font-medium">Upload Courses</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+
+<div class="max-w-3xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">Upload Courses</h1>
+        <p class="mt-1 text-gray-500 text-sm">Import courses from an Excel spreadsheet.</p>
+    </div>
+
+    <!-- Upload Form -->
+    <div class="card-pro rounded-lg p-6 mb-8">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">Upload Excel File</h3>
+        <p class="text-sm text-gray-500 mb-4">
+            Upload an Excel file (.xlsx) with columns: Term, Class Type, Course, Section, Course Title, Instructor, Room, Timeslot, Max Enrollment, Room Size.
+        </p>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="mb-4">
+                <input type="file" name="excel_file" accept=".xlsx,.xls"
+                    class="block w-full text-sm text-gray-900 border-2 border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none focus:border-bc-maroon p-2.5 transition-all">
+            </div>
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+                <a href="{% url 'courses' %}"
+                    class="text-gray-700 bg-white border border-gray-300 focus:ring-4 focus:outline-none focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 hover:bg-gray-50 focus:z-10 transition-colors">
+                    Cancel
+                </a>
+                <button type="submit"
+                    class="text-white bg-gradient-to-r from-bc-maroon to-bc-maroon-700 hover:from-bc-maroon-700 hover:to-bc-maroon-800 focus:ring-4 focus:ring-bc-maroon-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none transition-all shadow-md hover:shadow-lg">
+                    Upload
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Close Semester -->
+    <div class="card-pro rounded-lg border-red-200 p-6">
+        <h3 class="text-lg font-bold text-gray-900 mb-2">Close Semester</h3>
+        <p class="text-sm text-gray-500 mb-4">
+            This will mark all current courses as inactive. This action cannot be easily undone.
+        </p>
+        <form method="post" action="{% url 'close_semester' %}">
+            {% csrf_token %}
+            <div class="flex items-center justify-end">
+                <button type="submit"
+                    class="text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none transition-all shadow-md hover:shadow-lg"
+                    onclick="return confirm('Are you sure you want to close all courses for this semester?')">
+                    Close Semester
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

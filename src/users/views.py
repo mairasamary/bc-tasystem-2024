@@ -16,18 +16,18 @@ class ProfileView(UpdateView):
     model = CustomUser
     form_class = CustomUserUpdateForm
     template_name = 'update.html'
-    success_url = reverse_lazy('dashboard_v2')
+    success_url = reverse_lazy('dashboard')
 
 
 class StudentProfileView(LoginRequiredMixin, TemplateResponseMixin, View):
     """View for students to edit their profile (resume, past courses)."""
     template_name = 'student_profile.html'
-    success_url = reverse_lazy('student_profile_v2')
+    success_url = reverse_lazy('student_profile')
 
     def get(self, request, *args, **kwargs):
         if request.user.is_professor:
             messages.info(request, 'Professors do not have a student profile.')
-            return redirect('dashboard_v2')
+            return redirect('dashboard')
         profile, _ = StudentProfile.objects.get_or_create(user=request.user)
         profile_form = StudentProfileForm(instance=profile)
         course_formset = PastCourseFormSet(instance=request.user)
@@ -47,7 +47,7 @@ class StudentProfileView(LoginRequiredMixin, TemplateResponseMixin, View):
 
     def post(self, request, *args, **kwargs):
         if request.user.is_professor:
-            return redirect('dashboard_v2')
+            return redirect('dashboard')
         profile, _ = StudentProfile.objects.get_or_create(user=request.user)
         profile_form = StudentProfileForm(
             request.POST, request.FILES, instance=profile
@@ -104,15 +104,15 @@ def serve_resume(request):
         return redirect('users:login')
     if request.user.is_professor:
         messages.info(request, 'Professors do not have a student resume.')
-        return redirect('dashboard_v2')
+        return redirect('dashboard')
     try:
         profile = StudentProfile.objects.get(user=request.user)
     except StudentProfile.DoesNotExist:
         messages.info(request, 'You have not created a student profile yet.')
-        return redirect('student_profile_v2')
+        return redirect('student_profile')
     if not profile.resume:
         messages.warning(request, 'You have not uploaded a resume yet.')
-        return redirect('student_profile_v2')
+        return redirect('student_profile')
     try:
         file_handle = profile.resume.open('rb')
         filename = profile.resume.name.split('/')[-1] if profile.resume.name else 'resume'
@@ -129,7 +129,7 @@ def serve_resume(request):
         return response
     except (ValueError, OSError):
         messages.error(request, 'Your resume file could not be found. Please re-upload your resume.')
-        return redirect('student_profile_v2')
+        return redirect('student_profile')
 
 
 def serve_cv(request):
@@ -139,15 +139,15 @@ def serve_cv(request):
         return redirect('users:login')
     if request.user.is_professor:
         messages.info(request, 'Professors do not have a student CV.')
-        return redirect('dashboard_v2')
+        return redirect('dashboard')
     try:
         profile = StudentProfile.objects.get(user=request.user)
     except StudentProfile.DoesNotExist:
         messages.info(request, 'You have not created a student profile yet.')
-        return redirect('student_profile_v2')
+        return redirect('student_profile')
     if not profile.cv:
         messages.warning(request, 'You have not uploaded a CV yet.')
-        return redirect('student_profile_v2')
+        return redirect('student_profile')
     try:
         file_handle = profile.cv.open('rb')
         filename = profile.cv.name.split('/')[-1] if profile.cv.name else 'cv'
@@ -164,7 +164,7 @@ def serve_cv(request):
         return response
     except (ValueError, OSError):
         messages.error(request, 'Your CV file could not be found. Please re-upload your CV.')
-        return redirect('student_profile_v2')
+        return redirect('student_profile')
 
 
 def serve_profile_photo(request):

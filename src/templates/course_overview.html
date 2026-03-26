@@ -77,6 +77,37 @@
         <div class="prose prose-sm text-gray-600 max-w-none">{% if course.description %}{{ course.description|linebreaks }}{% else %}<p class="text-gray-500 italic">No description provided.</p>{% endif %}</div>
     </div>
 
+    {% if user.is_superuser or user.is_professor %}
+    <div class="card-pro rounded-lg p-6 mb-6">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">Current TAs</h2>
+        {% if course.current_tas.all %}
+        <ul class="divide-y divide-gray-100">
+            {% for ta in course.current_tas.all %}
+            <li class="flex items-center justify-between py-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-bc-maroon/10 text-bc-maroon flex items-center justify-center text-sm font-semibold">
+                        {{ ta.first_name|first }}{{ ta.last_name|first }}
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">{{ ta.get_full_name }}</p>
+                        <p class="text-xs text-gray-500">{{ ta.email }}</p>
+                    </div>
+                </div>
+                {% if course.professor_id == user.id or user.is_superuser %}
+                <form method="post" action="{% url 'remove_ta' course.id ta.id %}" onsubmit="return confirm('Remove {{ ta.get_full_name }} as a TA for this course?');">
+                    {% csrf_token %}
+                    <button type="submit" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-md ring-1 ring-inset ring-red-600/20 transition-colors">Remove</button>
+                </form>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-sm text-gray-500 italic">No TAs assigned yet.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
     <div class="flex flex-wrap gap-3">
         {% if user.is_superuser or user.is_professor %}
         {% if course.professor_id == user.id or user.is_superuser %}

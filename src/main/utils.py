@@ -23,7 +23,7 @@ def send_notification_email(subject, recipients, message_lines):
         recipients = [recipients]
 
     try:
-        from_email = settings.EMAIL_HOST_USER
+        from_email = settings.DEFAULT_FROM_EMAIL or settings.EMAIL_HOST_USER
         context = {"message_lines": message_lines}
         html_content = render_to_string("notification_email.html", context)
         text_content = "\n\n".join(message_lines)

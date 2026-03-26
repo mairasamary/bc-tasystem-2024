@@ -857,6 +857,61 @@ def decline_offer_v2(request, offer_id):
     return redirect('offers')
 
 @login_required
+def remove_ta_v2(request, course_id, user_id):
+    if request.method != 'POST':
+        return redirect('course_overview', course_id=course_id)
+
+    if not (request.user.is_professor or request.user.is_superuser):
+        messages.error(request, "Only professors or admins can remove TAs.")
+        return redirect('course_overview', course_id=course_id)
+
+    course = get_object_or_404(Course, id=course_id)
+    if request.user.is_professor and not request.user.is_superuser and course.professor_id != request.user.id:
+        messages.error(request, "You can only manage your own courses.")
+        return redirect('course_overview', course_id=course_id)
+
+    ta = get_object_or_404(User, id=user_id)
+
+    if ta not in course.current_tas.all():
+        messages.warning(request, f"{ta.get_full_name()} is not a TA for this course.")
+        return redirect('course_overview', course_id=course_id)
+
+    with transaction.atomic():
+        # Remove from course
+        course.current_tas.remove(ta)
+        # Re-open the course since there's now an open slot
+        if course.current_tas.count() < course.num_tas:
+            course.status = True
+            course.save(update_fields=['status'])
+        # Revert the offer to rejected
+        Offer.objects.filter(
+            recipient=ta, course=course, status=OfferStatus.ACCEPTED.value
+        ).update(status=OfferStatus.REJECTED.value)
+        # Revert the application to rejected
+        Application.objects.filter(
+            student=ta, course=course, status=ApplicationStatus.CONFIRMED.value
+        ).update(status=ApplicationStatus.REJECTED.value)
+        # Clear the student's assigned course
+        ta.course_working_for.remove(course)
+
+    messages.success(request, f"{ta.get_full_name()} has been removed as a TA for {course.course}.")
+
+    # Email notification to removed TA
+    if ta.email:
+        send_notification_email(
+            subject=f"TA Assignment Update for {course.course}",
+            recipients=ta.email,
+            message_lines=[
+                f"Dear {ta.get_full_name()},",
+                f"You have been removed as a TA for {course.course} — {course.course_title}.",
+                "If you have questions, please contact your course instructor.",
+            ],
+        )
+
+    return redirect('course_overview', course_id=course_id)
+
+
+@login_required
 def application_detail_v2(request, application_id):
     app = get_object_or_404(Application, id=application_id)
     

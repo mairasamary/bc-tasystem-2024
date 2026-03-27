@@ -46,6 +46,43 @@
 
         <div class="hidden md:flex items-center gap-3 text-sm text-gray-600">
             {% if user.is_authenticated %}
+            <div class="relative" id="notif-root">
+                <button type="button" id="notif-button" class="relative inline-flex items-center justify-center w-9 h-9 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-bc-navy-400 focus:ring-offset-2" aria-label="Notifications" aria-haspopup="menu" aria-expanded="false">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0a3 3 0 11-6 0h6z"/>
+                    </svg>
+                    <span id="notif-badge" class="{% if navbar_unread_notifications_count %}{% else %}hidden {% endif %}absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1.5 rounded-full bg-red-600 text-white text-[11px] leading-[18px] text-center font-semibold">{% if navbar_unread_notifications_count > 99 %}99+{% else %}{{ navbar_unread_notifications_count }}{% endif %}</span>
+                </button>
+
+                <div id="notif-menu" class="hidden absolute right-0 mt-2 w-[360px] max-w-[90vw] rounded-md border border-gray-200 bg-white shadow-lg overflow-hidden" role="menu" aria-labelledby="notif-button">
+                    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+                        <span class="text-sm font-semibold text-gray-900">Notifications</span>
+                        <a href="{% url 'notifications' %}" class="text-sm text-bc-navy hover:underline">View All</a>
+                    </div>
+                    <div id="notif-list" class="max-h-[380px] overflow-y-auto">
+                        {% for n in navbar_notifications %}
+                        <div data-id="{{ n.id }}" data-read="{% if n.is_read %}1{% else %}0{% endif %}" class="group px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                            <div class="flex items-start gap-3">
+                                <div class="pt-1">{% if n.is_read %}<span class="w-2 h-2 rounded-full bg-gray-300 block"></span>{% else %}<span class="w-2 h-2 rounded-full bg-red-600 block"></span>{% endif %}</div>
+                                <a href="{% url 'open_notification' n.id %}" class="min-w-0 flex-1 block">
+                                    <div class="text-sm text-gray-900 {% if not n.is_read %}font-semibold{% endif %}">{{ n.title }}</div>
+                                    <div class="mt-0.5 text-xs text-gray-500">{{ n.created_at|timesince }} ago</div>
+                                </a>
+                                <button type="button" class="notif-x opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-gray-700" data-dismiss-url="{% url 'dismiss_notification' n.id %}" aria-label="Dismiss notification">
+                                    <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div id="notif-empty" class="{% if navbar_notifications %}hidden {% endif %}px-4 py-10 text-center text-sm text-gray-500">No notifications</div>
+                    <div class="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50/60">
+                        <button type="button" id="notif-clear" data-clear-url="{% url 'clear_notifications' %}" class="text-sm font-medium text-gray-700 hover:text-gray-900 hover:underline">Clear All</button>
+                        <a href="{% url 'notifications' %}" class="text-sm font-medium text-bc-navy hover:underline">View All</a>
+                    </div>
+                </div>
+            </div>
+
             {% if not user.is_professor and not user.is_superuser %}
             <a href="{% url 'student_profile' %}" class="flex items-center gap-2.5 no-underline text-gray-800 hover:text-gray-900 transition-colors">
                 <span class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 text-xs font-medium" title="{{ user.get_full_name }}">{% if user.get_full_name %}{{ user.get_full_name|slice:":2"|upper }}{% else %}{{ user.email|slice:":2"|upper }}{% endif %}</span>
@@ -72,6 +109,7 @@
             <a href="{% url 'courses' %}" class="block py-2 px-3 text-gray-700 rounded hover:bg-gray-100">Courses</a>
             {% if user.is_professor or user.is_superuser %}<a href="{% url 'evaluations:list' %}" class="block py-2 px-3 text-gray-700 rounded hover:bg-gray-100">Evaluations</a>{% endif %}
             {% if not user.is_professor and not user.is_superuser %}<a href="{% url 'student_profile' %}" class="block py-2 px-3 text-gray-700 rounded hover:bg-gray-100">Profile</a>{% endif %}
+            <a href="{% url 'notifications' %}" class="block py-2 px-3 text-gray-700 rounded hover:bg-gray-100">Notifications</a>
             <a href="{% url 'users:logout' %}" class="block py-2 px-3 text-gray-700 rounded hover:bg-gray-100">Log out</a>
             {% else %}
             <a href="{% url 'home' %}" class="block py-2 px-3 text-gray-700 rounded hover:bg-gray-100">Home</a>
@@ -84,4 +122,100 @@
     document.getElementById('nav-toggle')?.addEventListener('click', function() {
         document.getElementById('navbar-mobile').classList.toggle('hidden');
     });
+</script>
+<script>
+    (function() {
+        const root = document.getElementById('notif-root');
+        if (!root) return;
+        const btn = document.getElementById('notif-button');
+        const menu = document.getElementById('notif-menu');
+        const list = document.getElementById('notif-list');
+        const badge = document.getElementById('notif-badge');
+        const empty = document.getElementById('notif-empty');
+        const clearBtn = document.getElementById('notif-clear');
+        const fadeMs = 180;
+
+        function getCookie(name) {
+            const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+            return match ? decodeURIComponent(match[2]) : '';
+        }
+
+        function unreadCount() {
+            return list.querySelectorAll('[data-read="0"]').length;
+        }
+
+        function refreshUI() {
+            const unread = unreadCount();
+            if (unread > 0) {
+                badge.textContent = unread > 99 ? '99+' : String(unread);
+                badge.classList.remove('hidden');
+            } else {
+                badge.textContent = '';
+                badge.classList.add('hidden');
+            }
+            if (list.children.length === 0) {
+                empty.classList.remove('hidden');
+            } else {
+                empty.classList.add('hidden');
+            }
+        }
+
+        function setMenuOpen(open) {
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            menu.classList.toggle('hidden', !open);
+        }
+
+        function removeRow(el) {
+            el.style.transition = `opacity ${fadeMs}ms ease, transform ${fadeMs}ms ease`;
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(-4px)';
+            window.setTimeout(() => {
+                el.remove();
+                refreshUI();
+            }, fadeMs);
+        }
+
+        btn?.addEventListener('click', (e) => {
+            e.preventDefault();
+            const open = btn.getAttribute('aria-expanded') === 'true';
+            setMenuOpen(!open);
+        });
+
+        clearBtn?.addEventListener('click', () => {
+            fetch(clearBtn.dataset.clearUrl, {
+                method: 'POST',
+                headers: {'X-CSRFToken': getCookie('csrftoken'), 'X-Requested-With': 'XMLHttpRequest'},
+            }).then(() => {
+                list.innerHTML = '';
+                refreshUI();
+            });
+        });
+
+        list?.addEventListener('click', (e) => {
+            const dismissBtn = e.target.closest('.notif-x');
+            if (!dismissBtn) return;
+            e.preventDefault();
+            const row = e.target.closest('[data-id]');
+            if (!row) return;
+            fetch(dismissBtn.dataset.dismissUrl, {
+                method: 'POST',
+                headers: {'X-CSRFToken': getCookie('csrftoken'), 'X-Requested-With': 'XMLHttpRequest'},
+            }).then(() => removeRow(row));
+        });
+
+        document.addEventListener('click', (e) => {
+            if (menu.classList.contains('hidden')) return;
+            if (root.contains(e.target)) return;
+            setMenuOpen(false);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            if (menu.classList.contains('hidden')) return;
+            setMenuOpen(false);
+            btn.focus();
+        });
+
+        refreshUI();
+    })();
 </script>

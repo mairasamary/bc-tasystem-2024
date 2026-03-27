@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications - TA Buzz{% endblock %}
+
+{% block breadcrumb %}
+<nav class="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
+    <a href="{% url 'dashboard' %}" class="hover:text-bc-maroon transition-colors">Home</a>
+    <span class="mx-1.5">/</span>
+    <span class="text-gray-800 font-medium">Notifications</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl">
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">Notifications</h1>
+            <p class="mt-1 text-sm text-gray-500">Recent activity and updates.</p>
+        </div>
+        <button type="button" id="notifications-clear-all" data-clear-url="{% url 'clear_notifications' %}"
+            class="text-sm font-medium text-gray-700 hover:text-gray-900 hover:underline">
+            Clear All
+        </button>
+    </div>
+
+    <div class="rounded-md border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div id="notifications-list">
+            {% for n in notifications %}
+            <div data-id="{{ n.id }}" data-read="{% if n.is_read %}1{% else %}0{% endif %}" class="group px-5 py-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <div class="flex items-start gap-3">
+                    <span class="mt-1 w-2 h-2 rounded-full {% if n.is_read %}bg-gray-300{% else %}bg-red-600{% endif %}"></span>
+                    <a href="{% url 'open_notification' n.id %}" class="min-w-0 flex-1 block">
+                        <p class="text-sm text-gray-900 {% if not n.is_read %}font-semibold{% endif %}">{{ n.title }}</p>
+                        <p class="mt-1 text-xs text-gray-500">{{ n.created_at|timesince }} ago</p>
+                    </a>
+                    <button type="button" class="notif-remove opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-gray-700" data-dismiss-url="{% url 'dismiss_notification' n.id %}" aria-label="Dismiss notification">
+                        <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div id="notifications-empty" class="{% if notifications %}hidden {% endif %}px-6 py-16 text-center text-sm text-gray-500">
+            No notifications
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        const listEl = document.getElementById('notifications-list');
+        const emptyEl = document.getElementById('notifications-empty');
+        const clearAllBtn = document.getElementById('notifications-clear-all');
+        const fadeMs = 180;
+
+        function getCookie(name) {
+            const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+            return match ? decodeURIComponent(match[2]) : '';
+        }
+
+        function refreshUI() {
+            if (listEl.children.length === 0) {
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+            emptyEl.classList.add('hidden');
+        }
+
+        function removeRow(row) {
+            row.style.transition = `opacity ${fadeMs}ms ease, transform ${fadeMs}ms ease`;
+            row.style.opacity = '0';
+            row.style.transform = 'translateY(-4px)';
+            window.setTimeout(() => {
+                row.remove();
+                refreshUI();
+            }, fadeMs);
+        }
+
+        listEl.addEventListener('click', (e) => {
+            const removeBtn = e.target.closest('.notif-remove');
+            if (removeBtn) {
+                e.preventDefault();
+                const row = e.target.closest('[data-id]');
+                const dismissUrl = removeBtn.getAttribute('data-dismiss-url');
+                if (!row || !dismissUrl) return;
+                fetch(dismissUrl, {
+                    method: 'POST',
+                    headers: {'X-CSRFToken': getCookie('csrftoken'), 'X-Requested-With': 'XMLHttpRequest'},
+                }).then(() => removeRow(row));
+                return;
+            }
+        });
+
+        clearAllBtn.addEventListener('click', () => {
+            fetch(clearAllBtn.dataset.clearUrl, {
+                method: 'POST',
+                headers: {'X-CSRFToken': getCookie('csrftoken'), 'X-Requested-With': 'XMLHttpRequest'},
+            }).then(() => {
+                listEl.innerHTML = '';
+                refreshUI();
+            });
+        });
+
+        refreshUI();
+    })();
+</script>
+{% endblock %}

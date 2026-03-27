@@ -144,7 +144,10 @@
         <div class="max-w-6xl mx-auto px-5 py-5">
             <div class="sm:flex sm:items-center sm:justify-between text-sm text-gray-600">
                 <span>© 2026 <span class="font-semibold text-gray-600">Boston College</span> TA Buzz</span>
-                <span class="mt-2 sm:mt-0">140 Commonwealth Avenue, Chestnut Hill, MA 02467</span>
+                <span class="mt-2 sm:mt-0 flex items-center gap-3">
+                    <a href="{% url 'contributors' %}" class="hover:text-gray-900 hover:underline">Contributors</a>
+                    <span>140 Commonwealth Avenue, Chestnut Hill, MA 02467</span>
+                </span>
             </div>
         </div>
     </footer>

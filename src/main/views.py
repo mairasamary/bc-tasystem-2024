@@ -19,6 +19,14 @@ from main.utils import send_notification_email
 User = get_user_model()
 
 
+def home(request):
+    return render(request, "home.html")
+
+
+def contributors(request):
+    return render(request, "contributors.html")
+
+
 @login_required
 def admin_dashboard_v2(request):
     # Admin: full system overview (stats + recent apps/offers)

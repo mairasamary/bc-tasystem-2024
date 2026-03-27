@@ -3,6 +3,8 @@ from . import views
 from users.views import StudentProfileView
 
 urlpatterns = [
+    path("", views.home, name="home"),
+    path("contributors/", views.contributors, name="contributors"),
     path("dashboard/", views.admin_dashboard_v2, name="dashboard"),
     path("profile/", StudentProfileView.as_view(), name="student_profile"),
     path("applications/", views.applications_list_v2, name="applications"),

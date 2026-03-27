@@ -704,31 +704,44 @@ def make_offer_v2(request, application_id):
 
 @login_required
 def reject_application_v2(request, application_id):
-    if request.method == 'POST':
-        if not (request.user.is_professor or request.user.is_superuser):
-            messages.error(request, "Only professors or admins can reject applications.")
-            return redirect('applications')
-            
-        app = get_object_or_404(Application, id=application_id)
-        
-        # Use model method
-        app.reject()
-        
+    if not (request.user.is_professor or request.user.is_superuser):
+        messages.error(request, "Only professors or admins can reject applications.")
+        return redirect('applications')
+
+    app = get_object_or_404(Application, id=application_id)
+
+    # Step 1: Show rejection form (serves as the warning/confirmation)
+    if request.method == "GET":
+        return render(request, "application_reject.html", {"app": app})
+
+    # Step 2: Submit rejection + optional feedback
+    if request.method == "POST":
+        rejection_feedback = (request.POST.get("rejection_feedback") or "").strip()
+
+        app.reject(rejection_feedback)
+
         messages.success(request, f"Application for {app.student.get_full_name()} has been rejected.")
 
-        # Email notification to student
         if app.student.email:
+            message_lines = [
+                f"Dear {app.student.get_full_name()},",
+                f"We regret to inform you that your TA application for {app.course.course} — {app.course.course_title} has been rejected.",
+            ]
+            if rejection_feedback:
+                message_lines.extend([
+                    "Feedback from the instructor:",
+                    rejection_feedback,
+                ])
+            message_lines.append("You may browse and apply to other open courses on TA Buzz.")
             send_notification_email(
                 subject=f"Application Update for {app.course.course}",
                 recipients=app.student.email,
-                message_lines=[
-                    f"Dear {app.student.get_full_name()},",
-                    f"We regret to inform you that your TA application for {app.course.course} — {app.course.course_title} has been rejected.",
-                    "You may browse and apply to other open courses on TA Buzz.",
-                ],
+                message_lines=message_lines,
             )
 
-    return redirect('applications')
+        return redirect("application_detail", application_id=app.id)
+
+    return redirect("application_detail", application_id=app.id)
 
 @login_required
 def withdraw_application_v2(request, application_id):

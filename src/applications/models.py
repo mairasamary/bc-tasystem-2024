@@ -69,8 +69,11 @@ class Application(models.Model):
         self.status = ApplicationStatus.ACCEPTED.value
         self.save()
 
-    def reject(self):
+    def reject(self, feedback=""):
         self.status = ApplicationStatus.REJECTED.value
+        # Feedback is optional; only set when provided by professor/admin.
+        if hasattr(self, "rejection_feedback"):
+            self.rejection_feedback = feedback or ""
         self.save()
 
     def confirm(self):

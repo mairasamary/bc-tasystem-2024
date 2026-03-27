@@ -3,9 +3,10 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.db.models import Count, F, Q, Sum
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
 from datetime import date
+from django.urls import reverse
 from openpyxl import Workbook
 from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
@@ -14,6 +15,8 @@ from applications.models import Application, ApplicationStatus
 from applications.forms import ApplicationForm
 from offers.models import Offer, OfferStatus
 from users.models import StudentProfile, PastCourse
+from main.models import Notification
+from main.notifications import create_notification
 from main.utils import send_notification_email
 
 User = get_user_model()
@@ -25,6 +28,38 @@ def home(request):
 
 def contributors(request):
     return render(request, "contributors.html")
+
+
+@login_required
+def notifications_page(request):
+    notifications = Notification.objects.filter(user=request.user).order_by("-created_at")
+    return render(request, "notifications.html", {"notifications": notifications})
+
+
+@login_required
+def open_notification(request, notification_id):
+    notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+    if not notification.is_read:
+        notification.is_read = True
+        notification.save(update_fields=["is_read"])
+    return redirect(notification.target_url or "/")
+
+
+@login_required
+def dismiss_notification(request, notification_id):
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "error": "Method not allowed"}, status=405)
+    notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+    notification.delete()
+    return JsonResponse({"ok": True})
+
+
+@login_required
+def clear_notifications(request):
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "error": "Method not allowed"}, status=405)
+    Notification.objects.filter(user=request.user).delete()
+    return JsonResponse({"ok": True})
 
 
 @login_required
@@ -649,6 +684,12 @@ def apply_to_course_v2(request, course_id):
                 app.resume.save(os.path.basename(profile.resume.name), profile.resume, save=True)
 
             messages.success(request, f"Successfully applied to {course.course}.")
+            if course.professor:
+                create_notification(
+                    user=course.professor,
+                    title=f"New application from {request.user.get_full_name() or request.user.email} for {course.course}",
+                    target_url=reverse("application_detail", kwargs={"application_id": app.id}),
+                )
             return redirect('courses')
     else:
         form = ApplicationForm()
@@ -687,6 +728,11 @@ def make_offer_v2(request, application_id):
         app.save()
         
         messages.success(request, f"Offer sent to {app.student.get_full_name()} for {app.course.course}.")
+        create_notification(
+            user=app.student,
+            title=f"You received a TA offer for {app.course.course}",
+            target_url=reverse("offers"),
+        )
 
         # Email notification to student
         if app.student.email:
@@ -721,6 +767,11 @@ def reject_application_v2(request, application_id):
         app.reject(rejection_feedback)
 
         messages.success(request, f"Application for {app.student.get_full_name()} has been rejected.")
+        create_notification(
+            user=app.student,
+            title=f"Your application for {app.course.course} was rejected",
+            target_url=reverse("application_detail", kwargs={"application_id": app.id}),
+        )
 
         if app.student.email:
             message_lines = [
@@ -756,6 +807,12 @@ def withdraw_application_v2(request, application_id):
         return redirect('applications')
     app.withdraw("Withdrawn by student")
     messages.success(request, "Your application has been withdrawn.")
+    if app.course.professor:
+        create_notification(
+            user=app.course.professor,
+            title=f"{app.student.get_full_name() or app.student.email} withdrew from {app.course.course}",
+            target_url=reverse("application_detail", kwargs={"application_id": app.id}),
+        )
 
     # Email notification to professor
     if app.course.professor and app.course.professor.email:
@@ -838,6 +895,17 @@ def accept_offer_v2(request, offer_id):
                     status=OfferStatus.PENDING.value,
                 ).exclude(id=offer.id).update(status=OfferStatus.REJECTED.value)
         messages.success(request, f"Congratulations! You are now a TA for {offer.course.course}.")
+        create_notification(
+            user=offer.recipient,
+            title=f"You accepted the offer for {offer.course.course}",
+            target_url=reverse("offers"),
+        )
+        if offer.course.professor:
+            create_notification(
+                user=offer.course.professor,
+                title=f"{offer.recipient.get_full_name() or offer.recipient.email} accepted your offer for {offer.course.course}",
+                target_url=reverse("offers"),
+            )
 
         # Email notification to professor
         if offer.course.professor and offer.course.professor.email:
@@ -862,6 +930,12 @@ def decline_offer_v2(request, offer_id):
             return redirect('offers')
         offer.reject()
         messages.info(request, f"You have declined the offer for {offer.course.course}.")
+        if offer.course.professor:
+            create_notification(
+                user=offer.course.professor,
+                title=f"{offer.recipient.get_full_name() or offer.recipient.email} declined your offer for {offer.course.course}",
+                target_url=reverse("offers"),
+            )
 
         # Email notification to professor
         if offer.course.professor and offer.course.professor.email:
@@ -916,6 +990,11 @@ def remove_ta_v2(request, course_id, user_id):
         ta.course_working_for.remove(course)
 
     messages.success(request, f"{ta.get_full_name()} has been removed as a TA for {course.course}.")
+    create_notification(
+        user=ta,
+        title=f"You were removed as TA for {course.course}",
+        target_url=reverse("offers"),
+    )
 
     # Email notification to removed TA
     if ta.email:

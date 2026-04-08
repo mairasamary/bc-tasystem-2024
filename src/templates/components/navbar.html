@@ -85,11 +85,11 @@
 
             {% if not user.is_professor and not user.is_superuser %}
             <a href="{% url 'student_profile' %}" class="flex items-center gap-2.5 no-underline text-gray-800 hover:text-gray-900 transition-colors">
-                <span class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 text-xs font-medium" title="{{ user.get_full_name }}">{% if user.get_full_name %}{{ user.get_full_name|slice:":2"|upper }}{% else %}{{ user.email|slice:":2"|upper }}{% endif %}</span>
+                <span class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 text-xs font-medium" title="{{ user.get_full_name }}">{% if user.first_name and user.last_name %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% elif user.get_full_name %}{{ user.get_full_name|slice:":2"|upper }}{% else %}{{ user.email|slice:":2"|upper }}{% endif %}</span>
                 <span class="font-medium text-gray-800">{{ user.get_full_name|default:user.email }}</span>
             </a>
             {% else %}
-            <span class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 text-xs font-medium" title="{{ user.get_full_name }}">{% if user.get_full_name %}{{ user.get_full_name|slice:":2"|upper }}{% else %}{{ user.email|slice:":2"|upper }}{% endif %}</span>
+            <span class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 text-xs font-medium" title="{{ user.get_full_name }}">{% if user.first_name and user.last_name %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% elif user.get_full_name %}{{ user.get_full_name|slice:":2"|upper }}{% else %}{{ user.email|slice:":2"|upper }}{% endif %}</span>
             <span class="font-medium text-gray-800">{{ user.get_full_name|default:user.email }}</span>
             {% endif %}
             <span class="text-gray-500 text-xs">{% if user.is_superuser %}Admin{% elif user.is_professor %}Professor{% else %}Student{% endif %}</span>

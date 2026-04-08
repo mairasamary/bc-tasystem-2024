@@ -1012,6 +1012,32 @@ def remove_ta_v2(request, course_id, user_id):
 
 
 @login_required
+def delete_course_v2(request, course_id):
+    if request.method != 'POST':
+        return redirect('course_overview', course_id=course_id)
+
+    if not request.user.is_superuser:
+        messages.error(request, "Only admins can delete courses.")
+        return redirect('courses')
+
+    course = get_object_or_404(Course, id=course_id)
+    course_name = f"{course.course} — {course.course_title}"
+
+    with transaction.atomic():
+        # Remove all assigned TAs
+        for ta in course.current_tas.all():
+            ta.course_working_for.remove(course)
+        course.current_tas.clear()
+        # Delete related offers and applications
+        Offer.objects.filter(course=course).delete()
+        Application.objects.filter(course=course).delete()
+        course.delete()
+
+    messages.success(request, f"Course {course_name} has been deleted.")
+    return redirect('courses')
+
+
+@login_required
 def application_detail_v2(request, application_id):
     app = get_object_or_404(Application, id=application_id)
     

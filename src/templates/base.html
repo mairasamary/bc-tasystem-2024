@@ -85,6 +85,19 @@
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade-in { animation: fadeIn 0.25s ease-out; }
+
+        /* Page transition animations */
+        @keyframes pageIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pageOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-6px); }
+        }
+        .page-content { animation: pageIn 0.3s ease-out; }
+        .page-leaving .page-content { animation: pageOut 0.15s ease-in forwards; }
+        .page-leaving footer { animation: pageOut 0.15s ease-in forwards; }
         .card-pro {
             background: #fff;
             border: 1px solid #e5e7eb;
@@ -123,7 +136,7 @@
     {% include "components/navbar.html" %}
 
     <main class="flex-grow w-full pt-16">
-        <div class="max-w-6xl mx-auto px-5 sm:px-6 py-8 pb-14">
+        <div class="page-content max-w-6xl mx-auto px-5 sm:px-6 py-8 pb-14">
         {% if messages %}
         <div class="mb-6 space-y-2">
             {% for message in messages %}
@@ -151,6 +164,26 @@
             </div>
         </div>
     </footer>
+<script>
+document.addEventListener('click', function(e) {
+    var link = e.target.closest('a[href]');
+    if (!link) return;
+    var href = link.getAttribute('href');
+    // Skip external links, anchors, new-tab links, and javascript:
+    if (!href || href.startsWith('#') || href.startsWith('javascript:') ||
+        link.target === '_blank' || link.hasAttribute('download') ||
+        e.ctrlKey || e.metaKey || e.shiftKey) return;
+    // Skip links to the same page
+    if (href === window.location.pathname) return;
+    e.preventDefault();
+    document.body.classList.add('page-leaving');
+    setTimeout(function() { window.location.href = href; }, 150);
+});
+// Handle browser back/forward - reset state
+window.addEventListener('pageshow', function(e) {
+    if (e.persisted) document.body.classList.remove('page-leaving');
+});
+</script>
 </body>
 
 </html>

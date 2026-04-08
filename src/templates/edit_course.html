@@ -180,5 +180,51 @@
             </div>
         </form>
     </div>
+
+    {% if user.is_superuser %}
+    <div class="card-pro rounded-lg p-6 mt-6 border border-red-200">
+        <h3 class="text-lg font-bold text-red-700 mb-2">Delete Course</h3>
+        <p class="text-sm text-gray-600 mb-4">Permanently delete this course and all associated applications and offers. This cannot be undone.</p>
+        <button type="button" onclick="openModal('delete-modal')" class="inline-flex items-center px-4 py-2 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-lg ring-1 ring-inset ring-red-600/20 transition-colors">Delete course</button>
+    </div>
+
+    <!-- Delete confirmation modal -->
+    <div id="delete-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+        <div class="modal-backdrop fixed inset-0 bg-black/40" onclick="closeModal('delete-modal')"></div>
+        <div class="modal-panel relative bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Delete {{ course.course }}?</h3>
+            <p class="text-sm text-gray-600 mb-6">This will permanently delete <strong>{{ course.course }} — {{ course.course_title }}</strong> and all associated applications and offers. This cannot be undone.</p>
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="closeModal('delete-modal')" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Cancel</button>
+                <form method="post" action="{% url 'delete_course' course.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
+
+<style>
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.95) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+@keyframes scaleOut { from { opacity: 1; transform: scale(1) translateY(0); } to { opacity: 0; transform: scale(0.95) translateY(8px); } }
+.modal-backdrop { animation: fadeIn 0.2s ease-out; }
+.modal-panel { animation: scaleIn 0.2s ease-out; }
+.modal-closing .modal-backdrop { animation: fadeOut 0.15s ease-in forwards; }
+.modal-closing .modal-panel { animation: scaleOut 0.15s ease-in forwards; }
+</style>
+<script>
+function openModal(id) {
+    var el = document.getElementById(id);
+    el.classList.remove('hidden', 'modal-closing');
+}
+function closeModal(id) {
+    var el = document.getElementById(id);
+    el.classList.add('modal-closing');
+    setTimeout(function() { el.classList.add('hidden'); el.classList.remove('modal-closing'); }, 150);
+}
+</script>
 {% endblock %}

@@ -100,7 +100,7 @@
                 </div>
             </div>
             {% endif %}
-            <a href="{% url 'users:logout' %}" class="text-gray-600 hover:text-gray-900 transition-colors">Log out</a>
+            <a href="{% url 'users:logout' %}" class="text-gray-600 hover:text-gray-900 transition-colors whitespace-nowrap">Log out</a>
             {% else %}
             <a href="{% url 'users:login' %}" class="text-gray-800 hover:underline">Log in</a>
             {% endif %}

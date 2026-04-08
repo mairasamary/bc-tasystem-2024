@@ -26,12 +26,58 @@ class UploadView(LoginRequiredMixin, UserPassesTestMixin, View):
     def process_excel_file(self, excel_file):
         workbook = load_workbook(excel_file)
         sheet = workbook.active
+        rows = sheet.iter_rows(values_only=True)
+        header_row = next(rows, None)
+        header_map = self.build_header_map(header_row)
 
-        for row in sheet.iter_rows(values_only=True):
-            if not row[0] or row[0] == "Term":
+        for row in rows:
+            row_data = self.parse_row_data(row, header_map)
+            if not row_data.get("term"):
                 continue
-            instructor = self.get_or_create_instructor(row)
-            self.create_course(row, instructor)
+            instructor = self.get_or_create_instructor(row_data)
+            self.create_course(row_data, instructor)
+
+    def build_header_map(self, header_row):
+        if not header_row:
+            return {}
+        mapping = {}
+        for idx, header in enumerate(header_row):
+            if not header:
+                continue
+            normalized = str(header).strip().lower().replace(" ", "")
+            mapping[normalized] = idx
+        return mapping
+
+    def _get_value(self, row, header_map, key, fallback_index):
+        idx = header_map.get(key, fallback_index)
+        if idx is None:
+            return None
+        if idx >= len(row):
+            return None
+        return row[idx]
+
+    def _to_int(self, value, default=0):
+        try:
+            if value is None or value == "":
+                return default
+            return int(float(value))
+        except (TypeError, ValueError):
+            return default
+
+    def parse_row_data(self, row, header_map):
+        # Supports both new and legacy Excel layouts.
+        return {
+            "term": self._get_value(row, header_map, "term", 0),
+            "class_type": self._get_value(row, header_map, "type", 1),
+            "course": self._get_value(row, header_map, "course", 2),
+            "section": self._get_value(row, header_map, "section", 3),
+            "course_title": self._get_value(row, header_map, "coursetitle", 4),
+            "instructors": self._get_value(row, header_map, "instructors", 5),
+            "room_name": self._get_value(row, header_map, "roomname", 6),
+            "timeslot": self._get_value(row, header_map, "timeslot", 7),
+            "max_enroll": self._to_int(self._get_value(row, header_map, "maxenroll", 8), 0),
+            "room_size": self._to_int(self._get_value(row, header_map, "roomsize", 9), 0),
+        }
 
     def get_email(self, first_name, last_name):
         return (
@@ -40,12 +86,15 @@ class UploadView(LoginRequiredMixin, UserPassesTestMixin, View):
             else instructors[f"{last_name}, {first_name}"]["Short Email"]
         )
 
-    def get_or_create_instructor(self, row):
+    def get_or_create_instructor(self, row_data):
+        instructor_value = row_data.get("instructors")
+        if not instructor_value:
+            instructor_value = "Unknown"
         try:
-            instructor_first_name = row[5].split(",")[1].strip()
-            instructor_last_name = row[5].split(",")[0].strip()
+            instructor_first_name = instructor_value.split(",")[1].strip()
+            instructor_last_name = instructor_value.split(",")[0].strip()
         except:
-            instructor_first_name = row[5]
+            instructor_first_name = str(instructor_value)
             instructor_last_name = ""
 
         email = self.get_email(instructor_first_name, instructor_last_name)
@@ -66,34 +115,38 @@ class UploadView(LoginRequiredMixin, UserPassesTestMixin, View):
 
         return instructor
 
-    def create_course(self, row, instructor):
+    def create_course(self, row_data, instructor):
         excluded_lectures = [
             "Computer Science I",
             "Computer Science II",
             "Computer Organization and Lab",
         ]
 
-        if row[4] in excluded_lectures and row[1] == "Lecture":
+        course_title = str(row_data.get("course_title") or "").strip()
+        class_type = str(row_data.get("class_type") or "").strip()
+        max_enroll = self._to_int(row_data.get("max_enroll"), 0)
+
+        if course_title in excluded_lectures and class_type == "Lecture":
             return
 
-        num_tas = 1 if row[1] == "Discussion" or row[1] == "Lab" else int(row[8]) // 20
+        num_tas = 1 if class_type in ("Discussion", "Lab") else max_enroll // 20
 
         num_tas = 1 if num_tas == 0 else num_tas
 
         new_class = Course.objects.create(
-            term=row[0],
-            class_type=row[1],
-            course=row[2],
-            section=row[3],
-            course_title=row[4],
+            term=row_data.get("term"),
+            class_type=class_type,
+            course=row_data.get("course"),
+            section=row_data.get("section"),
+            course_title=course_title,
             instructor_first_name=instructor.first_name,
             instructor_last_name=instructor.last_name,
-            room_name=row[6],
-            timeslot=row[7],
-            max_enroll=row[8],
-            room_size=row[9],
+            room_name=str(row_data.get("room_name") or ""),
+            timeslot=str(row_data.get("timeslot") or ""),
+            max_enroll=max_enroll,
+            room_size=self._to_int(row_data.get("room_size"), 0),
             num_tas=num_tas,
-            description=row[4],  # TODO: Add description
+            description=course_title,  # TODO: Add description
             professor=instructor,
         )
         instructor.courses.add(new_class)

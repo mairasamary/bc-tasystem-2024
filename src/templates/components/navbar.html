@@ -1,7 +1,7 @@
 {% load static %}
 <nav class="fixed w-full z-50 top-0 left-0 right-0 bg-white border-b border-gray-200 shadow-sm">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-between h-14">
-        <a href="/" class="flex items-center gap-3 no-underline hover:opacity-90 transition-opacity">
+        <a href="/" class="flex-1 flex items-center gap-3 no-underline hover:opacity-90 transition-opacity">
             <span class="font-bc-brand text-[#8D6E4B] text-2xl font-semibold tracking-tight uppercase" style="font-family: Lora, Georgia, serif;">BC</span>
             <div class="flex flex-col leading-tight font-bc-brand" style="font-family: Lora, Georgia, serif;">
                 <span class="font-semibold text-sm" style="color: #2c353c;">TA Buzz</span>
@@ -13,7 +13,7 @@
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
 
-        <div class="hidden md:flex items-center gap-1" id="navbar-desktop">
+        <div class="hidden md:flex items-center justify-center gap-1" id="navbar-desktop">
             {% if user.is_authenticated %}
             <a href="{% url 'dashboard' %}" class="flex items-center gap-2 py-2.5 px-3 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors {% if request.resolver_match.url_name == 'dashboard' %}bg-gray-100 text-gray-900{% endif %}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
@@ -44,7 +44,7 @@
             {% endif %}
         </div>
 
-        <div class="hidden md:flex items-center gap-3 text-sm text-gray-600">
+        <div class="hidden md:flex flex-1 items-center justify-end gap-3 text-sm text-gray-600">
             {% if user.is_authenticated %}
             <div class="relative" id="notif-root">
                 <button type="button" id="notif-button" class="relative inline-flex items-center justify-center w-9 h-9 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-bc-navy-400 focus:ring-offset-2" aria-label="Notifications" aria-haspopup="menu" aria-expanded="false">

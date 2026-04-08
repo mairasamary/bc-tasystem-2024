@@ -44,7 +44,7 @@
             {% endif %}
         </div>
 
-        <div class="hidden md:flex flex-1 items-center justify-end gap-3 text-sm text-gray-600">
+        <div class="hidden md:flex flex-1 min-w-0 items-center justify-end gap-3 text-sm text-gray-600">
             {% if user.is_authenticated %}
             <div class="relative" id="notif-root">
                 <button type="button" id="notif-button" class="relative inline-flex items-center justify-center w-9 h-9 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-bc-navy-400 focus:ring-offset-2" aria-label="Notifications" aria-haspopup="menu" aria-expanded="false">
@@ -84,15 +84,22 @@
             </div>
 
             {% if not user.is_professor and not user.is_superuser %}
-            <a href="{% url 'student_profile' %}" class="flex items-center gap-2.5 no-underline text-gray-800 hover:text-gray-900 transition-colors">
-                <span class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 text-xs font-medium" title="{{ user.get_full_name }}">{% if user.first_name and user.last_name %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% elif user.get_full_name %}{{ user.get_full_name|slice:":2"|upper }}{% else %}{{ user.email|slice:":2"|upper }}{% endif %}</span>
-                <span class="font-medium text-gray-800">{{ user.get_full_name|default:user.email }}</span>
+            <a href="{% url 'student_profile' %}" class="flex items-center gap-2.5 min-w-0 no-underline text-gray-800 hover:text-gray-900 transition-colors">
+                <span class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 text-xs font-medium shrink-0" title="{{ user.get_full_name }}">{% if user.first_name and user.last_name %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% elif user.get_full_name %}{{ user.get_full_name|slice:":2"|upper }}{% else %}{{ user.email|slice:":2"|upper }}{% endif %}</span>
+                <div class="min-w-0">
+                    <div class="font-medium text-gray-800 truncate">{{ user.get_full_name|default:user.email }}</div>
+                    <div class="text-gray-500 text-xs whitespace-nowrap">Student</div>
+                </div>
             </a>
             {% else %}
-            <span class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 text-xs font-medium" title="{{ user.get_full_name }}">{% if user.first_name and user.last_name %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% elif user.get_full_name %}{{ user.get_full_name|slice:":2"|upper }}{% else %}{{ user.email|slice:":2"|upper }}{% endif %}</span>
-            <span class="font-medium text-gray-800">{{ user.get_full_name|default:user.email }}</span>
+            <div class="flex items-center gap-2.5 min-w-0">
+                <span class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 text-xs font-medium shrink-0" title="{{ user.get_full_name }}">{% if user.first_name and user.last_name %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% elif user.get_full_name %}{{ user.get_full_name|slice:":2"|upper }}{% else %}{{ user.email|slice:":2"|upper }}{% endif %}</span>
+                <div class="min-w-0">
+                    <div class="font-medium text-gray-800 truncate">{{ user.get_full_name|default:user.email }}</div>
+                    <div class="text-gray-500 text-xs whitespace-nowrap">{% if user.is_superuser %}Admin{% else %}Professor{% endif %}</div>
+                </div>
+            </div>
             {% endif %}
-            <span class="text-gray-500 text-xs">{% if user.is_superuser %}Admin{% elif user.is_professor %}Professor{% else %}Student{% endif %}</span>
             <a href="{% url 'users:logout' %}" class="text-gray-600 hover:text-gray-900 transition-colors">Log out</a>
             {% else %}
             <a href="{% url 'users:login' %}" class="text-gray-800 hover:underline">Log in</a>

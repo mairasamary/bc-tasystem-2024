@@ -449,13 +449,9 @@ def course_overview_v2(request, course_id):
 
 @login_required
 def edit_course_v2(request, course_id):
-    if not (request.user.is_superuser or request.user.is_professor):
-        messages.error(request, "You don't have permission to edit courses.")
-        return redirect('courses')
+    if not request.user.is_superuser:
+        return redirect('course_overview', course_id=course_id)
     course = get_object_or_404(Course, id=course_id)
-    if request.user.is_professor and not request.user.is_superuser and course.professor_id != request.user.id:
-        messages.error(request, "You can only edit your own courses.")
-        return redirect('courses')
     if request.method == 'POST':
         form = CourseForm(request.POST, instance=course)
         if form.is_valid():

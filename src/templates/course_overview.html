@@ -125,10 +125,8 @@
     {% endif %}
 
     <div class="flex flex-wrap gap-3">
-        {% if user.is_superuser or user.is_professor %}
-        {% if course.professor_id == user.id or user.is_superuser %}
+        {% if user.is_superuser %}
         <a href="{% url 'edit_course' course.id %}" class="inline-flex items-center px-4 py-2 bg-bc-maroon hover:bg-bc-maroon-700 text-white font-medium rounded-lg text-sm transition-colors">Manage course</a>
-        {% endif %}
         {% endif %}
         {% if not user.is_professor and course.status and course.id not in applied_course_ids %}
         {% if student_can_apply %}

@@ -120,6 +120,7 @@ class StudentProfile(models.Model):
     profile_photo = models.FileField(upload_to=profile_photo_upload_path, blank=True, null=True)
     resume = models.FileField(upload_to=resume_upload_path, blank=True, null=True)
     cv = models.FileField(upload_to=cv_upload_path, blank=True, null=True)
+    graduation_year = models.PositiveIntegerField(blank=True, null=True)
     skills = models.ManyToManyField(Skill, related_name='profiles', blank=True)
 
     def __str__(self):

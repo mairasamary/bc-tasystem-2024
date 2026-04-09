@@ -1,3 +1,4 @@
+from datetime import date
 from django import forms
 from django.forms import inlineformset_factory
 from django.contrib.auth.forms import UserChangeForm
@@ -96,13 +97,23 @@ PastCourseFormSet = inlineformset_factory(
 )
 
 
+def _graduation_year_choices():
+    year = date.today().year
+    return [('', '-- Select year --')] + [(y, f'Class of {y}') for y in range(year, year + 4)]
+
+
 class StudentProfileForm(forms.ModelForm):
     class Meta:
         model = StudentProfile
-        fields = ['profile_photo', 'resume', 'cv', 'skills']
+        fields = ['profile_photo', 'resume', 'cv', 'graduation_year', 'skills']
         widgets = {
             'profile_photo': forms.FileInput(attrs={'accept': 'image/*'}),
             'resume': forms.FileInput(attrs={'accept': '.pdf,.doc,.docx'}),
             'cv': forms.FileInput(attrs={'accept': '.pdf,.doc,.docx'}),
+            'graduation_year': forms.Select(attrs={'class': INPUT_CLASS}),
             'skills': forms.CheckboxSelectMultiple(attrs={'class': 'skill-checkbox'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['graduation_year'].widget.choices = _graduation_year_choices()

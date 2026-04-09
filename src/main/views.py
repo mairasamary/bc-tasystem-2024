@@ -210,7 +210,15 @@ def courses_list_v2(request):
     class_type_filter = request.GET.get('class_type', '')
     course_level = request.GET.get('course_level', '')
     per_page_param = request.GET.get('per_page', '10')
+    show_all = request.GET.get('show_all', '')
     courses = Course.objects.all().order_by('course')
+
+    # Professors see only their own courses by default
+    professor_my_courses = False
+    if request.user.is_professor and not request.user.is_superuser:
+        if not show_all:
+            courses = courses.filter(professor=request.user)
+            professor_my_courses = True
 
     if query:
         courses = courses.filter(
@@ -383,6 +391,7 @@ def courses_list_v2(request):
         'understaffed_by_professor': understaffed_by_professor or [],
         'staffing_filter_urls': staffing_filter_urls or {},
         'staffing_filter': staffing_filter,
+        'professor_my_courses': professor_my_courses,
     })
 
 @login_required

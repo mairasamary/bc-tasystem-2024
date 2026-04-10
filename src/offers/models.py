@@ -42,6 +42,9 @@ class Offer(models.Model):
         self.recipient.course_working_for.set([self.course])
         self.recipient.save()
         self.save()
+        from main.ta_hiring import reject_pending_applications_when_course_filled
+
+        reject_pending_applications_when_course_filled(self.course)
 
     def reject(self):
         self.status = OfferStatus.REJECTED.value

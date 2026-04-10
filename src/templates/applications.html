@@ -30,7 +30,19 @@
             <tbody class="divide-y divide-gray-100">
                 {% for app in apps %}
                 <tr class="bg-white hover:bg-gray-50/50 transition-colors">
-                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ app.student.get_full_name }}</td>
+                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                        <div class="flex items-center gap-3">
+                            {% if app.profile_photo %}
+                            <img src="{% url 'serve_application_applicant_photo' app.id %}" alt=""
+                                class="w-9 h-9 rounded-full object-cover ring-1 ring-gray-200 bg-gray-100 shrink-0">
+                            {% else %}
+                            <span class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-bold shrink-0">
+                                {{ app.student.first_name|first }}{{ app.student.last_name|first }}
+                            </span>
+                            {% endif %}
+                            <span>{{ app.student.get_full_name }}</span>
+                        </div>
+                    </td>
                     <td class="px-6 py-4 text-gray-600">{{ app.course.course }}</td>
                     <td class="px-6 py-4">
                         {% if app.get_status == 'PENDING' %}
@@ -51,10 +63,14 @@
                         <div class="flex items-center justify-end gap-2 flex-wrap">
                             <a href="{% url 'application_detail' app.id %}" class="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">View details</a>
                             {% if user.is_professor and app.get_status == 'PENDING' or user.is_superuser and app.get_status == 'PENDING' %}
-                            <form action="{% url 'make_offer' app.id %}" method="POST" class="inline">
-                                {% csrf_token %}
-                                <button type="submit" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-bc-navy hover:bg-bc-navy-600 active:bg-bc-navy-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-bc-navy-400 focus:ring-offset-2">Make offer</button>
-                            </form>
+                                {% if app.course.has_ta_offer_capacity %}
+                                <form action="{% url 'make_offer' app.id %}" method="POST" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-bc-navy hover:bg-bc-navy-600 active:bg-bc-navy-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-bc-navy-400 focus:ring-offset-2">Make offer</button>
+                                </form>
+                                {% else %}
+                                <span class="text-xs text-amber-800 max-w-[10rem] text-right" title="TA offer cap reached for this course">Offer cap reached</span>
+                                {% endif %}
                             {% endif %}
                             {% if user == app.student and app.get_status == 'PENDING' or user == app.student and app.get_status == 'ACCEPTED' %}
                             <a href="{% url 'edit_application' app.id %}" class="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">Edit</a>

@@ -11,6 +11,11 @@ urlpatterns = [
     path("notifications/<uuid:notification_id>/dismiss/", views.dismiss_notification, name="dismiss_notification"),
     path("notifications/clear/", views.clear_notifications, name="clear_notifications"),
     path("profile/", StudentProfileView.as_view(), name="student_profile"),
+    path(
+        "employment-onboarding/",
+        views.employment_onboarding_checklist,
+        name="employment_onboarding",
+    ),
     path("applications/", views.applications_list_v2, name="applications"),
     path("offers/", views.offers_list_v2, name="offers"),
     path("courses/", views.courses_list_v2, name="courses"),
@@ -31,5 +36,10 @@ urlpatterns = [
     path("decline-offer/<uuid:offer_id>/", views.decline_offer_v2, name="decline_offer"),
     path("application/<uuid:application_id>/", views.application_detail_v2, name="application_detail"),
     path("application/<uuid:application_id>/resume/", views.serve_application_resume, name="serve_application_resume"),
+    path(
+        "application/<uuid:application_id>/photo/",
+        views.serve_application_applicant_photo,
+        name="serve_application_applicant_photo",
+    ),
     path("evaluations/", include("evaluations.urls")),
 ]

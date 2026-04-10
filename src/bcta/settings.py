@@ -215,3 +215,5 @@ if env_str not in (BcTaEnvironment.DEV, BcTaEnvironment.PROD):
     )
 ENV = BcTaEnvironment(env_str)
 SITE_HOSTNAME = os.getenv("SITE_HOSTNAME", "127.0.0.1:8000")
+# Full public origin for links in emails (optional). Example: https://cscita.bc.edu
+PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "").strip()

@@ -46,3 +46,17 @@ class Course(models.Model):
         if not self.num_tas:
             return 0
         return min(100, int(100 * self.current_tas.count() / self.num_tas))
+
+    def filled_ta_slots_and_pending_offers(self):
+        """Seats already assigned plus offers awaiting a student response (counts toward offer cap)."""
+        from offers.models import Offer, OfferStatus
+
+        return self.current_tas.count() + Offer.objects.filter(
+            course=self, status=OfferStatus.PENDING.value
+        ).count()
+
+    def has_ta_offer_capacity(self):
+        """True if the professor may send another TA offer for this course."""
+        if not self.num_tas:
+            return False
+        return self.filled_ta_slots_and_pending_offers() < self.num_tas

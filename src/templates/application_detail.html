@@ -13,10 +13,56 @@
 {% endblock %}
 
 {% block content %}
+{% if show_applicant_navigation %}
+<nav class="mb-5 flex flex-wrap items-center justify-between gap-3 text-sm" aria-label="Browse applicants">
+    <div class="flex items-center gap-2">
+        {% if review_prev_app_id %}
+        <a href="{% url 'application_detail' review_prev_app_id %}"
+            class="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-bc-navy/30 focus:ring-offset-1 transition-colors">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            Previous
+        </a>
+        {% else %}
+        <button type="button" disabled
+            class="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-400 bg-gray-50 border border-gray-200 rounded-md cursor-not-allowed shadow-sm">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            Previous
+        </button>
+        {% endif %}
+    </div>
+    {% if review_queue_position and review_queue_total %}
+    <span class="text-gray-500 tabular-nums" aria-live="polite">{{ review_queue_position }} / {{ review_queue_total }}</span>
+    {% endif %}
+    <div class="flex items-center gap-2">
+        {% if review_next_app_id %}
+        <a href="{% url 'application_detail' review_next_app_id %}"
+            class="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-bc-navy/30 focus:ring-offset-1 transition-colors">
+            Next
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+        {% else %}
+        <button type="button" disabled
+            class="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-400 bg-gray-50 border border-gray-200 rounded-md cursor-not-allowed shadow-sm">
+            Next
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+        {% endif %}
+    </div>
+</nav>
+{% endif %}
+
 <div class="mb-8">
     <div class="flex justify-between items-start">
-        <div>
-            <h1 class="text-2xl font-semibold text-gray-900 tracking-tight flex items-center gap-3">
+        <div class="flex items-start gap-4 min-w-0">
+            {% if app.profile_photo %}
+            <div class="shrink-0">
+                <img src="{% url 'serve_application_applicant_photo' app.id %}"
+                    alt=""
+                    class="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover ring-2 ring-gray-200 shadow-sm bg-gray-100">
+            </div>
+            {% endif %}
+            <div class="min-w-0">
+            <h1 class="text-2xl font-semibold text-gray-900 tracking-tight flex flex-wrap items-center gap-3">
                 {{ app.student.get_full_name }}
                 {% if app.get_status == 'PENDING' %}
                 <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-amber-50 text-amber-800 ring-1 ring-amber-200/60">Pending Review</span>
@@ -34,21 +80,30 @@
             <p class="mt-2 text-sm text-gray-500">{{ app.withdrawal_reason }}</p>
             {% endif %}
             <p class="mt-2 text-lg text-gray-600">Applying for <a href="{% url 'course_overview' app.course.id %}" class="font-semibold text-bc-maroon hover:text-bc-maroon-700 hover:underline">{{ app.course.course }} - {{ app.course.course_title }}</a></p>
+            </div>
         </div>
 
         {% if user.is_professor and app.get_status == 'PENDING' or user.is_superuser and app.get_status == 'PENDING' %}
-        <div class="flex items-center gap-2">
-            <form action="{% url 'make_offer' app.id %}" method="POST">
-                {% csrf_token %}
-                <button type="submit"
-                    class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-white bg-bc-navy hover:bg-bc-navy-600 active:bg-bc-navy-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-bc-navy-400 focus:ring-offset-2">
-                    Make offer
-                </button>
-            </form>
-            <a href="{% url 'reject_application' app.id %}"
-                class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:ring-offset-2 border border-transparent hover:border-red-200">
-                Reject
-            </a>
+        <div class="flex flex-col items-end gap-2">
+            <div class="flex items-center gap-2">
+                {% if app.course.has_ta_offer_capacity %}
+                <form action="{% url 'make_offer' app.id %}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-white bg-bc-navy hover:bg-bc-navy-600 active:bg-bc-navy-700 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-bc-navy-400 focus:ring-offset-2">
+                        Make offer
+                    </button>
+                </form>
+                {% else %}
+                <p class="text-sm text-amber-800 max-w-xs text-right" role="status">
+                    All TA offer slots are in use (filled seats or offers awaiting a response). Wait for a decision or a decline before sending another offer.
+                </p>
+                {% endif %}
+                <a href="{% url 'reject_application' app.id %}"
+                    class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:ring-offset-2 border border-transparent hover:border-red-200">
+                    Reject
+                </a>
+            </div>
         </div>
         {% endif %}
         {% if user == app.student %}
@@ -79,6 +134,13 @@
         <div class="card-pro rounded-lg p-8">
             <h2 class="text-xl font-bold text-gray-900 mb-4">Applicant profile (at time of application)</h2>
             <div class="space-y-6">
+                {% if app.profile_photo %}
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Profile photo</h3>
+                    <img src="{% url 'serve_application_applicant_photo' app.id %}" alt=""
+                        class="w-28 h-28 rounded-full object-cover ring-2 ring-gray-200 bg-gray-100">
+                </div>
+                {% endif %}
                 <div>
                     <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Resume</h3>
                     {% if app.resume %}
@@ -150,10 +212,15 @@
         <div class="card-pro rounded-lg p-8">
             <h2 class="text-xl font-bold text-gray-900 mb-4">Applicant</h2>
             <div class="flex items-center gap-4 mb-4">
+                {% if app.profile_photo %}
+                <img src="{% url 'serve_application_applicant_photo' app.id %}" alt=""
+                    class="w-12 h-12 rounded-full object-cover ring-2 ring-gray-200 bg-gray-100 shrink-0">
+                {% else %}
                 <div
-                    class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl">
+                    class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl shrink-0">
                     {{ app.student.first_name|first }}{{ app.student.last_name|first }}
                 </div>
+                {% endif %}
                 <div>
                     <h3 class="text-lg font-medium text-gray-900">{{ app.student.get_full_name }}</h3>
                     <p class="text-gray-500">{{ app.student.email }}</p>

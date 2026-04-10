@@ -10,11 +10,15 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-from applications.models import Application
-from .models import Offer
+from applications.models import Application, ApplicationStatus
+from courses.models import Course
 from django.urls import reverse
 from django.contrib import messages
 from django.conf import settings
+from main.utils import app_site_absolute_url
+from django.shortcuts import redirect
+from django.db import transaction
+from .models import Offer, OfferStatus
 
 
 class OfferCreateView(
@@ -26,14 +30,35 @@ class OfferCreateView(
     fields = []
 
     def form_valid(self, form):
-        form.instance.sender = self.request.user
-        form.instance.recipient = self.get_object().student
-        form.instance.course = self.get_object().course
-        form.instance.application = self.get_object()
-
-        self.get_object().accept()
-
-        return super().form_valid(form)
+        application = self.get_object()
+        with transaction.atomic():
+            app_locked = Application.objects.select_for_update().select_related("student").get(
+                pk=application.pk
+            )
+            if app_locked.status != ApplicationStatus.PENDING.value:
+                messages.error(self.request, "You can only make an offer for a pending application.")
+                return redirect("offers:offer-list")
+            if Offer.objects.filter(application=app_locked).exists():
+                messages.error(self.request, "An offer has already been sent for this application.")
+                return redirect("offers:offer-list")
+            course_locked = Course.objects.select_for_update().get(pk=app_locked.course_id)
+            used = course_locked.current_tas.count() + Offer.objects.filter(
+                course=course_locked, status=OfferStatus.PENDING.value
+            ).count()
+            if not course_locked.num_tas or used >= course_locked.num_tas:
+                messages.error(
+                    self.request,
+                    "You cannot send more offers than there are TA slots for this course.",
+                )
+                return redirect("offers:offer-list")
+            form.instance.sender = self.request.user
+            form.instance.recipient = app_locked.student
+            form.instance.course = course_locked
+            form.instance.application = app_locked
+            response = super().form_valid(form)
+            app_locked.status = ApplicationStatus.ACCEPTED.value
+            app_locked.save(update_fields=["status"])
+        return response
 
     def get_object(self):
         return Application.objects.get(pk=self.kwargs.get("pk"))
@@ -55,13 +80,12 @@ class OfferCreateView(
         application = self.get_object()
         student = application.student
         course = application.course
-        offer = Offer.objects.get(application=application)
-        url = reverse("offers:offer-detail", args=[offer.id])
+        offers_url = app_site_absolute_url(reverse("offers"))
         subject = f"TA Application Update For {student}"
         message = [
             f"Dear {student}",
             f"Congratulations! You have received an offer for {course}",
-            f"Access the offer here: http://cscigpu03.bc.edu:8080{url}",
+            f"Respond to your offer here: {offers_url}",
         ]
         if student.email:
             recipients = student.email
@@ -133,7 +157,14 @@ class OfferAcceptView(
         if error:
             messages.error(self.request, error)
             return self.form_invalid(form)
+        offer = self.object
+        course = offer.course
         self.object.accept()
+        from main.ta_hiring import send_student_ta_acceptance_onboarding_email
+
+        send_student_ta_acceptance_onboarding_email(
+            offer.recipient, course.course, course.course_title
+        )
         return super().form_valid(form)
 
     def test_func(self):

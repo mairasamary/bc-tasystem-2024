@@ -40,6 +40,16 @@
     </div>
 </div>
 
+{% if assigned_course_name %}
+<div class="mb-6 rounded-lg border border-bc-navy/15 bg-bc-navy/5 px-4 py-3 text-sm text-bc-navy-800">
+    <span class="font-medium">TA assignment:</span> {{ assigned_course_name }}.
+    Complete BC student employment onboarding and track your forms on the
+    <a href="{% url 'employment_onboarding' %}" class="font-medium underline hover:text-bc-navy">employment onboarding checklist</a>
+    (see also
+    <a href="https://www.bc.edu/content/bc-web/offices/student-services/student-employment/new-hires.html" class="font-medium underline hover:text-bc-navy" target="_blank" rel="noopener noreferrer">BC New Hires</a>).
+</div>
+{% endif %}
+
 {% if has_accepted_offer_this_term %}
 <div class="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
     You are already assigned as a TA this term. You can only accept 1 TA role per term.

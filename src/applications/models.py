@@ -11,6 +11,11 @@ def application_resume_upload_path(instance, filename):
     return f'application_resumes/{instance.id}/{filename}'
 
 
+def application_profile_photo_upload_path(instance, filename):
+    """Snapshot of profile photo at time of application."""
+    return f'application_profile_photos/{instance.id}/{filename}'
+
+
 class ApplicationStatus(Enum):
     '''
     Enum for the status of an application
@@ -45,6 +50,9 @@ class Application(models.Model):
 
     # Snapshot of profile at time of application (for professor review)
     resume = models.FileField(upload_to=application_resume_upload_path, blank=True, null=True)
+    profile_photo = models.FileField(
+        upload_to=application_profile_photo_upload_path, blank=True, null=True
+    )
     skills_snapshot = models.JSONField(default=list, blank=True)  # [{"name": "Python"}, ...]
     courses_snapshot = models.JSONField(default=list, blank=True)  # [{"course_name": "...", "grade": "..."}]
 

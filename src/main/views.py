@@ -14,10 +14,13 @@ from courses.models import Course
 from applications.models import Application, ApplicationStatus
 from applications.forms import ApplicationForm
 from offers.models import Offer, OfferStatus
+from users.forms import StudentEmploymentOnboardingForm
 from users.models import StudentProfile, PastCourse
 from main.models import Notification
+from main.constants import BC_STUDENT_EMPLOYMENT_NEW_HIRES_URL
 from main.notifications import create_notification
-from main.utils import send_notification_email
+from main.ta_hiring import send_student_ta_acceptance_onboarding_email
+from main.utils import app_site_absolute_url, send_notification_email
 
 User = get_user_model()
 
@@ -167,6 +170,37 @@ def admin_dashboard_v2(request):
         'assigned_course_name': assigned_course_name,
     }
     return render(request, 'student_dashboard.html', context)
+
+
+@login_required
+def employment_onboarding_checklist(request):
+    if request.user.is_professor and not request.user.is_superuser:
+        messages.error(request, "This page is for students with a TA assignment.")
+        return redirect("dashboard")
+    if not request.user.has_ta_assignment:
+        messages.error(
+            request,
+            "This checklist is available after you have accepted a TA assignment.",
+        )
+        return redirect("dashboard")
+    profile, _ = StudentProfile.objects.get_or_create(user=request.user)
+    if request.method == "POST":
+        form = StudentEmploymentOnboardingForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Your onboarding checklist has been saved.")
+            return redirect("employment_onboarding")
+    else:
+        form = StudentEmploymentOnboardingForm(instance=profile)
+    return render(
+        request,
+        "employment_onboarding_checklist.html",
+        {
+            "form": form,
+            "bc_new_hires_url": BC_STUDENT_EMPLOYMENT_NEW_HIRES_URL,
+        },
+    )
+
 
 @login_required
 def applications_list_v2(request):
@@ -683,10 +717,17 @@ def apply_to_course_v2(request, course_id):
                 for pc in request.user.past_courses.all()
             ]
             app.save()
-            # Copy resume file to application snapshot (so professor sees what was submitted)
+            # Copy resume and profile photo to application snapshots (what was submitted)
+            import os
+
             if profile.resume:
-                import os
                 app.resume.save(os.path.basename(profile.resume.name), profile.resume, save=True)
+            if profile.profile_photo:
+                app.profile_photo.save(
+                    os.path.basename(profile.profile_photo.name),
+                    profile.profile_photo,
+                    save=True,
+                )
 
             messages.success(request, f"Successfully applied to {course.course}.")
             if course.professor:
@@ -710,48 +751,93 @@ def apply_to_course_v2(request, course_id):
         'profile_past_courses': profile_past_courses,
     })
 
+
 @login_required
 def make_offer_v2(request, application_id):
-    if request.method == 'POST':
-        if not (request.user.is_professor or request.user.is_superuser):
-            messages.error(request, "Only professors or admins can make offers.")
-            return redirect('applications')
-            
-        app = get_object_or_404(Application, id=application_id)
-        
-        # Create Offer
-        Offer.objects.create(
-            recipient=app.student,
-            course=app.course,
-            sender=request.user,
-            application=app,
-            status=OfferStatus.PENDING.value
-        )
-        
-        # Update Application status
-        app.status = ApplicationStatus.ACCEPTED.value
-        app.save()
-        
-        messages.success(request, f"Offer sent to {app.student.get_full_name()} for {app.course.course}.")
-        create_notification(
-            user=app.student,
-            title=f"You received a TA offer for {app.course.course}",
-            target_url=reverse("offers"),
-        )
+    if request.method != "POST":
+        return redirect("applications")
 
-        # Email notification to student
-        if app.student.email:
-            send_notification_email(
-                subject=f"TA Offer for {app.course.course}",
-                recipients=app.student.email,
-                message_lines=[
-                    f"Dear {app.student.get_full_name()},",
-                    f"Congratulations! You have received a TA offer for {app.course.course} — {app.course.course_title}.",
-                    "Please log in to TA Buzz to review and respond to this offer.",
-                ],
+    if not (request.user.is_professor or request.user.is_superuser):
+        messages.error(request, "Only professors or admins can make offers.")
+        return redirect("applications")
+
+    app = get_object_or_404(
+        Application.objects.select_related("course", "student"),
+        id=application_id,
+    )
+    course = app.course
+
+    if request.user.is_professor and not request.user.is_superuser:
+        if course.professor_id != request.user.id:
+            messages.error(request, "You can only make offers for your own courses.")
+            return redirect("applications")
+
+    if app.status != ApplicationStatus.PENDING.value:
+        messages.error(request, "You can only make an offer for a pending application.")
+        return redirect("applications")
+
+    if Offer.objects.filter(application=app).exists():
+        messages.error(request, "An offer has already been sent for this application.")
+        return redirect("applications")
+
+    if not course.has_ta_offer_capacity():
+        messages.error(
+            request,
+            "You cannot send more offers than there are TA slots for this course. "
+            "Wait for responses or for a student to decline before offering another applicant.",
+        )
+        return redirect("applications")
+
+    with transaction.atomic():
+        app_locked = Application.objects.select_for_update().select_related("student").get(pk=app.pk)
+        if app_locked.status != ApplicationStatus.PENDING.value:
+            messages.error(request, "You can only make an offer for a pending application.")
+            return redirect("applications")
+        if Offer.objects.filter(application=app_locked).exists():
+            messages.error(request, "An offer has already been sent for this application.")
+            return redirect("applications")
+        course_locked = Course.objects.select_for_update().get(pk=app_locked.course_id)
+        used = course_locked.current_tas.count() + Offer.objects.filter(
+            course=course_locked, status=OfferStatus.PENDING.value
+        ).count()
+        if not course_locked.num_tas or used >= course_locked.num_tas:
+            messages.error(
+                request,
+                "You cannot send more offers than there are TA slots for this course. "
+                "Wait for responses or for a student to decline before offering another applicant.",
             )
+            return redirect("applications")
+        Offer.objects.create(
+            recipient=app_locked.student,
+            course=course_locked,
+            sender=request.user,
+            application=app_locked,
+            status=OfferStatus.PENDING.value,
+        )
+        app_locked.status = ApplicationStatus.ACCEPTED.value
+        app_locked.save(update_fields=["status"])
 
-    return redirect('applications')
+    messages.success(request, f"Offer sent to {app.student.get_full_name()} for {course.course}.")
+    create_notification(
+        user=app.student,
+        title=f"You received a TA offer for {course.course}",
+        target_url=reverse("offers"),
+    )
+
+    if app.student.email:
+        respond_url = app_site_absolute_url(reverse("offers"))
+        send_notification_email(
+            subject=f"TA Offer for {course.course}",
+            recipients=app.student.email,
+            message_lines=[
+                f"Dear {app.student.get_full_name()},",
+                f"Congratulations! You have received a TA offer for {course.course} — {course.course_title}.",
+                "Open the link below to log in to TA Buzz and accept or decline this offer:",
+                respond_url,
+            ],
+        )
+
+    return redirect("applications")
 
 @login_required
 def reject_application_v2(request, application_id):
@@ -849,6 +935,17 @@ def edit_application_v2(request, application_id):
         form = ApplicationForm(request.POST, instance=app)
         if form.is_valid():
             form.save()
+            profile, _ = StudentProfile.objects.get_or_create(user=request.user)
+            import os
+
+            if profile.profile_photo:
+                app.profile_photo.save(
+                    os.path.basename(profile.profile_photo.name),
+                    profile.profile_photo,
+                    save=True,
+                )
+            elif app.profile_photo:
+                app.profile_photo.delete(save=True)
             messages.success(request, "Your application has been updated.")
             return redirect('application_detail', application_id=app.id)
     else:
@@ -903,7 +1000,10 @@ def accept_offer_v2(request, offer_id):
         create_notification(
             user=offer.recipient,
             title=f"You accepted the offer for {offer.course.course}",
-            target_url=reverse("offers"),
+            target_url=reverse("employment_onboarding"),
+        )
+        send_student_ta_acceptance_onboarding_email(
+            offer.recipient, offer.course.course, offer.course.course_title
         )
         if offer.course.professor:
             create_notification(
@@ -1042,19 +1142,77 @@ def delete_course_v2(request, course_id):
     return redirect('courses')
 
 
+def _review_queue_nav_for_reviewer(application, user):
+    """
+    Ordered queue: course code, section, student name, then id.
+    Superuser: all applications. Professor: only applications for their courses.
+    Returns (prev_id, next_id, position_1_based, total) or (None, None, None, None) if N/A.
+    """
+    if user.is_superuser:
+        qs = Application.objects.all()
+    elif getattr(user, "is_professor", False) and application.course.professor_id == user.id:
+        qs = Application.objects.filter(course__professor=user)
+    else:
+        return None, None, None, None
+    qs = qs.order_by(
+        "course__course",
+        "course__section",
+        "student__last_name",
+        "student__first_name",
+        "id",
+    )
+    ids = list(qs.values_list("id", flat=True))
+    total = len(ids)
+    try:
+        idx = ids.index(application.id)
+    except ValueError:
+        return None, None, None, None
+    prev_id = ids[idx - 1] if idx > 0 else None
+    next_id = ids[idx + 1] if idx + 1 < total else None
+    position = idx + 1
+    return prev_id, next_id, position, total
+
+
 @login_required
 def application_detail_v2(request, application_id):
-    app = get_object_or_404(Application, id=application_id)
-    
+    app = get_object_or_404(
+        Application.objects.select_related("student", "course", "course__professor"),
+        id=application_id,
+    )
+
     # Permission Check
     is_student_owner = request.user == app.student
     is_course_professor = request.user == app.course.professor
-    
+
     if not (request.user.is_superuser or is_student_owner or is_course_professor):
         messages.error(request, "You are not authorized to view this application.")
-        return redirect('dashboard')
-        
-    return render(request, 'application_detail.html', {'app': app})
+        return redirect("dashboard")
+
+    review_prev_app_id = review_next_app_id = None
+    review_queue_position = review_queue_total = None
+    show_applicant_navigation = request.user.is_superuser or (
+        is_course_professor and getattr(request.user, "is_professor", False)
+    )
+    if show_applicant_navigation:
+        (
+            review_prev_app_id,
+            review_next_app_id,
+            review_queue_position,
+            review_queue_total,
+        ) = _review_queue_nav_for_reviewer(app, request.user)
+
+    return render(
+        request,
+        "application_detail.html",
+        {
+            "app": app,
+            "show_applicant_navigation": show_applicant_navigation,
+            "review_prev_app_id": review_prev_app_id,
+            "review_next_app_id": review_next_app_id,
+            "review_queue_position": review_queue_position,
+            "review_queue_total": review_queue_total,
+        },
+    )
 
 
 @login_required
@@ -1084,3 +1242,33 @@ def serve_application_resume(request, application_id):
     except (ValueError, OSError):
         messages.error(request, "Resume file could not be found.")
         return redirect('application_detail', application_id=application_id)
+
+
+@login_required
+def serve_application_applicant_photo(request, application_id):
+    """Serve the profile photo snapshot for an application (student owner, course professor, or admin)."""
+    app = get_object_or_404(Application, id=application_id)
+    if not (
+        request.user.is_superuser
+        or request.user == app.student
+        or request.user == app.course.professor
+    ):
+        return HttpResponse(status=403)
+    if not app.profile_photo:
+        return HttpResponse(status=404)
+    try:
+        file_handle = app.profile_photo.open("rb")
+        filename = (app.profile_photo.name or "").lower()
+        if filename.endswith(".png"):
+            content_type = "image/png"
+        elif filename.endswith(".gif"):
+            content_type = "image/gif"
+        elif filename.endswith(".webp"):
+            content_type = "image/webp"
+        else:
+            content_type = "image/jpeg"
+        response = FileResponse(file_handle, content_type=content_type)
+        response["Cache-Control"] = "private, max-age=3600"
+        return response
+    except (ValueError, OSError):
+        return HttpResponse(status=404)

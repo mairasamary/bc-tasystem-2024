@@ -101,6 +101,11 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def is_ta(self):
         return self.course_working_for.exists()
 
+    @property
+    def has_ta_assignment(self):
+        """True if the user is assigned as a TA for at least one course (template-friendly)."""
+        return self.course_working_for.exists()
+
 
 class Skill(models.Model):
     """Predefined skill that students can add to their profile."""
@@ -122,6 +127,26 @@ class StudentProfile(models.Model):
     cv = models.FileField(upload_to=cv_upload_path, blank=True, null=True)
     graduation_year = models.PositiveIntegerField(blank=True, null=True)
     skills = models.ManyToManyField(Skill, related_name='profiles', blank=True)
+
+    # Self-reported student employment onboarding (TA / on-campus hire)
+    onboarding_done_required_form = models.BooleanField(
+        default=False,
+        verbose_name="Required Onboarding Form for New Student Employees",
+    )
+    onboarding_done_i9 = models.BooleanField(default=False, verbose_name="Form I-9")
+    onboarding_done_payroll_statement = models.BooleanField(
+        default=False,
+        verbose_name="Payroll Form Statement (Student Hours at Boston College)",
+    )
+    onboarding_done_w4 = models.BooleanField(default=False, verbose_name="W-4 (Federal Withholding Form)")
+    onboarding_done_m4 = models.BooleanField(
+        default=False,
+        verbose_name="M-4 (Massachusetts Withholding Form)",
+    )
+    onboarding_done_direct_deposit = models.BooleanField(
+        default=False,
+        verbose_name="Direct Deposit Enrollment Instructions",
+    )
 
     def __str__(self):
         return f"Profile for {self.user.get_full_name()}"

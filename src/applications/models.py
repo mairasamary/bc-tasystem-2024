@@ -84,9 +84,6 @@ class Application(models.Model):
 
     def reject(self, feedback=""):
         self.status = ApplicationStatus.REJECTED.value
-        # Feedback is optional; only set when provided by professor/admin.
-        if hasattr(self, "rejection_feedback"):
-            self.rejection_feedback = feedback or ""
         self.save()
 
     def confirm(self):
@@ -97,3 +94,19 @@ class Application(models.Model):
         self.status = ApplicationStatus.WITHDRAWN.value
         self.withdrawal_reason = reason
         self.save()
+
+
+class ApplicationAnswer(models.Model):
+    """A student's answer to a professor's custom course question."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name='custom_answers')
+    question = models.ForeignKey(
+        'courses.CourseQuestion', on_delete=models.PROTECT, related_name='answers'
+    )
+    answer_text = models.CharField(max_length=500, blank=True)
+
+    class Meta:
+        unique_together = ('application', 'question')
+
+    def __str__(self):
+        return f"Answer to '{self.question.question_text[:40]}' by {self.application.student.get_full_name()}"

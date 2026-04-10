@@ -40,7 +40,7 @@
     </div>
 </div>
 
-{% if assigned_course_name %}
+{% if assigned_course_name and not navbar_onboarding_complete %}
 <div class="mb-6 rounded-lg border border-bc-navy/15 bg-bc-navy/5 px-4 py-3 text-sm text-bc-navy-800">
     <span class="font-medium">TA assignment:</span> {{ assigned_course_name }}.
     Complete BC student employment onboarding and track your forms on the
@@ -87,21 +87,7 @@
                 {% for app in my_apps %}
                 <tr class="bg-white hover:bg-gray-50/50 transition-colors">
                     <td class="px-6 py-4 font-medium text-gray-900">{{ app.course.course }}</td>
-                    <td class="px-6 py-4">
-                        {% if app.get_status == 'PENDING' %}
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-amber-50 text-amber-800 ring-1 ring-amber-200/60">Pending</span>
-                        {% elif app.get_status == 'ACCEPTED' %}
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200/60">Accepted</span>
-                        {% elif app.get_status == 'REJECTED' %}
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-red-50 text-red-800 ring-1 ring-red-200/60">Rejected</span>
-                        {% elif app.get_status == 'CONFIRMED' %}
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-sky-50 text-sky-800 ring-1 ring-sky-200/60">Confirmed</span>
-                        {% elif app.get_status == 'WITHDRAWN' %}
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 ring-1 ring-gray-200/60">Withdrawn</span>
-                        {% else %}
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 ring-1 ring-gray-200/60">{{ app.get_status }}</span>
-                        {% endif %}
-                    </td>
+                    <td class="px-6 py-4">{% include "components/status_badge.html" with status=app.get_status %}</td>
                     <td class="px-6 py-4 text-right"><a href="{% url 'application_detail' app.id %}" class="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">View</a></td>
                 </tr>
                 {% empty %}
@@ -139,17 +125,7 @@
                 <tr class="bg-white hover:bg-gray-50/50 transition-colors">
                     <td class="px-6 py-4 font-medium text-gray-900">{{ offer.course.course }}</td>
                     <td class="px-6 py-4 text-gray-600">{{ offer.sender.get_full_name }}</td>
-                    <td class="px-6 py-4">
-                        {% if offer.get_status == 'PENDING' %}
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-amber-50 text-amber-800 ring-1 ring-amber-200/60">Pending</span>
-                        {% elif offer.get_status == 'ACCEPTED' %}
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200/60">Accepted</span>
-                        {% elif offer.get_status == 'REJECTED' %}
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-red-50 text-red-800 ring-1 ring-red-200/60">Declined</span>
-                        {% else %}
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 ring-1 ring-gray-200/60">{{ offer.get_status }}</span>
-                        {% endif %}
-                    </td>
+                    <td class="px-6 py-4">{% include "components/status_badge.html" with status=offer.get_status %}</td>
                     <td class="px-6 py-4 text-gray-600">{{ offer.created_at|date:"M d, Y" }}</td>
                 </tr>
                 {% empty %}

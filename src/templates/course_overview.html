@@ -20,8 +20,8 @@
             <p class="mt-1 text-gray-500 text-sm">{{ course.class_type }} Sec: {{ course.section }}</p>
         </div>
         {% if course.status %}
-        <span class="inline-flex items-center bg-green-50 text-green-700 text-sm font-medium px-3 py-1.5 rounded-full ring-1 ring-inset ring-green-600/20">
-            <span class="w-2 h-2 me-2 bg-green-500 rounded-full"></span>Active
+        <span class="inline-flex items-center bg-emerald-50 text-emerald-700 text-sm font-medium px-3 py-1.5 rounded-full ring-1 ring-inset ring-emerald-600/20">
+            <span class="w-2 h-2 me-2 bg-emerald-500 rounded-full"></span>Active
         </span>
         {% else %}
         <span class="inline-flex items-center bg-red-50 text-red-700 text-sm font-medium px-3 py-1.5 rounded-full ring-1 ring-inset ring-red-600/20">
@@ -122,6 +122,54 @@
     </div>
     {% endif %}
     {% endfor %}
+    {% endif %}
+
+    {% if user.is_superuser or user.is_professor and course.professor_id == user.id %}
+    <div class="card-pro rounded-lg p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h2 class="text-lg font-bold text-gray-900">Application questions</h2>
+                <p class="text-xs text-gray-500 mt-0.5">Students will answer these when applying. Max 5 questions.</p>
+            </div>
+            <span class="text-xs text-gray-400">{{ course.custom_questions.count }}/5</span>
+        </div>
+
+        {% if course.custom_questions.all %}
+        <ul class="divide-y divide-gray-100 mb-5">
+            {% for q in course.custom_questions.all %}
+            <li class="flex items-start justify-between gap-4 py-3">
+                <div class="min-w-0">
+                    <p class="text-sm text-gray-900">{{ q.question_text }}</p>
+                    <p class="text-xs text-gray-500 mt-0.5">{% if q.is_required %}Required{% else %}Optional{% endif %}</p>
+                </div>
+                {% if not q.has_answers %}
+                <form method="post" action="{% url 'delete_course_question' course.id q.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="shrink-0 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 px-2.5 py-1 rounded-md transition-colors">Delete</button>
+                </form>
+                {% else %}
+                <span class="shrink-0 text-xs text-gray-400 px-2.5 py-1">Has answers</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-sm text-gray-500 italic mb-5">No custom questions yet. Students will only see the standard fields.</p>
+        {% endif %}
+
+        {% if course.custom_questions.count < 5 %}
+        <form method="post" action="{% url 'add_course_question' course.id %}" class="flex flex-col sm:flex-row gap-2">
+            {% csrf_token %}
+            <input type="text" name="question_text" maxlength="300" placeholder="e.g. What grade did you get in this course?"
+                class="flex-1 text-sm border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-bc-navy-400 focus:border-transparent" required>
+            <label class="flex items-center gap-1.5 text-sm text-gray-700 whitespace-nowrap self-center">
+                <input type="checkbox" name="is_required" checked class="rounded border-gray-300 text-bc-navy focus:ring-bc-navy-400">
+                Required
+            </label>
+            <button type="submit" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-bc-navy hover:bg-bc-navy-600 rounded-md transition-colors">Add question</button>
+        </form>
+        {% endif %}
+    </div>
     {% endif %}
 
     <div class="flex flex-wrap gap-3">

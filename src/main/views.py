@@ -10,8 +10,8 @@ from django.urls import reverse
 from openpyxl import Workbook
 from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
-from courses.models import Course
-from applications.models import Application, ApplicationStatus
+from courses.models import Course, CourseQuestion
+from applications.models import Application, ApplicationStatus, ApplicationAnswer
 from applications.forms import ApplicationForm
 from offers.models import Offer, OfferStatus
 from users.forms import StudentEmploymentOnboardingForm
@@ -23,6 +23,15 @@ from main.ta_hiring import send_student_ta_acceptance_onboarding_email
 from main.utils import app_site_absolute_url, send_notification_email
 
 User = get_user_model()
+
+# Shared ordering for the applications table and professor/superuser prev/next on detail pages
+APPLICATIONS_SORT_ORDER = (
+    "student__last_name",
+    "student__first_name",
+    "course__course",
+    "course__section",
+    "id",
+)
 
 
 def home(request):
@@ -216,13 +225,15 @@ def employment_onboarding_checklist(request):
 
 @login_required
 def applications_list_v2(request):
+    qs = Application.objects.select_related("student", "course")
     if request.user.is_superuser:
-        apps = Application.objects.select_related('student', 'course').order_by('-id')
+        apps = qs
     elif request.user.is_professor:
-        apps = Application.objects.filter(course__professor=request.user).select_related('student', 'course').order_by('-id')
+        apps = qs.filter(course__professor=request.user)
     else:
-        apps = Application.objects.filter(student=request.user).select_related('student', 'course').order_by('-id')
-    return render(request, 'applications.html', {'apps': apps})
+        apps = qs.filter(student=request.user)
+    apps = apps.order_by(*APPLICATIONS_SORT_ORDER)
+    return render(request, "applications.html", {"apps": apps})
 
 @login_required
 def offers_list_v2(request):
@@ -497,6 +508,54 @@ def course_overview_v2(request, course_id):
         context['student_can_apply'] = False
     return render(request, 'course_overview.html', context)
 
+
+@login_required
+def add_course_question_v2(request, course_id):
+    if request.method != 'POST':
+        return redirect('course_overview', course_id=course_id)
+    course = get_object_or_404(Course, id=course_id)
+    if not (request.user.is_superuser or request.user == course.professor):
+        messages.error(request, "Only the course professor can manage questions.")
+        return redirect('course_overview', course_id=course_id)
+    if course.custom_questions.count() >= 5:
+        messages.error(request, "Maximum of 5 custom questions per course.")
+        return redirect('course_overview', course_id=course_id)
+    question_text = (request.POST.get('question_text') or '').strip()
+    if not question_text:
+        messages.error(request, "Question text cannot be empty.")
+        return redirect('course_overview', course_id=course_id)
+    if len(question_text) > 300:
+        messages.error(request, "Question text must be 300 characters or fewer.")
+        return redirect('course_overview', course_id=course_id)
+    is_required = request.POST.get('is_required') == 'on'
+    next_order = (course.custom_questions.order_by('-order').values_list('order', flat=True).first() or 0) + 1
+    CourseQuestion.objects.create(
+        course=course,
+        question_text=question_text,
+        is_required=is_required,
+        order=next_order,
+    )
+    messages.success(request, "Question added.")
+    return redirect('course_overview', course_id=course_id)
+
+
+@login_required
+def delete_course_question_v2(request, course_id, question_id):
+    if request.method != 'POST':
+        return redirect('course_overview', course_id=course_id)
+    course = get_object_or_404(Course, id=course_id)
+    if not (request.user.is_superuser or request.user == course.professor):
+        messages.error(request, "Only the course professor can manage questions.")
+        return redirect('course_overview', course_id=course_id)
+    question = get_object_or_404(CourseQuestion, id=question_id, course=course)
+    if question.has_answers:
+        messages.error(request, "Cannot delete a question that already has student answers.")
+        return redirect('course_overview', course_id=course_id)
+    question.delete()
+    messages.success(request, "Question deleted.")
+    return redirect('course_overview', course_id=course_id)
+
+
 @login_required
 def edit_course_v2(request, course_id):
     if not request.user.is_superuser:
@@ -548,6 +607,139 @@ def close_semester_v2(request):
         messages.success(request, "Successfully closed all courses for the semester.")
 
     return redirect('courses')
+
+
+BC_NEW_HIRES_URL = "https://www.bc.edu/content/bc-web/offices/student-services/student-employment/new-hires.html"
+
+ONBOARDING_STEPS = [
+    ("onboarding_done_required_form", "Required Onboarding Form"),
+    ("onboarding_done_i9", "Form I-9"),
+    ("onboarding_done_payroll_statement", "Payroll Form Statement"),
+    ("onboarding_done_w4", "W-4 (Federal)"),
+    ("onboarding_done_m4", "M-4 (Massachusetts)"),
+    ("onboarding_done_direct_deposit", "Direct Deposit"),
+]
+
+
+def _build_onboarding_rows():
+    """Return a list of dicts — one per TA — with their onboarding status."""
+    tas = User.objects.filter(course_working_for__isnull=False).distinct().order_by('last_name', 'first_name')
+    rows = []
+    for ta in tas:
+        try:
+            profile = ta.student_profile
+        except Exception:
+            profile = None
+        steps = []
+        completed = 0
+        for field, label in ONBOARDING_STEPS:
+            done = bool(getattr(profile, field, False)) if profile else False
+            if done:
+                completed += 1
+            steps.append({'label': label, 'done': done})
+        course = ta.course_working_for.first()
+        rows.append({
+            'user': ta,
+            'course': course,
+            'steps': steps,
+            'completed': completed,
+            'total': len(ONBOARDING_STEPS),
+            'is_complete': completed == len(ONBOARDING_STEPS),
+        })
+    return rows
+
+
+@login_required
+def onboarding_status_v2(request):
+    if not request.user.is_superuser:
+        messages.error(request, "Only admins can view onboarding status.")
+        return redirect('dashboard')
+    rows = _build_onboarding_rows()
+    complete_count = sum(1 for r in rows if r['is_complete'])
+    incomplete_count = len(rows) - complete_count
+    return render(request, 'onboarding_status.html', {
+        'rows': rows,
+        'step_labels': [label for _, label in ONBOARDING_STEPS],
+        'complete_count': complete_count,
+        'incomplete_count': incomplete_count,
+        'total_count': len(rows),
+    })
+
+
+@login_required
+def export_onboarding_status(request):
+    if not request.user.is_superuser:
+        messages.error(request, "Only admins can export onboarding status.")
+        return redirect('dashboard')
+
+    rows = _build_onboarding_rows()
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Onboarding Status"
+
+    headers = ['Name', 'Email', 'Course'] + [label for _, label in ONBOARDING_STEPS] + ['Completed', 'Status']
+    ws.append(headers)
+    for cell in ws[1]:
+        cell.font = Font(bold=True)
+
+    for row in rows:
+        data = [
+            row['user'].get_full_name(),
+            row['user'].email,
+            row['course'].course if row['course'] else '—',
+        ]
+        for step in row['steps']:
+            data.append('Yes' if step['done'] else 'No')
+        data.append(f"{row['completed']}/{row['total']}")
+        data.append('Complete' if row['is_complete'] else 'Incomplete')
+        ws.append(data)
+
+    for col in ws.columns:
+        max_len = max(len(str(cell.value or '')) for cell in col)
+        ws.column_dimensions[get_column_letter(col[0].column)].width = min(max_len + 4, 40)
+
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="onboarding_status.xlsx"'
+    wb.save(response)
+    return response
+
+
+@login_required
+def send_onboarding_reminders(request):
+    if request.method != 'POST':
+        return redirect('onboarding_status')
+    if not request.user.is_superuser:
+        messages.error(request, "Only admins can send onboarding reminders.")
+        return redirect('dashboard')
+
+    rows = _build_onboarding_rows()
+    incomplete = [r for r in rows if not r['is_complete']]
+    sent = 0
+    for row in incomplete:
+        ta = row['user']
+        if not ta.email:
+            continue
+        missing = [s['label'] for s in row['steps'] if not s['done']]
+        missing_list = '\n'.join(f'  • {m}' for m in missing)
+        send_notification_email(
+            subject="Action required: Complete your TA onboarding forms",
+            recipients=ta.email,
+            message_lines=[
+                f"Dear {ta.get_full_name()},",
+                f"You have been assigned as a TA for {row['course'].course if row['course'] else 'your course'}, but your BC student employment onboarding is not yet complete.",
+                f"You are still missing the following form(s):\n{missing_list}",
+                "Please complete these forms as soon as possible. All forms are submitted in person at the Office of Student Services.",
+                f"Visit the BC Student Employment New Hires page for instructions and form details:\n{BC_NEW_HIRES_URL}",
+                "If you have already submitted a form, you can mark it as complete on TA Buzz so your progress is up to date.",
+            ],
+        )
+        sent += 1
+
+    messages.success(request, f"Reminder sent to {sent} student{'s' if sent != 1 else ''} with incomplete onboarding.")
+    return redirect('onboarding_status')
 
 
 def _get_export_queryset(request):
@@ -707,9 +899,16 @@ def apply_to_course_v2(request, course_id):
         messages.error(request, "You have reached the 5-course application limit for this term.")
         return redirect('courses')
 
+    custom_questions = list(course.custom_questions.all())
+
     if request.method == 'POST':
         form = ApplicationForm(request.POST)
-        if form.is_valid():
+        # Validate required custom question answers
+        custom_errors = {}
+        for question in custom_questions:
+            if question.is_required and not (request.POST.get(f'question_{question.id}') or '').strip():
+                custom_errors[question.id] = "This field is required."
+        if form.is_valid() and not custom_errors:
             if request.user.is_ta():
                 messages.error(request, "You are already a TA for a course.")
                 return redirect('courses')
@@ -731,6 +930,14 @@ def apply_to_course_v2(request, course_id):
                 for pc in request.user.past_courses.all()
             ]
             app.save()
+            # Save answers to custom course questions
+            for question in course.custom_questions.all():
+                answer_text = (request.POST.get(f'question_{question.id}') or '').strip()
+                ApplicationAnswer.objects.create(
+                    application=app,
+                    question=question,
+                    answer_text=answer_text,
+                )
             # Copy resume and profile photo to application snapshots (what was submitted)
             import os
 
@@ -757,12 +964,23 @@ def apply_to_course_v2(request, course_id):
     # Profile summary for template (resume link, skills, past courses)
     profile_skills = list(profile.skills.all().order_by('name'))
     profile_past_courses = list(request.user.past_courses.all().order_by('course_name'))
+    posted = request.POST if request.method == 'POST' else {}
+    errors = custom_errors if request.method == 'POST' else {}
+    custom_questions_prefilled = [
+        {
+            'question': q,
+            'answer_text': posted.get(f'question_{q.id}', ''),
+            'error': errors.get(q.id, ''),
+        }
+        for q in custom_questions
+    ]
     return render(request, 'application_form.html', {
         'form': form,
         'course': course,
         'profile': profile,
         'profile_skills': profile_skills,
         'profile_past_courses': profile_past_courses,
+        'custom_questions_prefilled': custom_questions_prefilled,
     })
 
 
@@ -945,10 +1163,28 @@ def edit_application_v2(request, application_id):
         return redirect('application_detail', application_id=app.id)
 
     course = app.course
+    custom_questions = list(course.custom_questions.all())
+    existing_answers = {a.question_id: a for a in app.custom_answers.select_related('question').all()}
+
     if request.method == 'POST':
         form = ApplicationForm(request.POST, instance=app)
-        if form.is_valid():
+        custom_errors = {}
+        for question in custom_questions:
+            if question.is_required and not (request.POST.get(f'question_{question.id}') or '').strip():
+                custom_errors[question.id] = "This field is required."
+        if form.is_valid() and not custom_errors:
             form.save()
+            # Update or create answers for each custom question
+            for question in custom_questions:
+                answer_text = (request.POST.get(f'question_{question.id}') or '').strip()
+                if question.id in existing_answers:
+                    ans = existing_answers[question.id]
+                    ans.answer_text = answer_text
+                    ans.save(update_fields=['answer_text'])
+                else:
+                    ApplicationAnswer.objects.create(
+                        application=app, question=question, answer_text=answer_text
+                    )
             profile, _ = StudentProfile.objects.get_or_create(user=request.user)
             import os
 
@@ -968,11 +1204,23 @@ def edit_application_v2(request, application_id):
     else:
         form = ApplicationForm(instance=app)
 
+    posted = request.POST if request.method == 'POST' else {}
+    errors = locals().get('custom_errors', {})
+    custom_questions_prefilled = [
+        {
+            'question': q,
+            'answer_text': posted.get(f'question_{q.id}', existing_answers.get(q.id).answer_text if q.id in existing_answers else ''),
+            'error': errors.get(q.id, ''),
+        }
+        for q in custom_questions
+    ]
+
     return render(request, 'application_form.html', {
         'form': form,
         'course': course,
         'application': app,
         'is_edit': True,
+        'custom_questions_prefilled': custom_questions_prefilled,
     })
 
 
@@ -1158,7 +1406,7 @@ def delete_course_v2(request, course_id):
 
 def _review_queue_nav_for_reviewer(application, user):
     """
-    Ordered queue: course code, section, student name, then id.
+    Same order as the Applications list: last name, first name, course, section, id.
     Superuser: all applications. Professor: only applications for their courses.
     Returns (prev_id, next_id, position_1_based, total) or (None, None, None, None) if N/A.
     """
@@ -1168,13 +1416,7 @@ def _review_queue_nav_for_reviewer(application, user):
         qs = Application.objects.filter(course__professor=user)
     else:
         return None, None, None, None
-    qs = qs.order_by(
-        "course__course",
-        "course__section",
-        "student__last_name",
-        "student__first_name",
-        "id",
-    )
+    qs = qs.select_related("student", "course").order_by(*APPLICATIONS_SORT_ORDER)
     ids = list(qs.values_list("id", flat=True))
     total = len(ids)
     try:
@@ -1215,6 +1457,10 @@ def application_detail_v2(request, application_id):
             review_queue_total,
         ) = _review_queue_nav_for_reviewer(app, request.user)
 
+    custom_answers = list(
+        app.custom_answers.select_related('question').order_by('question__order', 'question__id')
+    )
+
     return render(
         request,
         "application_detail.html",
@@ -1225,6 +1471,7 @@ def application_detail_v2(request, application_id):
             "review_next_app_id": review_next_app_id,
             "review_queue_position": review_queue_position,
             "review_queue_total": review_queue_total,
+            "custom_answers": custom_answers,
         },
     )
 

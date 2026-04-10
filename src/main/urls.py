@@ -24,6 +24,8 @@ urlpatterns = [
     path("courses/<uuid:course_id>/", views.course_overview_v2, name="course_overview"),
     path("courses/<uuid:course_id>/edit/", views.edit_course_v2, name="edit_course"),
     path("courses/<uuid:course_id>/remove-ta/<uuid:user_id>/", views.remove_ta_v2, name="remove_ta"),
+    path("courses/<uuid:course_id>/questions/add/", views.add_course_question_v2, name="add_course_question"),
+    path("courses/<uuid:course_id>/questions/<uuid:question_id>/delete/", views.delete_course_question_v2, name="delete_course_question"),
     path("courses/<uuid:course_id>/delete/", views.delete_course_v2, name="delete_course"),
     path("courses/upload/", views.upload_courses_v2, name="upload_courses"),
     path("courses/export/", views.export_schedule, name="export_schedule"),
@@ -42,5 +44,8 @@ urlpatterns = [
         views.serve_application_applicant_photo,
         name="serve_application_applicant_photo",
     ),
+    path("onboarding-status/", views.onboarding_status_v2, name="onboarding_status"),
+    path("onboarding-status/export/", views.export_onboarding_status, name="export_onboarding_status"),
+    path("onboarding-status/remind/", views.send_onboarding_reminders, name="send_onboarding_reminders"),
     path("evaluations/", include("evaluations.urls")),
 ]

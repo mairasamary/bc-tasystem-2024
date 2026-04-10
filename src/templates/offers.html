@@ -13,7 +13,7 @@
 {% block content %}
 <div class="mb-8">
     <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">Offers</h1>
-    <p class="mt-1 text-gray-500 text-sm">All offers sent</p>
+    <p class="mt-1 text-gray-500 text-sm">{% if user.is_professor or user.is_superuser %}All offers sent{% else %}Offers extended to you{% endif %}</p>
 </div>
 
 <div class="card-pro rounded-xl overflow-hidden border border-gray-200/80 shadow-sm">
@@ -34,17 +34,7 @@
                     <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ offer.recipient.get_full_name }}</td>
                     <td class="px-6 py-4 text-gray-600">{{ offer.course.course }}</td>
                     <td class="px-6 py-4 text-gray-600">{{ offer.created_at|date:"M d, Y" }}</td>
-                    <td class="px-6 py-4">
-                        {% if offer.get_status == 'PENDING' %}
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-amber-50 text-amber-800 ring-1 ring-amber-200/60">Pending</span>
-                        {% elif offer.get_status == 'ACCEPTED' %}
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200/60">Accepted</span>
-                        {% elif offer.get_status == 'REJECTED' %}
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-red-50 text-red-800 ring-1 ring-red-200/60">Rejected</span>
-                        {% else %}
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 ring-1 ring-gray-200/60">{{ offer.get_status }}</span>
-                        {% endif %}
-                    </td>
+                    <td class="px-6 py-4">{% include "components/status_badge.html" with status=offer.get_status %}</td>
                     <td class="px-6 py-4">
                         <div class="flex items-center justify-end gap-2 flex-wrap">
                             {% if user == offer.recipient and offer.get_status == 'PENDING' %}

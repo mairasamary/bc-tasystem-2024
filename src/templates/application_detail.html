@@ -53,15 +53,7 @@
 
 <div class="mb-8">
     <div class="flex justify-between items-start">
-        <div class="flex items-start gap-4 min-w-0">
-            {% if app.profile_photo %}
-            <div class="shrink-0">
-                <img src="{% url 'serve_application_applicant_photo' app.id %}"
-                    alt=""
-                    class="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover ring-2 ring-gray-200 shadow-sm bg-gray-100">
-            </div>
-            {% endif %}
-            <div class="min-w-0">
+        <div class="min-w-0">
             <h1 class="text-2xl font-semibold text-gray-900 tracking-tight flex flex-wrap items-center gap-3">
                 {{ app.student.get_full_name }}
                 {% if app.get_status == 'PENDING' %}
@@ -80,7 +72,6 @@
             <p class="mt-2 text-sm text-gray-500">{{ app.withdrawal_reason }}</p>
             {% endif %}
             <p class="mt-2 text-lg text-gray-600">Applying for <a href="{% url 'course_overview' app.course.id %}" class="font-semibold text-bc-maroon hover:text-bc-maroon-700 hover:underline">{{ app.course.course }} - {{ app.course.course_title }}</a></p>
-            </div>
         </div>
 
         {% if user.is_professor and app.get_status == 'PENDING' or user.is_superuser and app.get_status == 'PENDING' %}
@@ -130,7 +121,7 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <!-- Main Content -->
     <div class="lg:col-span-2 space-y-8">
-        <!-- Profile at time of application: Resume, Skills, Courses & grades -->
+        <!-- Profile at time of application: Resume, Skills, Courses -->
         <div class="card-pro rounded-lg p-8">
             <h2 class="text-xl font-bold text-gray-900 mb-4">Applicant profile (at time of application)</h2>
             <div class="space-y-6">
@@ -156,16 +147,20 @@
                     <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Skills</h3>
                     {% if app.skills_snapshot %}
                     <p class="text-gray-900">{% for s in app.skills_snapshot %}{{ s.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
-                    {% else %}
+                    {% endif %}
+                    {% if app.skills_additional_snapshot %}
+                    <p class="text-gray-900 mt-2"><span class="text-gray-500">Other skills:</span> {{ app.skills_additional_snapshot }}</p>
+                    {% endif %}
+                    {% if not app.skills_snapshot and not app.skills_additional_snapshot %}
                     <p class="text-gray-500 italic">No skills recorded.</p>
                     {% endif %}
                 </div>
                 <div>
-                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Courses &amp; grades</h3>
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Courses</h3>
                     {% if app.courses_snapshot %}
                     <ul class="list-disc list-inside text-gray-900 space-y-0.5">
                         {% for c in app.courses_snapshot %}
-                        <li>{{ c.course_name }} — {{ c.grade }}</li>
+                        <li>{{ c.course_name }}</li>
                         {% endfor %}
                     </ul>
                     {% else %}

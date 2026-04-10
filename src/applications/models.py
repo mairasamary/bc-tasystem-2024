@@ -54,7 +54,12 @@ class Application(models.Model):
         upload_to=application_profile_photo_upload_path, blank=True, null=True
     )
     skills_snapshot = models.JSONField(default=list, blank=True)  # [{"name": "Python"}, ...]
-    courses_snapshot = models.JSONField(default=list, blank=True)  # [{"course_name": "...", "grade": "..."}]
+    skills_additional_snapshot = models.CharField(
+        max_length=500,
+        blank=True,
+        help_text="Free-text skills from profile at time of application.",
+    )
+    courses_snapshot = models.JSONField(default=list, blank=True)  # [{"course_name": "..."}]
 
     status = models.IntegerField(choices=[(
         tag.value, tag.name) for tag in ApplicationStatus], default=ApplicationStatus.PENDING.value)

@@ -19,6 +19,8 @@ def google_callback(request):
             'code'), backend=GoogleAuthBackend)
         if user:
             login(request, user=user)
+            if user.student_needs_profile_welcome():
+                return redirect("profile_welcome")
         else:
             messages.error(request, "You are not Authorized to Login ")
-        return redirect('dashboard')
+        return redirect("dashboard")

@@ -9,7 +9,13 @@ from django.views.generic import View
 from django.views.generic.edit import UpdateView
 from django.views.generic.base import TemplateResponseMixin
 from .forms import CustomUserUpdateForm, StudentProfileForm, PastCourseForm, PastCourseFormSet
-from .models import CustomUser, StudentProfile, PastCourse, Skill
+from .models import (
+    CustomUser,
+    StudentProfile,
+    PastCourse,
+    Skill,
+    ensure_default_skills_exist,
+)
 
 
 class ProfileView(UpdateView):
@@ -24,6 +30,30 @@ class StudentProfileView(LoginRequiredMixin, TemplateResponseMixin, View):
     template_name = 'student_profile.html'
     success_url = reverse_lazy('student_profile')
 
+    def _skills_template_context(self, profile, selected_skill_ids_override=None):
+        if not Skill.objects.exists():
+            ensure_default_skills_exist()
+        qs = Skill.objects.all().order_by('name')
+        all_skills = list(qs.values('id', 'name'))
+        for s in all_skills:
+            s['id'] = str(s['id'])
+        if selected_skill_ids_override is not None:
+            selected_ids = [str(s) for s in selected_skill_ids_override if s]
+            selected_skills = list(Skill.objects.filter(id__in=selected_ids).order_by('name'))
+        else:
+            selected_ids = [str(sid) for sid in profile.skills.values_list('id', flat=True)]
+            selected_skills = list(profile.skills.all().order_by('name'))
+        selected_set = set(selected_ids)
+        skills_available_to_add = [s for s in qs if str(s.id) not in selected_set]
+        return {
+            'all_skills': qs,
+            'all_skills_json': json.dumps(all_skills),
+            'selected_skill_ids': selected_ids,
+            'selected_skill_ids_json': json.dumps(selected_ids),
+            'selected_skills': selected_skills,
+            'skills_available_to_add': skills_available_to_add,
+        }
+
     def get(self, request, *args, **kwargs):
         if request.user.is_professor:
             messages.info(request, 'Professors do not have a student profile.')
@@ -31,19 +61,14 @@ class StudentProfileView(LoginRequiredMixin, TemplateResponseMixin, View):
         profile, _ = StudentProfile.objects.get_or_create(user=request.user)
         profile_form = StudentProfileForm(instance=profile)
         course_formset = PastCourseFormSet(instance=request.user)
-        all_skills = list(Skill.objects.all().values('id', 'name'))
-        for s in all_skills:
-            s['id'] = str(s['id'])
-        return self.render_to_response({
+        ctx = {
             'profile_form': profile_form,
             'course_formset': course_formset,
             'profile': profile,
-            'all_skills': Skill.objects.all(),
-            'all_skills_json': json.dumps(all_skills),
-            'selected_skill_ids': [str(sid) for sid in profile.skills.values_list('id', flat=True)],
-            'selected_skill_ids_json': json.dumps([str(sid) for sid in profile.skills.values_list('id', flat=True)]),
-            'selected_skills': list(profile.skills.all()),
-        })
+            'profile_complete_for_apply': request.user.has_complete_profile_for_apply(),
+        }
+        ctx.update(self._skills_template_context(profile))
+        return self.render_to_response(ctx)
 
     def post(self, request, *args, **kwargs):
         if request.user.is_professor:
@@ -69,8 +94,9 @@ class StudentProfileView(LoginRequiredMixin, TemplateResponseMixin, View):
             if request.POST.get('remove_cv') == '1':
                 profile.cv = None
             profile.save()
-            profile_form.save_m2m()
             course_formset.save()
+            skill_ids = request.POST.getlist('skills', [])
+            profile.skills.set(Skill.objects.filter(id__in=skill_ids))
             # Save Eagle ID on user (empty = clear it)
             eagleid_val = (request.POST.get('eagleid') or '').strip()
             try:
@@ -81,20 +107,14 @@ class StudentProfileView(LoginRequiredMixin, TemplateResponseMixin, View):
             messages.success(request, 'Profile updated successfully.')
             return redirect(self.success_url)
         selected_ids = request.POST.getlist('skills', [])
-        selected_skills = list(Skill.objects.filter(id__in=selected_ids))
-        all_skills = list(Skill.objects.all().values('id', 'name'))
-        for s in all_skills:
-            s['id'] = str(s['id'])
-        return self.render_to_response({
+        ctx = {
             'profile_form': profile_form,
             'course_formset': course_formset,
             'profile': profile,
-            'all_skills': Skill.objects.all(),
-            'all_skills_json': json.dumps(all_skills),
-            'selected_skill_ids': selected_ids,
-            'selected_skill_ids_json': json.dumps(selected_ids),
-            'selected_skills': selected_skills,
-        })
+            'profile_complete_for_apply': request.user.has_complete_profile_for_apply(),
+        }
+        ctx.update(self._skills_template_context(profile, selected_skill_ids_override=selected_ids))
+        return self.render_to_response(ctx)
 
 
 def serve_resume(request):

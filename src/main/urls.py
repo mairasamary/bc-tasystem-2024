@@ -5,6 +5,7 @@ from users.views import StudentProfileView
 urlpatterns = [
     path("", views.home, name="home"),
     path("contributors/", views.contributors, name="contributors"),
+    path("welcome/", views.profile_welcome, name="profile_welcome"),
     path("dashboard/", views.admin_dashboard_v2, name="dashboard"),
     path("notifications/", views.notifications_page, name="notifications"),
     path("notifications/<uuid:notification_id>/open/", views.open_notification, name="open_notification"),

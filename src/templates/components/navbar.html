@@ -13,38 +13,33 @@
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
 
-        <div class="hidden md:flex items-center justify-center gap-1" id="navbar-desktop">
+        <div class="hidden md:flex items-center justify-center gap-0.5" id="navbar-desktop">
             {% if user.is_authenticated %}
-            <a href="{% url 'dashboard' %}" class="flex items-center gap-2 py-2.5 px-3 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors {% if request.resolver_match.url_name == 'dashboard' %}bg-gray-100 text-gray-900{% endif %}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+            <a href="{% url 'dashboard' %}" class="py-2 px-3 rounded-md text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors {% if request.resolver_match.url_name == 'dashboard' %}bg-gray-100 text-gray-900 font-medium{% endif %}">
                 Dashboard
             </a>
-            <a href="{% url 'applications' %}" class="flex items-center gap-2 py-2.5 px-3 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors {% if request.resolver_match.url_name == 'applications' %}bg-gray-100 text-gray-900{% endif %}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <a href="{% url 'applications' %}" class="py-2 px-3 rounded-md text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors {% if request.resolver_match.url_name == 'applications' %}bg-gray-100 text-gray-900 font-medium{% endif %}">
                 Applications
             </a>
-            <a href="{% url 'offers' %}" class="flex items-center gap-2 py-2.5 px-3 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors {% if request.resolver_match.url_name == 'offers' %}bg-gray-100 text-gray-900{% endif %}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            <a href="{% url 'offers' %}" class="py-2 px-3 rounded-md text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors {% if request.resolver_match.url_name == 'offers' %}bg-gray-100 text-gray-900 font-medium{% endif %}">
                 Offers
             </a>
-            <a href="{% url 'courses' %}" class="flex items-center gap-2 py-2.5 px-3 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors {% if request.resolver_match.url_name == 'courses' %}bg-gray-100 text-gray-900{% endif %}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            <a href="{% url 'courses' %}" class="py-2 px-3 rounded-md text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors {% if request.resolver_match.url_name == 'courses' %}bg-gray-100 text-gray-900 font-medium{% endif %}">
                 Courses
             </a>
-            {% if user.has_ta_assignment and not user.is_professor %}
-            <a href="{% url 'employment_onboarding' %}" class="flex items-center gap-2 py-2.5 px-3 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors {% if request.resolver_match.url_name == 'employment_onboarding' %}bg-gray-100 text-gray-900{% endif %}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+            {% if user.has_ta_assignment and not user.is_professor and not navbar_onboarding_complete %}
+            <a href="{% url 'employment_onboarding' %}" class="relative py-2 px-3 rounded-md text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors {% if request.resolver_match.url_name == 'employment_onboarding' %}bg-gray-100 text-gray-900 font-medium{% endif %}">
                 Onboarding
+                <span class="ml-1 inline-flex items-center justify-center text-[10px] font-semibold leading-none px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">{{ navbar_onboarding_steps_completed }}/6</span>
             </a>
             {% endif %}
             {% if user.is_professor or user.is_superuser %}
-            <a href="{% url 'evaluations:list' %}" class="flex items-center gap-2 py-2.5 px-3 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors {% if 'evaluations' in request.resolver_match.url_name %}bg-gray-100 text-gray-900{% endif %}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+            <a href="{% url 'evaluations:list' %}" class="py-2 px-3 rounded-md text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors {% if 'evaluations' in request.resolver_match.url_name %}bg-gray-100 text-gray-900 font-medium{% endif %}">
                 Evaluations
             </a>
             {% endif %}
             {% else %}
-            <a href="{% url 'home' %}" class="flex items-center gap-2 py-2.5 px-3 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors {% if request.resolver_match.url_name == 'home' %}bg-gray-100 text-gray-900{% endif %}">
+            <a href="{% url 'home' %}" class="py-2 px-3 rounded-md text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors {% if request.resolver_match.url_name == 'home' %}bg-gray-100 text-gray-900 font-medium{% endif %}">
                 Home
             </a>
             {% endif %}
@@ -91,7 +86,13 @@
 
             {% if not user.is_professor and not user.is_superuser %}
             <a href="{% url 'student_profile' %}" class="flex items-center gap-2.5 min-w-0 no-underline text-gray-800 hover:text-gray-900 transition-colors">
+                {% if navbar_show_profile_photo %}
+                <span class="w-8 h-8 rounded-full overflow-hidden ring-1 ring-gray-200 shrink-0 block" title="{{ user.get_full_name }}">
+                    <img src="{% url 'users:serve_profile_photo' %}" alt="" class="w-full h-full object-cover" width="32" height="32" decoding="async">
+                </span>
+                {% else %}
                 <span class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 text-xs font-medium shrink-0" title="{{ user.get_full_name }}">{% if user.first_name and user.last_name %}{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}{% elif user.get_full_name %}{{ user.get_full_name|slice:":2"|upper }}{% else %}{{ user.email|slice:":2"|upper }}{% endif %}</span>
+                {% endif %}
                 <div class="min-w-0">
                     <div class="font-medium text-gray-800 truncate">{{ user.get_full_name|default:user.email }}</div>
                     <div class="text-gray-500 text-xs whitespace-nowrap">Student</div>
@@ -120,7 +121,7 @@
             <a href="{% url 'applications' %}" class="block py-2 px-3 text-gray-700 rounded hover:bg-gray-100">Applications</a>
             <a href="{% url 'offers' %}" class="block py-2 px-3 text-gray-700 rounded hover:bg-gray-100">Offers</a>
             <a href="{% url 'courses' %}" class="block py-2 px-3 text-gray-700 rounded hover:bg-gray-100">Courses</a>
-            {% if user.has_ta_assignment and not user.is_professor %}<a href="{% url 'employment_onboarding' %}" class="block py-2 px-3 text-gray-700 rounded hover:bg-gray-100">Onboarding</a>{% endif %}
+            {% if user.has_ta_assignment and not user.is_professor and not navbar_onboarding_complete %}<a href="{% url 'employment_onboarding' %}" class="block py-2 px-3 text-gray-700 rounded hover:bg-gray-100">Onboarding <span class="ml-1 text-xs font-semibold text-amber-700">{{ navbar_onboarding_steps_completed }}/6</span></a>{% endif %}
             {% if user.is_professor or user.is_superuser %}<a href="{% url 'evaluations:list' %}" class="block py-2 px-3 text-gray-700 rounded hover:bg-gray-100">Evaluations</a>{% endif %}
             {% if not user.is_professor and not user.is_superuser %}<a href="{% url 'student_profile' %}" class="block py-2 px-3 text-gray-700 rounded hover:bg-gray-100">Profile</a>{% endif %}
             <a href="{% url 'notifications' %}" class="block py-2 px-3 text-gray-700 rounded hover:bg-gray-100">Notifications</a>

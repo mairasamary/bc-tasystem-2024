@@ -2,7 +2,7 @@ from datetime import date
 from django import forms
 from django.forms import inlineformset_factory
 from django.contrib.auth.forms import UserChangeForm
-from .models import CustomUser, StudentProfile, PastCourse, Skill, PREDEFINED_COURSES, GRADE_CHOICES
+from .models import CustomUser, StudentProfile, PastCourse, Skill, PREDEFINED_COURSES
 
 COURSE_CHOICES = [('', '-- Select a course --')] + [(c, c) for c in PREDEFINED_COURSES] + [('__custom__', 'Custom elective (enter name below)')]
 
@@ -28,14 +28,10 @@ class PastCourseForm(forms.ModelForm):
         max_length=200, required=False, label='Custom course name',
         widget=forms.TextInput(attrs={'placeholder': 'Enter elective name', 'class': INPUT_CLASS})
     )
-    grade = forms.ChoiceField(
-        choices=GRADE_CHOICES, required=False, label='Grade',
-        widget=forms.Select(attrs={'class': INPUT_CLASS})
-    )
 
     class Meta:
         model = PastCourse
-        fields = ['grade']
+        fields = []
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -45,13 +41,15 @@ class PastCourseForm(forms.ModelForm):
             else:
                 self.fields['course_selection'].initial = '__custom__'
                 self.fields['custom_course_name'].initial = self.instance.course_name
+        else:
+            # New / empty formset row: force placeholder, not custom elective
+            self.fields['course_selection'].initial = ''
 
     def clean(self):
         data = super().clean()
         selection = data.get('course_selection')
         custom = (data.get('custom_course_name') or '').strip()
-        grade = data.get('grade')
-        if not selection and not custom and not grade:
+        if not selection and not custom:
             return data
         if selection == '__custom__':
             if not custom:
@@ -62,8 +60,6 @@ class PastCourseForm(forms.ModelForm):
             data['course_name'] = selection
         else:
             self.add_error('course_selection', 'Please select a course or enter a custom one.')
-        if not grade:
-            self.add_error('grade', 'Please select a grade.')
         return data
 
     def save(self, commit=True):
@@ -103,15 +99,24 @@ def _graduation_year_choices():
 
 
 class StudentProfileForm(forms.ModelForm):
+    """Skills are edited via custom UI on the profile template (POST name=\"skills\")."""
+
     class Meta:
         model = StudentProfile
-        fields = ['profile_photo', 'resume', 'cv', 'graduation_year', 'skills']
+        fields = ['profile_photo', 'resume', 'cv', 'graduation_year', 'skills_additional']
         widgets = {
             'profile_photo': forms.FileInput(attrs={'accept': 'image/*'}),
             'resume': forms.FileInput(attrs={'accept': '.pdf,.doc,.docx'}),
             'cv': forms.FileInput(attrs={'accept': '.pdf,.doc,.docx'}),
             'graduation_year': forms.Select(attrs={'class': INPUT_CLASS}),
-            'skills': forms.CheckboxSelectMultiple(attrs={'class': 'skill-checkbox'}),
+            'skills_additional': forms.Textarea(
+                attrs={
+                    'class': INPUT_CLASS,
+                    'rows': 3,
+                    'placeholder': 'Add languages, tools, or experience that are not in the list above.',
+                    'maxlength': '500',
+                }
+            ),
         }
 
     def __init__(self, *args, **kwargs):

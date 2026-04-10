@@ -34,6 +34,18 @@ def contributors(request):
 
 
 @login_required
+def profile_welcome(request):
+    """One-time welcome for new students; POST acknowledges and sends them to profile."""
+    if not request.user.student_needs_profile_welcome():
+        return redirect("dashboard")
+    if request.method == "POST":
+        request.user.profile_welcome_acknowledged = True
+        request.user.save(update_fields=["profile_welcome_acknowledged"])
+        return redirect("student_profile")
+    return render(request, "profile_welcome.html")
+
+
+@login_required
 def notifications_page(request):
     notifications = Notification.objects.filter(user=request.user).order_by("-created_at")
     return render(request, "notifications.html", {"notifications": notifications})
@@ -397,10 +409,8 @@ def courses_list_v2(request):
             if current_term
             else 0
         )
-        has_accepted = Offer.objects.filter(
-            recipient=request.user, status=OfferStatus.ACCEPTED.value
-        ).exists()
-        student_can_apply = not (apps_this_term >= 5 or has_accepted)
+        # One TA position total: cannot apply after accepting / being assigned as TA
+        student_can_apply = not (apps_this_term >= 5 or request.user.is_ta())
     else:
         applied_course_ids = []
         student_can_apply = True  # professors don't use Apply
@@ -481,10 +491,7 @@ def course_overview_v2(request, course_id):
             if current_term
             else 0
         )
-        has_accepted = Offer.objects.filter(
-            recipient=request.user, status=OfferStatus.ACCEPTED.value
-        ).exists()
-        context['student_can_apply'] = not (apps_this_term >= 5 or has_accepted)
+        context['student_can_apply'] = not (apps_this_term >= 5 or request.user.is_ta())
     else:
         context['applied_course_ids'] = []
         context['student_can_apply'] = False
@@ -670,11 +677,14 @@ def apply_to_course_v2(request, course_id):
         messages.warning(request, "You have already applied to this course.")
         return redirect('courses')
 
-    # Require profile with resume before applying
+    # Require Eagle ID + resume before applying
     profile, _ = StudentProfile.objects.get_or_create(user=request.user)
-    if not profile.resume:
-        messages.error(request, "Please complete your profile before applying. Upload a resume in your Profile page.")
-        return redirect('student_profile')
+    if not request.user.has_complete_profile_for_apply():
+        messages.error(
+            request,
+            "Complete your profile before applying: add your Eagle ID and upload a resume on your Profile page.",
+        )
+        return redirect("student_profile")
 
     def count_applications_for_term(student, term):
         if not term:
@@ -700,6 +710,9 @@ def apply_to_course_v2(request, course_id):
     if request.method == 'POST':
         form = ApplicationForm(request.POST)
         if form.is_valid():
+            if request.user.is_ta():
+                messages.error(request, "You are already a TA for a course.")
+                return redirect('courses')
             # Re-check limit right before save
             if count_applications_for_term(request.user, course.term) >= 5:
                 return HttpResponse(
@@ -712,8 +725,9 @@ def apply_to_course_v2(request, course_id):
             app.status = ApplicationStatus.PENDING.value
             # Snapshot profile at time of application
             app.skills_snapshot = [{"name": s.name} for s in profile.skills.all()]
+            app.skills_additional_snapshot = (profile.skills_additional or "").strip()[:500]
             app.courses_snapshot = [
-                {"course_name": pc.course_name, "grade": pc.grade}
+                {"course_name": pc.course_name}
                 for pc in request.user.past_courses.all()
             ]
             app.save()
@@ -946,6 +960,9 @@ def edit_application_v2(request, application_id):
                 )
             elif app.profile_photo:
                 app.profile_photo.delete(save=True)
+            app.skills_snapshot = [{"name": s.name} for s in profile.skills.all()]
+            app.skills_additional_snapshot = (profile.skills_additional or "").strip()[:500]
+            app.save(update_fields=["skills_snapshot", "skills_additional_snapshot"])
             messages.success(request, "Your application has been updated.")
             return redirect('application_detail', application_id=app.id)
     else:
@@ -966,36 +983,33 @@ def accept_offer_v2(request, offer_id):
         if request.user != offer.recipient:
             messages.error(request, "You are not authorized to accept this offer.")
             return redirect('offers')
-        # Enforce 1 TA position per term: block if student already has an accepted offer for this term
-        term = (offer.course.term or "").strip()
-        if term:
-            has_other_accepted = Offer.objects.filter(
-                recipient=offer.recipient,
-                course__term__iexact=term,
-                status=OfferStatus.ACCEPTED.value,
-            ).exclude(id=offer.id).exists()
-            if has_other_accepted:
-                messages.error(request, "You can only accept 1 TA position per term.")
-                return redirect('offers')
+        # Exactly one TA assignment: block a second offer if already assigned elsewhere
+        if offer.recipient.is_ta() and not offer.recipient.course_working_for.filter(
+            pk=offer.course.pk
+        ).exists():
+            messages.error(
+                request,
+                "You are already a TA for another course. You can only hold one TA position at a time.",
+            )
+            return redirect('offers')
         with transaction.atomic():
             offer.accept()
-            if term:
-                # Withdraw other same-term applications (active: PENDING or ACCEPTED)
-                Application.objects.filter(
-                    student=offer.recipient,
-                    course__term__iexact=term,
-                ).exclude(id=offer.application_id).filter(
-                    status__in=[ApplicationStatus.PENDING.value, ApplicationStatus.ACCEPTED.value],
-                ).update(
-                    status=ApplicationStatus.WITHDRAWN.value,
-                    withdrawal_reason="Accepted another TA offer",
-                )
-                # Close other same-term pending offers (status only; applications already withdrawn)
-                Offer.objects.filter(
-                    recipient=offer.recipient,
-                    course__term__iexact=term,
-                    status=OfferStatus.PENDING.value,
-                ).exclude(id=offer.id).update(status=OfferStatus.REJECTED.value)
+            # Withdraw all other active applications (any term)
+            Application.objects.filter(
+                student=offer.recipient,
+                status__in=[
+                    ApplicationStatus.PENDING.value,
+                    ApplicationStatus.ACCEPTED.value,
+                ],
+            ).exclude(id=offer.application_id).update(
+                status=ApplicationStatus.WITHDRAWN.value,
+                withdrawal_reason="Accepted a TA offer",
+            )
+            # Reject all other pending offers
+            Offer.objects.filter(
+                recipient=offer.recipient,
+                status=OfferStatus.PENDING.value,
+            ).exclude(id=offer.id).update(status=OfferStatus.REJECTED.value)
         messages.success(request, f"Congratulations! You are now a TA for {offer.course.course}.")
         create_notification(
             user=offer.recipient,

@@ -21,7 +21,7 @@ class ApplicationForm(forms.ModelForm):
                 'class': APPLY_INPUT_CLASS,
                 'rows': 3,
                 'maxlength': 500,
-                'placeholder': 'Relevant experience (courses taken, grades, prior TA/tutoring, etc.)',
+                'placeholder': 'Relevant experience (courses taken, prior TA/tutoring, etc.)',
             }),
             'other_notes': forms.Textarea(attrs={
                 'class': APPLY_INPUT_CLASS,

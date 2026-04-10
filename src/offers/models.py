@@ -34,6 +34,9 @@ class Offer(models.Model):
     def accept(self):
         self.status = OfferStatus.ACCEPTED.value
         self.application.confirm()
+        # Single TA assignment: remove recipient from any other course TA lists first
+        for other in self.recipient.course_working_for.exclude(pk=self.course.pk):
+            other.current_tas.remove(self.recipient)
         self.course.current_tas.add(self.recipient)
         # Close course when it reaches full TA capacity (one of two ways courses close)
         if self.course.current_tas.count() >= self.course.num_tas:

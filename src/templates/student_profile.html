@@ -16,7 +16,14 @@
     <p class="mt-1 text-gray-500 text-sm">Update your photo, resume, skills, and course history</p>
 </div>
 
-<div class="card-pro rounded-lg overflow-hidden">
+{% if not profile_complete_for_apply %}
+<div class="mb-6 p-4 rounded-lg border border-amber-200 bg-amber-50/90 text-amber-950 text-sm" role="status">
+    <p class="font-semibold">Before you can apply to courses</p>
+    <p class="mt-1 text-amber-900/90">Enter your <strong>Eagle ID</strong> below and upload a <strong>resume</strong>.</p>
+</div>
+{% endif %}
+
+<div class="card-pro rounded-lg">
 <form method="post" enctype="multipart/form-data" class="m-0 w-full">
     {% csrf_token %}
 
@@ -58,15 +65,28 @@
             <p class="mt-2 text-sm text-red-600">{{ profile_form.profile_photo.errors.0 }}</p>
             {% endif %}
 
-            <!-- Skills: search + bubbles -->
+            <!-- Skills: search, suggestions, bubbles -->
             <div class="mt-6 w-full">
-                <label class="block text-sm font-bold text-gray-900 mb-2">Skills</label>
-                <div class="relative">
-                    <input type="text" id="skill-search" placeholder="Search skills..." autocomplete="off"
+                <label class="block text-sm font-bold text-gray-900 mb-1" for="skill-search">Skills</label>
+                <p class="text-xs text-gray-500 mb-2">Add skills for your TA profile. Click below to pick from the list, or search and choose from the dropdown.</p>
+                <div class="relative z-20">
+                    <input type="text" id="skill-search" placeholder="Search skills…" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="skill-results" aria-autocomplete="list"
                         class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-bc-maroon focus:border-bc-maroon">
-                    <div id="skill-results" class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto hidden"></div>
+                    <div id="skill-results" role="listbox" class="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-48 overflow-y-auto hidden"></div>
                 </div>
-                <div id="skill-bubbles" class="flex flex-wrap gap-1.5 mt-2">
+                {% if skills_available_to_add %}
+                <div class="mt-3">
+                    <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Add a skill</span>
+                    <div id="skill-quick-picks" class="flex flex-wrap gap-1.5 mt-1.5">
+                        {% for skill in skills_available_to_add %}
+                        <button type="button" class="skill-quick-add inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border border-gray-200 bg-white text-gray-700 hover:border-bc-maroon hover:text-bc-maroon hover:bg-bc-maroon/5 transition-colors"
+                            data-skill-id="{{ skill.id }}" data-skill-name="{{ skill.name }}">+ {{ skill.name }}</button>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                <p class="text-xs text-gray-500 mt-2">Your skills <span class="text-gray-400">(saved when you click &ldquo;Save profile&rdquo;)</span></p>
+                <div id="skill-bubbles" class="flex flex-wrap gap-1.5 mt-1 min-h-[1.75rem]">
                     {% for skill in selected_skills %}
                     <span class="skill-bubble inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-bc-maroon/15 text-bc-maroon text-xs font-medium">
                         {{ skill.name }}
@@ -75,7 +95,12 @@
                     </span>
                     {% endfor %}
                 </div>
-                {% if profile_form.skills.errors %}<p class="text-sm text-red-600 mt-1">{{ profile_form.skills.errors.0 }}</p>{% endif %}
+                <div class="mt-4 w-full text-left">
+                    <label for="{{ profile_form.skills_additional.id_for_label }}" class="block text-xs font-medium text-gray-500 mb-1">Other skills (optional)</label>
+                    <p class="text-xs text-gray-500 mb-1">Optional. Max 500 characters.</p>
+                    {{ profile_form.skills_additional }}
+                    {% if profile_form.skills_additional.errors %}<p class="text-sm text-red-600 mt-1">{{ profile_form.skills_additional.errors.0 }}</p>{% endif %}
+                </div>
             </div>
         </div>
 
@@ -119,26 +144,22 @@
             </div>
         </div>
 
-        <!-- Bottom right: Courses and grades -->
+        <!-- Bottom right: Past courses -->
         <div class="card-pro rounded-lg p-6 flex flex-col">
-            <h2 class="text-sm font-bold text-gray-900 tracking-tight mb-1">Courses & Grades</h2>
-            <p class="text-sm text-gray-500 mb-4">List relevant courses and grades for your TA applications.</p>
+            <h2 class="text-sm font-bold text-gray-900 tracking-tight mb-1">Courses</h2>
+            <p class="text-sm text-gray-500 mb-4">List relevant courses you&rsquo;ve taken for your TA applications.</p>
             {{ course_formset.management_form }}
             <div id="course-formset-container" class="space-y-3">
                 {% for form in course_formset %}
-                <div class="past-course-row grid grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_5.5rem_auto] gap-4 items-end p-4 rounded-lg bg-gray-50/80 border border-gray-100 text-sm transition-opacity" data-delete-target="">
+                <div class="past-course-row grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-4 items-end p-4 rounded-lg bg-gray-50/80 border border-gray-100 text-sm transition-opacity" data-delete-target="">
                     {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-                    <div class="min-w-0">
+                    <div class="min-w-0 w-full">
                         <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Course</label>
                         {{ form.course_selection }}
                     </div>
-                    <div class="custom-course-wrap min-w-0 {% if form.course_selection.value != '__custom__' %}hidden{% endif %}">
+                    <div class="custom-course-wrap min-w-0 {% if form.course_selection.value != '__custom__' %}invisible pointer-events-none{% endif %}">
                         <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Custom</label>
                         {{ form.custom_course_name }}
-                    </div>
-                    <div class="min-w-0">
-                        <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Grade</label>
-                        {{ form.grade }}
                     </div>
                     {% if course_formset.can_delete %}
                     <div class="flex items-center pb-0.5">
@@ -150,10 +171,9 @@
                         </label>
                     </div>
                     {% endif %}
-                    {% if form.course_selection.errors or form.grade.errors %}
+                    {% if form.course_selection.errors %}
                     <div class="col-span-full text-red-600 text-xs mt-1">
                         {% if form.course_selection.errors %}{{ form.course_selection.errors.0 }}{% endif %}
-                        {% if form.grade.errors %}{{ form.grade.errors.0 }}{% endif %}
                     </div>
                     {% endif %}
                 </div>
@@ -165,19 +185,15 @@
             </button>
 
             <div id="empty-course-form" class="hidden">
-                <div class="past-course-row empty-form-template grid grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_5.5rem_auto] gap-4 items-end p-4 rounded-lg bg-gray-50/80 border border-gray-100 text-sm" data-delete-target="">
+                <div class="past-course-row empty-form-template grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-4 items-end p-4 rounded-lg bg-gray-50/80 border border-gray-100 text-sm" data-delete-target="">
                     {% for hidden in course_formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
-                    <div class="min-w-0">
+                    <div class="min-w-0 w-full">
                         <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Course</label>
                         {{ course_formset.empty_form.course_selection }}
                     </div>
-                    <div class="custom-course-wrap min-w-0 hidden">
+                    <div class="custom-course-wrap min-w-0 invisible pointer-events-none">
                         <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Custom</label>
                         {{ course_formset.empty_form.custom_course_name }}
-                    </div>
-                    <div class="min-w-0">
-                        <label class="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">Grade</label>
-                        {{ course_formset.empty_form.grade }}
                     </div>
                     {% if course_formset.can_delete %}
                     <div class="flex items-center pb-0.5">
@@ -245,6 +261,23 @@
             var forVal = label.getAttribute('for');
             if (forVal) label.setAttribute('for', forVal.replace('__prefix__', nextIndex));
         });
+        var courseSelect = newRow.querySelector('select[name*="course_selection"]');
+        if (courseSelect) {
+            courseSelect.value = '';
+        }
+        var customWrap = newRow.querySelector('.custom-course-wrap');
+        if (customWrap) {
+            customWrap.classList.add('invisible', 'pointer-events-none');
+        }
+        var customInput = newRow.querySelector('input[name*="custom_course_name"]');
+        if (customInput) {
+            customInput.value = '';
+        }
+        var delCb = newRow.querySelector('input[name*="-DELETE"]');
+        if (delCb) {
+            delCb.checked = false;
+        }
+        newRow.classList.remove('opacity-50');
         container.appendChild(newRow);
         totalFormsInput.value = nextIndex + 1;
     }
@@ -270,10 +303,15 @@
         });
     }
 
+    function setCustomCourseWrapVisible(wrap, show) {
+        if (!wrap) return;
+        wrap.classList.toggle('invisible', !show);
+        wrap.classList.toggle('pointer-events-none', !show);
+    }
     container.addEventListener('change', function(e) {
         if (e.target.matches('select[name*="course_selection"]')) {
             var wrap = e.target.closest('.past-course-row').querySelector('.custom-course-wrap');
-            if (wrap) wrap.classList.toggle('hidden', e.target.value !== '__custom__');
+            setCustomCourseWrapVisible(wrap, e.target.value === '__custom__');
         }
         if (e.target.matches('input[name*="-DELETE"]')) {
             var row = e.target.closest('.past-course-row');
@@ -297,41 +335,74 @@
     var bubblesDiv = document.getElementById('skill-bubbles');
 
     function getSelectedIds() {
-        return Array.from(bubblesDiv.querySelectorAll('input[name="skills"]')).map(function(inp) { return inp.value; });
+        return Array.from(bubblesDiv.querySelectorAll('input[name="skills"]')).map(function(inp) { return String(inp.value); });
+    }
+
+    function setListboxOpen(open) {
+        if (searchInput) searchInput.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    function removeQuickPickButton(skillId) {
+        var sid = String(skillId);
+        var qp = document.querySelector('#skill-quick-picks .skill-quick-add[data-skill-id="' + sid + '"]');
+        if (qp) qp.remove();
+        var wrap = document.getElementById('skill-quick-picks');
+        var section = wrap && wrap.closest('.mt-3');
+        if (section && wrap && wrap.children.length === 0) section.classList.add('hidden');
     }
 
     function addSkill(id, name) {
-        if (getSelectedIds().indexOf(id) >= 0) return;
+        var sid = String(id);
+        if (getSelectedIds().indexOf(sid) >= 0) return;
         var bubble = document.createElement('span');
         bubble.className = 'skill-bubble inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-bc-maroon/15 text-bc-maroon text-xs font-medium';
         bubble.appendChild(document.createTextNode(name + ' '));
         var btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'remove-skill ml-0.5 hover:text-bc-maroon-700';
-        btn.setAttribute('data-skill-id', id);
-        btn.setAttribute('aria-label', 'Remove');
+        btn.setAttribute('data-skill-id', sid);
+        btn.setAttribute('aria-label', 'Remove ' + name);
         btn.textContent = '\u00D7';
         var hidden = document.createElement('input');
         hidden.type = 'hidden';
         hidden.name = 'skills';
-        hidden.value = id;
+        hidden.value = sid;
         bubble.appendChild(btn);
         bubble.appendChild(hidden);
         bubblesDiv.appendChild(bubble);
         searchInput.value = '';
         resultsDiv.classList.add('hidden');
         resultsDiv.innerHTML = '';
+        setListboxOpen(false);
+        removeQuickPickButton(sid);
     }
 
     function removeSkill(id) {
-        var bubble = bubblesDiv.querySelector('.skill-bubble [data-skill-id="' + id + '"]');
-        if (bubble) bubble.closest('.skill-bubble').remove();
+        var sid = String(id);
+        var el = bubblesDiv.querySelector('.remove-skill[data-skill-id="' + sid + '"]');
+        if (el) el.closest('.skill-bubble').remove();
+        // Restore quick-pick if this skill exists in catalog (page reload on save still canonical)
+        if (allSkills.some(function(s) { return String(s.id) === sid; })) {
+            var skill = allSkills.filter(function(s) { return String(s.id) === sid; })[0];
+            var qp = document.getElementById('skill-quick-picks');
+            if (qp && skill) {
+                var b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'skill-quick-add inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border border-gray-200 bg-white text-gray-700 hover:border-bc-maroon hover:text-bc-maroon hover:bg-bc-maroon/5 transition-colors';
+                b.setAttribute('data-skill-id', skill.id);
+                b.setAttribute('data-skill-name', skill.name);
+                b.textContent = '+ ' + skill.name;
+                qp.appendChild(b);
+                var section = qp.closest('.mt-3');
+                if (section) section.classList.remove('hidden');
+            }
+        }
     }
 
     function showSkillResults() {
         var q = searchInput.value.trim().toLowerCase();
         var selected = getSelectedIds();
-        var available = allSkills.filter(function(s) { return selected.indexOf(s.id) < 0; });
+        var available = allSkills.filter(function(s) { return selected.indexOf(String(s.id)) < 0; });
         var matches = q
             ? available.filter(function(s) { return s.name.toLowerCase().indexOf(q) >= 0; })
             : available;
@@ -340,27 +411,53 @@
         matches.forEach(function(s) {
             var btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg';
+            btn.setAttribute('role', 'option');
+            btn.className = 'block w-full text-left px-3 py-2 text-sm hover:bg-gray-100 focus:bg-gray-100 focus:outline-none first:rounded-t-lg last:rounded-b-lg';
             btn.textContent = s.name;
-            btn.addEventListener('click', function() { addSkill(s.id, s.name); });
+            btn.addEventListener('mousedown', function(ev) {
+                ev.preventDefault();
+                addSkill(s.id, s.name);
+            });
             resultsDiv.appendChild(btn);
         });
-        resultsDiv.classList.toggle('hidden', matches.length === 0);
+        var show = matches.length > 0 && document.activeElement === searchInput;
+        resultsDiv.classList.toggle('hidden', !show);
+        setListboxOpen(show);
     }
 
     if (searchInput && resultsDiv && bubblesDiv) {
         searchInput.addEventListener('input', showSkillResults);
         searchInput.addEventListener('blur', function() {
-            setTimeout(function() { resultsDiv.classList.add('hidden'); }, 150);
+            setTimeout(function() {
+                resultsDiv.classList.add('hidden');
+                setListboxOpen(false);
+            }, 200);
         });
         searchInput.addEventListener('focus', function() {
             showSkillResults();
+        });
+        resultsDiv.addEventListener('mousedown', function(ev) {
+            ev.preventDefault();
         });
         bubblesDiv.addEventListener('click', function(e) {
             if (e.target.classList.contains('remove-skill')) {
                 removeSkill(e.target.getAttribute('data-skill-id'));
             }
         });
+        document.addEventListener('click', function(e) {
+            if (!searchInput || !resultsDiv) return;
+            if (e.target === searchInput || resultsDiv.contains(e.target)) return;
+            resultsDiv.classList.add('hidden');
+            setListboxOpen(false);
+        });
+        var qp = document.getElementById('skill-quick-picks');
+        if (qp) {
+            qp.addEventListener('click', function(e) {
+                var t = e.target.closest('.skill-quick-add');
+                if (!t) return;
+                addSkill(t.getAttribute('data-skill-id'), t.getAttribute('data-skill-name') || '');
+            });
+        }
     }
 })();
 </script>

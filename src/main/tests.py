@@ -169,3 +169,37 @@ class HelpViewAccessTests(TestCase):
 
         response = middleware(request)
         self.assertEqual(response.status_code, 200)
+
+
+class HelpSearchRelevanceTests(TestCase):
+    def setUp(self):
+        self.student = CustomUser.objects.create_user(
+            email="help-search-student@example.com",
+            password="password123",
+        )
+
+    def test_help_search_matches_out_of_order_terms(self):
+        """
+        Previously the help search required an almost-exact substring match.
+        Queries like "resume upload" should still find the Getting started article
+        even though the article text uses "upload your resume".
+        """
+        self.client.force_login(self.student)
+        response = self.client.get(reverse("help_students_search"), {"q": "resume upload"})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Getting started (Welcome + Profile)")
+
+    def test_help_search_prefers_title_matches(self):
+        """
+        Title hits should rank strongly so obvious matches show up near the top.
+        """
+        self.client.force_login(self.student)
+        response = self.client.get(reverse("help_students_search"), {"q": "Getting started"})
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode("utf-8")
+        # The Getting started card should appear before other student topics.
+        first_idx = content.find("Getting started (Welcome + Profile)")
+        self.assertNotEqual(first_idx, -1)
+        apply_idx = content.find("Apply to a course (TA position)")
+        self.assertNotEqual(apply_idx, -1)
+        self.assertLess(first_idx, apply_idx)

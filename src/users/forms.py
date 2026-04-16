@@ -122,6 +122,12 @@ class StudentProfileForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['graduation_year'].widget.choices = _graduation_year_choices()
+        # Enforce required fields for students who are completing their profile
+        # for the first time.
+        self.fields["graduation_year"].required = not bool(
+            getattr(self.instance, "graduation_year", None)
+        )
+        self.fields["resume"].required = not bool(getattr(self.instance, "resume", None))
 
 
 CHECKBOX_CLASS = "h-4 w-4 rounded border-gray-300 text-bc-navy focus:ring-bc-navy"

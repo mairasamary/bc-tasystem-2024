@@ -48,6 +48,10 @@ def profile_welcome(request):
     if not request.user.student_needs_profile_welcome():
         return redirect("dashboard")
     if request.method == "POST":
+        bc_worker = bool(request.POST.get("bc_student_worker"))
+        profile, _ = StudentProfile.objects.get_or_create(user=request.user)
+        profile.bc_student_worker = bc_worker
+        profile.save(update_fields=["bc_student_worker"])
         request.user.profile_welcome_acknowledged = True
         request.user.save(update_fields=["profile_welcome_acknowledged"])
         return redirect("student_profile")
@@ -205,6 +209,12 @@ def employment_onboarding_checklist(request):
         )
         return redirect("dashboard")
     profile, _ = StudentProfile.objects.get_or_create(user=request.user)
+
+    # Past TAs and BC student workers do not need to re-complete these checklist forms.
+    if profile.onboarding_complete:
+        messages.info(request, "Your student employment onboarding is already complete. No checklist needed.")
+        return redirect("dashboard")
+
     if request.method == "POST":
         form = StudentEmploymentOnboardingForm(request.POST, instance=profile)
         if form.is_valid():
@@ -630,10 +640,14 @@ def _build_onboarding_rows():
             profile = ta.student_profile
         except Exception:
             profile = None
+        if profile:
+            profile_onboarding_complete = bool(profile.onboarding_complete)
+        else:
+            profile_onboarding_complete = bool(getattr(ta, "has_been_ta_before", lambda: False)())
         steps = []
         completed = 0
         for field, label in ONBOARDING_STEPS:
-            done = bool(getattr(profile, field, False)) if profile else False
+            done = profile_onboarding_complete or (bool(getattr(profile, field, False)) if profile else False)
             if done:
                 completed += 1
             steps.append({'label': label, 'done': done})
@@ -644,7 +658,7 @@ def _build_onboarding_rows():
             'steps': steps,
             'completed': completed,
             'total': len(ONBOARDING_STEPS),
-            'is_complete': completed == len(ONBOARDING_STEPS),
+            'is_complete': profile_onboarding_complete or completed == len(ONBOARDING_STEPS),
         })
     return rows
 
@@ -874,7 +888,7 @@ def apply_to_course_v2(request, course_id):
     if not request.user.has_complete_profile_for_apply():
         messages.error(
             request,
-            "Complete your profile before applying: add your Eagle ID and upload a resume on your Profile page.",
+                "Complete your profile before applying: add your 8-digit Eagle ID, Graduation Year, and upload a resume on your Profile page.",
         )
         return redirect("student_profile")
 

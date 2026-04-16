@@ -19,7 +19,7 @@
 {% if not profile_complete_for_apply %}
 <div class="mb-6 p-4 rounded-lg border border-amber-200 bg-amber-50/90 text-amber-950 text-sm" role="status">
     <p class="font-semibold">Before you can apply to courses</p>
-    <p class="mt-1 text-amber-900/90">Enter your <strong>Eagle ID</strong> below and upload a <strong>resume</strong>.</p>
+    <p class="mt-1 text-amber-900/90">Enter your <strong>8-digit Eagle ID</strong> and <strong>Graduation Year</strong> below, and upload a <strong>resume</strong>.</p>
 </div>
 {% endif %}
 
@@ -55,10 +55,16 @@
                     <input type="number" name="eagleid" value="{% if user.eagleid %}{{ user.eagleid }}{% endif %}" id="id_eagleid" min="0" max="999999999" placeholder="8-digit ID"
                         class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-bc-maroon focus:border-bc-maroon">
                     <p class="text-xs text-gray-400 mt-0.5">Leave blank to clear.</p>
+                    {% if eagleid_error %}
+                    <p class="text-sm text-red-600 mt-1">{{ eagleid_error }}</p>
+                    {% endif %}
                 </div>
                 <div class="mt-3 text-left">
                     <label for="id_graduation_year" class="block text-xs font-medium text-gray-500 mb-0.5">Graduation Year</label>
                     {{ profile_form.graduation_year }}
+                    {% if profile_form.graduation_year.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ profile_form.graduation_year.errors.0 }}</p>
+                    {% endif %}
                 </div>
             </div>
             {% if profile_form.profile_photo.errors %}

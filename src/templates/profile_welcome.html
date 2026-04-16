@@ -15,13 +15,29 @@
         </p>
         <form method="post" class="mt-8">
             {% csrf_token %}
+            <div class="mt-4 text-left">
+                <label class="inline-flex items-start gap-3 text-sm text-gray-700">
+                    <input
+                        type="checkbox"
+                        name="bc_student_worker"
+                        value="1"
+                        class="mt-1 h-4 w-4 rounded border-gray-300 text-bc-maroon focus:ring-bc-maroon"
+                    >
+                    <span>
+                        I have previously been a Boston College student worker (TA or other student job).
+                    </span>
+                </label>
+                <p class="mt-2 text-xs text-gray-500">
+                    If yes, you likely do not need to complete the TA Buzz onboarding checklist when you accept a TA offer.
+                </p>
+            </div>
             <button type="submit"
                 class="w-full sm:w-auto min-w-[200px] inline-flex items-center justify-center px-8 py-3 rounded-lg text-base font-semibold text-gray-900 bg-bc-gold hover:bg-bc-gold-500 focus:outline-none focus:ring-4 focus:ring-bc-gold/40 transition-colors shadow-sm">
                 Get started
             </button>
         </form>
         <p class="mt-6 text-xs text-gray-500">
-            You&rsquo;ll need your <span class="font-medium text-gray-700">Eagle ID</span> and a <span class="font-medium text-gray-700">resume</span> before you can submit applications.
+            You&rsquo;ll need your <span class="font-medium text-gray-700">8-digit Eagle ID</span>, <span class="font-medium text-gray-700">Graduation Year</span>, and a <span class="font-medium text-gray-700">resume</span> before you can submit applications.
         </p>
     </div>
 </div>

@@ -112,6 +112,23 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         """True if the user is assigned as a TA for at least one course (template-friendly)."""
         return self.course_working_for.exists()
 
+    def has_been_ta_before(self) -> bool:
+        """
+        True if this student previously accepted a TA offer for a different course
+        than their current TA assignment(s).
+
+        We intentionally exclude the user's current `course_working_for` so that
+        they aren't treated as "past TA" immediately after accepting a new offer.
+        """
+        # Local import to avoid module import cycles.
+        from offers.models import Offer, OfferStatus
+
+        qs = Offer.objects.filter(recipient=self, status=OfferStatus.ACCEPTED.value)
+        current_course_ids = list(self.course_working_for.values_list("id", flat=True))
+        if current_course_ids:
+            qs = qs.exclude(course__id__in=current_course_ids)
+        return qs.exists()
+
     def student_needs_profile_welcome(self):
         """First-time students see the welcome screen until they click Get Started."""
         if self.is_professor or self.is_superuser or self.is_staff:
@@ -119,13 +136,22 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return not self.profile_welcome_acknowledged
 
     def has_complete_profile_for_apply(self):
-        """Applying requires a non-zero Eagle ID and an uploaded resume."""
+        """Profile completion required before a student can apply/browse app."""
         if self.is_professor:
             return True
-        if not self.eagleid:
+        # Eagle IDs are required to be exactly 8 digits.
+        # We store the value as an integer, so leading zeros can't be represented,
+        # but the numeric input is expected to contain exactly 8 digits.
+        eagleid_str = str(self.eagleid) if self.eagleid is not None else ""
+        if not eagleid_str or not eagleid_str.isdigit() or len(eagleid_str) != 8:
             return False
         try:
-            return bool(self.student_profile.resume)
+            profile = self.student_profile
+            return (
+                bool(profile.resume)
+                and profile.graduation_year is not None
+                and profile.graduation_year > 0
+            )
         except ObjectDoesNotExist:
             return False
 
@@ -163,6 +189,12 @@ class StudentProfile(models.Model):
     )
 
     # Self-reported student employment onboarding (TA / on-campus hire)
+    bc_student_worker = models.BooleanField(
+        default=False,
+        verbose_name="I was a BC student worker before (skip onboarding checklist)",
+        help_text="If you have been a BC student worker before, you likely already completed onboarding documents.",
+    )
+
     onboarding_done_required_form = models.BooleanField(
         default=False,
         verbose_name="Required Onboarding Form for New Student Employees",
@@ -184,6 +216,14 @@ class StudentProfile(models.Model):
 
     @property
     def onboarding_complete(self):
+        if self.bc_student_worker:
+            return True
+
+        # If the student has already been a TA previously (before their current term),
+        # they shouldn't be asked to re-complete these checklist forms.
+        if self.user.has_been_ta_before():
+            return True
+
         return all([
             self.onboarding_done_required_form,
             self.onboarding_done_i9,
@@ -195,6 +235,11 @@ class StudentProfile(models.Model):
 
     @property
     def onboarding_steps_completed(self):
+        if self.bc_student_worker:
+            return 6
+        if self.user.has_been_ta_before():
+            return 6
+
         return sum([
             self.onboarding_done_required_form,
             self.onboarding_done_i9,

@@ -8,6 +8,7 @@ from django.urls import reverse_lazy
 from django.views.generic import View
 from django.views.generic.edit import UpdateView
 from django.views.generic.base import TemplateResponseMixin
+import re
 from .forms import CustomUserUpdateForm, StudentProfileForm, PastCourseForm, PastCourseFormSet
 from .models import (
     CustomUser,
@@ -80,6 +81,14 @@ class StudentProfileView(LoginRequiredMixin, TemplateResponseMixin, View):
         course_formset = PastCourseFormSet(
             request.POST, instance=request.user
         )
+
+        eagleid_val = (request.POST.get('eagleid') or '').strip()
+        eagleid_error = None
+        if eagleid_val:
+            # Numeric input should come through as digits; we enforce exact length.
+            if not re.fullmatch(r"\d{8}", eagleid_val):
+                eagleid_error = "Eagle ID must be exactly 8 digits."
+
         if profile_form.is_valid() and course_formset.is_valid():
             # Keep existing files: Django clears FileFields when not in request.FILES
             old_resume = profile.resume
@@ -97,21 +106,21 @@ class StudentProfileView(LoginRequiredMixin, TemplateResponseMixin, View):
             course_formset.save()
             skill_ids = request.POST.getlist('skills', [])
             profile.skills.set(Skill.objects.filter(id__in=skill_ids))
-            # Save Eagle ID on user (empty = clear it)
-            eagleid_val = (request.POST.get('eagleid') or '').strip()
-            try:
+            if eagleid_error:
+                messages.error(request, eagleid_error)
+            else:
+                # Save Eagle ID on user (empty = clear it)
                 request.user.eagleid = int(eagleid_val) if eagleid_val else 0
                 request.user.save(update_fields=['eagleid'])
-            except (ValueError, TypeError):
-                pass
-            messages.success(request, 'Profile updated successfully.')
-            return redirect(self.success_url)
+                messages.success(request, 'Profile updated successfully.')
+                return redirect(self.success_url)
         selected_ids = request.POST.getlist('skills', [])
         ctx = {
             'profile_form': profile_form,
             'course_formset': course_formset,
             'profile': profile,
             'profile_complete_for_apply': request.user.has_complete_profile_for_apply(),
+            'eagleid_error': eagleid_error,
         }
         ctx.update(self._skills_template_context(profile, selected_skill_ids_override=selected_ids))
         return self.render_to_response(ctx)

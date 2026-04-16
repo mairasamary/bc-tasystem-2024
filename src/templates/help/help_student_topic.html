@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ topic.title }} - TA Connect{% endblock %}
+
+{% block breadcrumb %}
+<nav class="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
+    <a href="{% url 'dashboard' %}" class="hover:text-bc-maroon transition-colors">Home</a>
+    <span class="mx-1.5">/</span>
+    <a href="{% url 'help_home' %}" class="hover:text-bc-maroon transition-colors">Help</a>
+    <span class="mx-1.5">/</span>
+    <span class="text-gray-800 font-medium">{{ topic.title }}</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto mb-10 bg-white px-6 py-10">
+    <div class="grid grid-cols-[240px_1fr] gap-10">
+        <aside class="self-start">
+            <div class="mb-6">
+                <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 pb-2 border-b border-gray-200">
+                    Related help
+                </div>
+                <nav class="space-y-1">
+                    {% for t in topics %}
+                        <a href="{% url 'help_student_topic' topic_id=t.id %}"
+                           class="block text-sm px-2 py-1 rounded-md transition-colors
+                                  {% if t.id == topic.id %}
+                                      border-l-4 border-bc-maroon pl-1 text-gray-900 font-semibold
+                                  {% else %}
+                                      border-l-4 border-transparent text-gray-700 hover:bg-gray-50 pl-1
+                                  {% endif %}">
+                            {{ t.title }}
+                            {% if help_role == 'admin' %}
+                            <span class="block mt-0.5 text-[10px] uppercase tracking-wider text-gray-400">{{ t.audience }}</span>
+                            {% endif %}
+                        </a>
+                    {% endfor %}
+                </nav>
+            </div>
+        </aside>
+
+        <main>
+            <div class="mb-8">
+                <a href="{% url 'help_home' %}"
+                   class="inline-flex items-center justify-center text-center text-sm font-medium text-bc-maroon hover:underline bg-transparent">
+                    <span aria-hidden="true">&larr;</span>
+                    Back to Help
+                </a>
+            </div>
+
+            <h1 class="text-4xl font-normal text-gray-900 tracking-tight mb-4">{{ topic.title }}</h1>
+            <p class="text-sm text-gray-700 leading-relaxed mb-7">{{ topic.summary }}</p>
+
+            {% if topic.screenshot_static_path %}
+                <div class="mt-6">
+                    <img
+                        src="{% static topic.screenshot_static_path %}"
+                        alt="{{ topic.screenshot_alt|default:topic.title }}"
+                        class="w-full rounded-lg border border-gray-200"
+                    />
+                    {% if topic.screenshot_caption %}
+                        <p class="mt-2 text-xs text-gray-500">{{ topic.screenshot_caption }}</p>
+                    {% endif %}
+                </div>
+            {% elif topic.id == 'apply-to-course' %}
+                <div class="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-5">
+                    <h2 class="text-sm font-semibold text-gray-900">Screenshot example</h2>
+                    <p class="mt-1 text-sm text-gray-600">
+                        Add an image of the “Apply to a course” page here.
+                        (We’ll use this slot once a screenshot file is added to <code>src/static/images/help/</code>.)
+                    </p>
+                </div>
+            {% endif %}
+
+            <article class="text-gray-700">
+                <section class="mt-8">
+                    <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Prerequisites</h2>
+                    <ul class="list-disc pl-5 text-sm space-y-2">
+                        {% for item in topic.prerequisites %}
+                            <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </section>
+
+                <section class="mt-10">
+                    <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Steps</h2>
+                    <ol class="list-decimal pl-5 text-sm space-y-2">
+                        {% for step in topic.steps %}
+                            <li>{{ step }}</li>
+                        {% endfor %}
+                    </ol>
+                </section>
+
+                <section class="mt-10">
+                    <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">What to know</h2>
+                    <ul class="list-disc pl-5 text-sm space-y-2">
+                        {% for item in topic.what_to_know %}
+                            <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </section>
+
+                <section class="mt-10">
+                    <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Troubleshooting</h2>
+                    <ul class="list-disc pl-5 text-sm space-y-2">
+                        {% for item in topic.troubleshooting %}
+                            <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </section>
+            </article>
+        </main>
+    </div>
+</div>
+{% endblock %}
+

@@ -18,6 +18,7 @@ class ProfileWelcomeMiddleware:
         "/static/",
         "/media/",
         "/welcome/",
+        "/help/",
         "/profile/",
         "/users/logout/",
         "/users/login/",

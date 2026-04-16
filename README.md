@@ -1,6 +1,6 @@
-# TA Buzz
+# TA Connect
 
-TA Buzz is a TA-Professor matching made for Boston College to streamline to process of matching student TAs with Professors.
+TA Connect is a TA-Professor matching made for Boston College to streamline to process of matching student TAs with Professors.
 
 ## Installation
 ```bash

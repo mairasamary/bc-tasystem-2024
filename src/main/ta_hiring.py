@@ -34,7 +34,7 @@ def send_student_ta_acceptance_onboarding_email(user, course_code: str, course_t
         "Please follow the link below for instructions on how to complete each form:",
         BC_STUDENT_EMPLOYMENT_NEW_HIRES_URL,
         "",
-        "On TA Buzz you can use your personal onboarding checklist to self-report which forms you have "
+        "On TA Connect you can use your personal onboarding checklist to self-report which forms you have "
         "completed: Required Onboarding Form for Student Employees, Form I-9, Payroll Form Statement, "
         "W-4 (Federal Withholding Form), M-4 (Massachusetts Withholding Form), and Direct Deposit "
         "Enrollment Instructions.",
@@ -78,6 +78,6 @@ def reject_pending_applications_when_course_filled(course):
                     f"Dear {app.student.get_full_name()},",
                     f"Thank you for your interest in TAing for {app.course.course} — {app.course.course_title}.",
                     "All TA positions for this course have been filled.",
-                    "You may browse other open courses on TA Buzz.",
+                    "You may browse other open courses on TA Connect.",
                 ],
             )

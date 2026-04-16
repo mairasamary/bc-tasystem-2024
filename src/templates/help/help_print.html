@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ guide_title }} - TA Connect{% endblock %}
+
+{% block content %}
+<style>
+  .print-page {
+    background: white;
+  }
+
+  @media print {
+    nav.fixed { display: none !important; }
+    footer { display: none !important; }
+    body { background: #ffffff !important; }
+    .print-controls { display: none !important; }
+    .print-page {
+      min-height: auto !important;
+      margin: 0 !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      break-after: page;
+      page-break-after: always;
+    }
+    .print-page:last-child {
+      break-after: auto;
+      page-break-after: auto;
+    }
+    .print-no-break {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+  }
+</style>
+
+<div class="print-controls mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+  <div>
+    <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">{{ guide_title }}</h1>
+    <p class="mt-1 text-gray-500 text-sm">{{ guide_summary }}</p>
+  </div>
+  <div class="flex items-center gap-3">
+    <a href="{% url 'help_home' %}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded-md transition-colors shadow-sm print:hidden">
+      Back to Help
+    </a>
+    <button type="button"
+            onclick="window.print()"
+            class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-bc-navy hover:bg-bc-navy-600 active:bg-bc-navy-700 rounded-md transition-colors print:hidden">
+      Print / Save as PDF
+    </button>
+  </div>
+</div>
+
+<section class="print-page min-h-[70vh] flex items-center justify-center border border-gray-200 rounded-xl px-8 py-16">
+  <div class="max-w-3xl text-center">
+    <p class="text-sm font-semibold uppercase tracking-[0.2em] text-gray-500">TA Connect</p>
+    <h1 class="mt-4 text-4xl font-semibold tracking-tight text-gray-900">{{ guide_title }}</h1>
+    <p class="mt-4 text-base text-gray-600">{{ guide_summary }}</p>
+    <p class="mt-10 text-sm text-gray-500">Generated from the TA Connect Help Center</p>
+  </div>
+</section>
+
+<section class="print-page min-h-[70vh] border border-gray-200 rounded-xl px-8 py-12">
+  <div class="max-w-4xl">
+    <p class="text-sm font-semibold uppercase tracking-[0.2em] text-gray-500">Contents</p>
+    <h2 class="mt-3 text-3xl font-semibold tracking-tight text-gray-900">Table of Contents</h2>
+    <p class="mt-3 text-sm text-gray-600">Each article begins on a new page in the printout.</p>
+
+    <div class="mt-8 space-y-4">
+      {% for topic in topics %}
+        <div class="print-no-break border-b border-gray-200 pb-4">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              {% if help_role == 'admin' %}
+              <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">{{ topic.audience }}</p>
+              {% endif %}
+              <p class="text-base font-semibold text-gray-900">{{ forloop.counter }}. {{ topic.title }}</p>
+              <p class="mt-1 text-sm text-gray-600">{{ topic.summary }}</p>
+            </div>
+            <p class="shrink-0 text-sm text-gray-500">Page {{ forloop.counter|add:2 }}</p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<div class="space-y-6">
+  {% for topic in topics %}
+    <section class="print-page mt-6 border border-gray-200 rounded-xl px-8 py-10">
+      {% if help_role == 'admin' %}
+      <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">{{ topic.audience }}</p>
+      {% endif %}
+      <h2 class="text-xl font-semibold text-gray-900">{{ topic.title }}</h2>
+      <p class="mt-1 text-gray-600 text-sm max-w-3xl">{{ topic.summary }}</p>
+
+      {% if topic.screenshot_static_path %}
+        <div class="mt-4">
+          <img
+            src="{% static topic.screenshot_static_path %}"
+            alt="{{ topic.screenshot_alt|default:topic.title }}"
+            style="width: 100%; border: 1px solid #e5e7eb; border-radius: 6px;"
+          />
+          {% if topic.screenshot_caption %}
+            <p class="mt-2 text-xs text-gray-500">{{ topic.screenshot_caption }}</p>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      <div class="mt-4">
+        <h3 class="text-sm font-bold text-gray-900 mb-1">Prerequisites</h3>
+        <ul class="list-disc pl-5 text-sm text-gray-700 space-y-1">
+          {% for item in topic.prerequisites %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="mt-4">
+        <h3 class="text-sm font-bold text-gray-900 mb-1">Steps</h3>
+        <ol class="list-decimal pl-5 text-sm text-gray-700 space-y-1">
+          {% for step in topic.steps %}
+            <li>{{ step }}</li>
+          {% endfor %}
+        </ol>
+      </div>
+
+      <div class="mt-4">
+        <h3 class="text-sm font-bold text-gray-900 mb-1">What to know</h3>
+        <ul class="list-disc pl-5 text-sm text-gray-700 space-y-1">
+          {% for item in topic.what_to_know %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="mt-4">
+        <h3 class="text-sm font-bold text-gray-900 mb-1">Troubleshooting</h3>
+        <ul class="list-disc pl-5 text-sm text-gray-700 space-y-1">
+          {% for item in topic.troubleshooting %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </section>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Help - TA Connect{% endblock %}
+
+{% block breadcrumb %}
+{% endblock %}
+
+{% block content %}
+{% if help_role %}
+<div class="max-w-6xl mx-auto">
+    <!-- Hero with background image and overlaid search -->
+    <div class="relative left-1/2 w-screen -translate-x-1/2 -mt-8 mb-8">
+        <div class="relative w-full h-64 sm:h-72 md:h-80 lg:h-96 overflow-hidden">
+            <img src="{% static 'images/help-hero.jpg' %}"
+                 alt="Boston College campus"
+                 class="absolute inset-0 w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-b from-black/55 via-black/40 to-black/55"></div>
+
+            <div class="relative h-full flex items-center">
+                <div class="w-full max-w-6xl mx-auto px-5 sm:px-6">
+                    <div class="max-w-2xl">
+                        <h1 class="text-3xl sm:text-4xl font-normal text-white tracking-tight">How can we help?</h1>
+                        <p class="mt-3 text-sm text-gray-100/90">
+                            {% if help_role == 'student' %}
+                                Search student workflows. Explanations open on separate pages so student-only details stay private.
+                            {% elif help_role == 'professor' %}
+                                Search professor workflows for course staffing, applications, offers, and TA evaluations.
+                            {% else %}
+                                Search student, professor, and admin workflows from a single help center.
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <div class="mt-5 max-w-2xl">
+                        <form method="get"
+                              action="{% url 'help_students_search' %}"
+                              class="flex flex-col sm:flex-row sm:items-center sm:gap-4">
+                            <div class="flex-1">
+                                <label for="help-search" class="sr-only">Search help center</label>
+                                <input id="help-search"
+                                       name="q"
+                                       type="text"
+                                       placeholder="Search our help center"
+                                       value="{{ request.GET.q|default:'' }}"
+                                       class="w-full rounded-lg border border-white/30 bg-white/95 px-4 py-2 text-sm text-gray-900 placeholder:text-gray-500 shadow-sm focus:ring-2 focus:ring-bc-maroon focus:border-bc-maroon"/>
+                            </div>
+                            <div class="mt-3 sm:mt-0">
+                                <button type="submit"
+                                        class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-900 bg-white/95 border border-white/30 hover:bg-white transition-colors rounded-md shadow-sm">
+                                    Search
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Printable guide -->
+    <div class="bg-gray-50 border border-gray-200 rounded-xl p-7 mb-8">
+        <h2 class="text-lg font-semibold text-gray-900">Download Printable Help Guide</h2>
+        <p class="mt-1 text-sm text-gray-600 max-w-3xl">
+            {% if help_role == 'student' %}
+                Use the printable student help guide to print or save as a PDF.
+            {% elif help_role == 'professor' %}
+                Use the printable professor help guide to save the core staffing workflows as a PDF.
+            {% else %}
+                Use the printable admin help guide to export workflows for students, professors, and admins in one document.
+            {% endif %}
+        </p>
+        <div class="mt-5">
+            <a href="{% url 'help_print' %}"
+               class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-white bg-bc-navy hover:bg-bc-navy-600 rounded-md transition-colors">
+                Download printable guide
+            </a>
+        </div>
+    </div>
+
+    <!-- About -->
+    <div class="bg-white border border-gray-200 rounded-xl p-7 mb-8">
+        <div class="flex flex-col gap-4">
+            <div class="max-w-3xl">
+                <h3 class="text-sm font-semibold text-gray-900">About TA Connect</h3>
+                <p class="mt-2 text-sm text-gray-600">
+                    {% if help_role == 'student' %}
+                        TA Connect helps students browse courses, submit applications, and respond to TA offers.
+                    {% elif help_role == 'professor' %}
+                        TA Connect helps professors manage courses, review applicants, send offers, and evaluate TAs.
+                    {% else %}
+                        TA Connect helps admins manage the full TA hiring pipeline, including courses, staffing, and onboarding oversight.
+                    {% endif %}
+                </p>
+                <ul class="mt-4 text-sm text-gray-600 space-y-1 list-disc pl-5">
+                    {% if help_role == 'student' %}
+                    <li>Apply when courses are open</li>
+                    <li>Track your application status</li>
+                    <li>Accept or decline offers when available</li>
+                    {% elif help_role == 'professor' %}
+                    <li>Track understaffed courses from the dashboard</li>
+                    <li>Review applications and send offers</li>
+                    <li>Manage custom questions and TA evaluations</li>
+                    {% else %}
+                    <li>Create, edit, and upload courses</li>
+                    <li>Monitor staffing and onboarding across the system</li>
+                    <li>Export schedules and manage semester-close operations</li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="self-start">
+                <a href="{% url 'contributors' %}"
+                   class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-white bg-bc-maroon hover:bg-bc-maroon-700 rounded-md transition-colors">
+                    Meet the Contributors
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popular articles -->
+    <div class="mb-6">
+        <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wider">Popular articles</h2>
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
+            {% for topic in topics %}
+                <a href="{% url 'help_student_topic' topic_id=topic.id %}"
+                   class="help-topic-link bg-white border border-gray-200 rounded-xl p-5 block hover:border-gray-300 transition-colors"
+                   data-search="{{ topic.title }} {{ topic.summary }}">
+                    <h3 class="text-sm font-semibold text-gray-900">{{ topic.title }}</h3>
+                    {% if help_role == 'admin' %}
+                    <p class="mt-1 text-xs font-medium uppercase tracking-wider text-gray-500">{{ topic.audience }}</p>
+                    {% endif %}
+                    <p class="mt-2 text-sm text-gray-600 overflow-hidden">{{ topic.summary }}</p>
+                    <div class="mt-3 text-sm font-medium text-bc-maroon hover:underline">
+                        Read more →
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="max-w-3xl mx-auto bg-white rounded-xl border border-gray-200/80 shadow-sm p-6">
+    <h2 class="text-xl font-semibold text-gray-900">Help</h2>
+    <p class="mt-2 text-sm text-gray-600">
+        Sign in to view role-specific help articles.
+    </p>
+</div>
+{% endif %}
+{% endblock %}
+

@@ -1,7 +1,8 @@
 """
 Wipe the database and load a minimal TA test scenario.
 
-Professor + 2 students + 1 course (num_tas=1). One student is wangedi@bc.edu for Google OAuth.
+Professor + admin + 2 students + 1 course (num_tas=1). One student is
+wangedi@bc.edu for Google OAuth.
 """
 
 from django.conf import settings
@@ -37,7 +38,7 @@ SKILL_NAMES = [
 
 
 class Command(BaseCommand):
-    help = "Flush all data and create professor, two students, skills, site, and one course (1 TA slot)."
+    help = "Flush all data and create an admin, professor, two students, skills, site, and one course (1 TA slot)."
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -54,7 +55,7 @@ class Command(BaseCommand):
         domain = getattr(settings, "SITE_HOSTNAME", "127.0.0.1:8000")
         Site.objects.update_or_create(
             pk=settings.SITE_ID,
-            defaults={"domain": domain, "name": "TA Buzz"},
+            defaults={"domain": domain, "name": "TA Connect"},
         )
 
         for name in SKILL_NAMES:
@@ -67,6 +68,14 @@ class Command(BaseCommand):
             last_name="Professor",
             professor=True,
             eagleid=100001,
+        )
+
+        CustomUser.objects.create_superuser(
+            email="admin.help@test.bc.edu",
+            password="TestAdmin123!",
+            first_name="Avery",
+            last_name="Admin",
+            eagleid=100000,
         )
 
         student_oauth = CustomUser(
@@ -112,6 +121,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS("Done. Test accounts:\n"))
         self.stdout.write(
+            "  Admin (password login):     admin.help@test.bc.edu  /  TestAdmin123!\n"
             "  Professor (password login): prof.ta@test.bc.edu  /  TestProf123!\n"
             "  Student (Google OAuth):     wangedi@bc.edu\n"
             "  Student (password login):   student2.ta@test.bc.edu  /  TestStudent123!\n"

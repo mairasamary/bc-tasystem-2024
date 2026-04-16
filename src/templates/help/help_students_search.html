@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Help Search - TA Connect{% endblock %}
+
+{% block breadcrumb %}
+<nav class="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
+    <a href="{% url 'dashboard' %}" class="hover:text-bc-maroon transition-colors">Home</a>
+    <span class="mx-1.5">/</span>
+    <a href="{% url 'help_home' %}" class="hover:text-bc-maroon transition-colors">Help</a>
+    <span class="mx-1.5">/</span>
+    <span class="text-gray-800 font-medium">Search</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="bg-white border border-gray-200/80 shadow-sm rounded-xl p-6 mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-normal text-gray-900 tracking-tight">Search</h1>
+                <p class="mt-2 text-sm text-gray-600">
+                    {% if query %}
+                        Results for <span class="font-medium text-gray-900">&ldquo;{{ query }}&rdquo;</span>
+                    {% else %}
+                        Showing all available help articles
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <a href="{% url 'help_home' %}"
+                   class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded-md transition-colors">
+                    Back to Help
+                </a>
+            </div>
+        </div>
+
+        <form method="get" action="{% url 'help_students_search' %}" class="mt-5">
+            <label for="help-search" class="sr-only">Search help center</label>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                <input id="help-search" name="q" type="text" value="{{ query }}"
+                       placeholder="Search our help center"
+                       class="w-full rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm focus:ring-2 focus:ring-bc-maroon focus:border-bc-maroon"/>
+                <button type="submit"
+                        class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded-md transition-colors">
+                    Search
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="mb-6">
+        <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wider">Articles</h2>
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-5">
+            {% for topic in topics %}
+                <a href="{% url 'help_student_topic' topic_id=topic.id %}"
+                   class="bg-white border border-gray-200 rounded-xl p-5 block hover:border-gray-300 transition-colors">
+                    <h3 class="text-sm font-semibold text-gray-900">{{ topic.title }}</h3>
+                    {% if help_role == 'admin' %}
+                    <p class="mt-1 text-xs font-medium uppercase tracking-wider text-gray-500">{{ topic.audience }}</p>
+                    {% endif %}
+                    <p class="mt-2 text-sm text-gray-600 overflow-hidden">{{ topic.summary }}</p>
+                    <div class="mt-3 text-sm font-medium text-bc-maroon hover:underline">
+                        Read more →
+                    </div>
+                </a>
+            {% empty %}
+                <div class="md:col-span-2 bg-white border border-gray-200 rounded-xl p-6">
+                    <p class="text-sm text-gray-700">
+                        No matching help articles found.
+                    </p>
+                    <p class="mt-2 text-xs text-gray-500">
+                        Try a different keyword (e.g., &ldquo;apply&rdquo;, &ldquo;offer&rdquo;, &ldquo;onboarding&rdquo;).
+                    </p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

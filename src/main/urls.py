@@ -1,11 +1,17 @@
 from django.urls import path, include
 from . import views
 from users.views import StudentProfileView
+from .help_views import help_home, help_print, help_students_print, help_students_search, help_student_topic
 
 urlpatterns = [
     path("", views.home, name="home"),
     path("contributors/", views.contributors, name="contributors"),
     path("welcome/", views.profile_welcome, name="profile_welcome"),
+    path("help/", help_home, name="help_home"),
+    path("help/print/", help_print, name="help_print"),
+    path("help/students/print/", help_students_print, name="help_students_print"),
+    path("help/students/search/", help_students_search, name="help_students_search"),
+    path("help/students/<str:topic_id>/", help_student_topic, name="help_student_topic"),
     path("dashboard/", views.admin_dashboard_v2, name="dashboard"),
     path("notifications/", views.notifications_page, name="notifications"),
     path("notifications/<uuid:notification_id>/open/", views.open_notification, name="open_notification"),

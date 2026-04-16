@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Help (Printable) - TA Connect{% endblock %}
+
+{% block content %}
+<style>
+  @media print {
+    nav.fixed { display: none !important; }
+    footer { display: none !important; }
+    body { background: #ffffff !important; }
+  }
+</style>
+
+<div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+  <div>
+    <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">TA Connect - Student Help Guide</h1>
+    <p class="mt-1 text-gray-500 text-sm">Printable version (use your browser Print dialog to save as PDF).</p>
+  </div>
+  <div class="flex items-center gap-3">
+    <a href="{% url 'help_home' %}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded-md transition-colors shadow-sm print:hidden">
+      Back to Help
+    </a>
+    <button type="button"
+            onclick="window.print()"
+            class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-bc-navy hover:bg-bc-navy-600 active:bg-bc-navy-700 rounded-md transition-colors print:hidden">
+      Print / Save as PDF
+    </button>
+  </div>
+</div>
+
+<div class="space-y-6">
+  {% for topic in student_topics %}
+    <section class="mt-6">
+      <h2 class="text-xl font-semibold text-gray-900">{{ topic.title }}</h2>
+      <p class="mt-1 text-gray-600 text-sm max-w-3xl">{{ topic.summary }}</p>
+
+      {% if topic.screenshot_static_path %}
+        <div class="mt-4">
+          <img
+            src="{% static topic.screenshot_static_path %}"
+            alt="{{ topic.screenshot_alt|default:topic.title }}"
+            style="width: 100%; border: 1px solid #e5e7eb; border-radius: 6px;"
+          />
+          {% if topic.screenshot_caption %}
+            <p class="mt-2 text-xs text-gray-500">{{ topic.screenshot_caption }}</p>
+          {% endif %}
+        </div>
+      {% elif topic.id == 'apply-to-course' %}
+        <div class="mt-4 border border-gray-200 rounded-lg p-4 bg-gray-50">
+          <h3 class="text-sm font-semibold text-gray-900">Screenshot example</h3>
+          <p class="mt-1 text-sm text-gray-600">
+            Add an image of the “Apply to a course” page here.
+          </p>
+        </div>
+      {% endif %}
+
+      <div class="mt-4">
+        <h3 class="text-sm font-bold text-gray-900 mb-1">Prerequisites</h3>
+        <ul class="list-disc pl-5 text-sm text-gray-700 space-y-1">
+          {% for item in topic.prerequisites %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="mt-4">
+        <h3 class="text-sm font-bold text-gray-900 mb-1">Steps</h3>
+        <ol class="list-decimal pl-5 text-sm text-gray-700 space-y-1">
+          {% for step in topic.steps %}
+            <li>{{ step }}</li>
+          {% endfor %}
+        </ol>
+      </div>
+
+      <div class="mt-4">
+        <h3 class="text-sm font-bold text-gray-900 mb-1">What to know</h3>
+        <ul class="list-disc pl-5 text-sm text-gray-700 space-y-1">
+          {% for item in topic.what_to_know %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="mt-4">
+        <h3 class="text-sm font-bold text-gray-900 mb-1">Troubleshooting</h3>
+        <ul class="list-disc pl-5 text-sm text-gray-700 space-y-1">
+          {% for item in topic.troubleshooting %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </section>
+  {% endfor %}
+</div>
+{% endblock %}
+

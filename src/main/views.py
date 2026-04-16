@@ -826,7 +826,7 @@ def send_onboarding_reminders(request):
                 f"You are still missing the following form(s):\n{missing_list}",
                 "Please complete these forms as soon as possible. All forms are submitted in person at the Office of Student Services.",
                 f"Visit the BC Student Employment New Hires page for instructions and form details:\n{BC_NEW_HIRES_URL}",
-                "If you have already submitted a form, you can mark it as complete on TA Buzz so your progress is up to date.",
+                "If you have already submitted a form, you can mark it as complete on TA Connect so your progress is up to date.",
             ],
         )
         sent += 1
@@ -1157,7 +1157,7 @@ def make_offer_v2(request, application_id):
             message_lines=[
                 f"Dear {app.student.get_full_name()},",
                 f"Congratulations! You have received a TA offer for {course.course} — {course.course_title}.",
-                "Open the link below to log in to TA Buzz and accept or decline this offer:",
+                "Open the link below to log in to TA Connect and accept or decline this offer:",
                 respond_url,
             ],
         )
@@ -1199,7 +1199,7 @@ def reject_application_v2(request, application_id):
                     "Feedback from the instructor:",
                     rejection_feedback,
                 ])
-            message_lines.append("You may browse and apply to other open courses on TA Buzz.")
+            message_lines.append("You may browse and apply to other open courses on TA Connect.")
             send_notification_email(
                 subject=f"Application Update for {app.course.course}",
                 recipients=app.student.email,

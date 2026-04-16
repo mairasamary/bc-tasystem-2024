@@ -36,7 +36,10 @@ class TAEvaluationForm(forms.ModelForm):
             tas_qs = CustomUser.objects.filter(
                 course_working_for__professor=self.professor
             ).distinct()
-            courses_qs = self.professor.courses.filter(is_active=True)
+            # Allow evaluating courses even after an admin closes the semester.
+            # The admin "close" action currently flips `Course.is_active/status` flags,
+            # but evaluations should remain available.
+            courses_qs = self.professor.courses.all()
             self.fields["ta"].queryset = tas_qs
             self.fields["course"].queryset = courses_qs
             self.fields["ta"].empty_label = None

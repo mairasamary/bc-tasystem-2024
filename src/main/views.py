@@ -11,6 +11,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
 from courses.models import Course, CourseQuestion
+from evaluations.models import TAEvaluation
 from applications.models import Application, ApplicationStatus, ApplicationAnswer
 from applications.forms import ApplicationForm
 from offers.models import Offer, OfferStatus
@@ -612,9 +613,87 @@ def close_semester_v2(request):
         return redirect('courses')
 
     if request.method == 'POST':
+        # "Close semester" is implemented as a system-wide course close:
+        # - `status=False` blocks student applications (`apply_to_course_v2` checks `course.status`)
+        # - `is_active=False` hides courses from professor/student course pickers
+        #
+        # We additionally notify professors so they can leave optional TA evaluations.
+        open_courses = list(
+            Course.objects.filter(status=True)
+            .select_related("professor")
+            .prefetch_related("current_tas")
+        )
+
         # Close all courses for the semester (the other way courses close; the other is full TA capacity)
         Course.objects.all().update(is_active=False, status=False)
-        messages.success(request, "Successfully closed all courses for the semester.")
+
+        if not open_courses:
+            messages.success(request, "Successfully closed all courses for the semester.")
+            return redirect('courses')
+
+        # Map: professor_id -> {prof, pairs[(ta_id, course_id)]}
+        professor_to_pairs = {}
+        ta_ids = set()
+        closed_course_ids = {c.id for c in open_courses}
+
+        for course in open_courses:
+            professor = course.professor
+            if not professor:
+                continue
+            bucket = professor_to_pairs.setdefault(professor.id, {"prof": professor, "pairs": []})
+            for ta in course.current_tas.all():
+                bucket["pairs"].append((ta.id, course.id))
+                ta_ids.add(ta.id)
+
+        # Only notify professors who actually have at least one TA in a course being closed.
+        if not professor_to_pairs:
+            messages.success(request, "Successfully closed all courses for the semester.")
+            return redirect('courses')
+
+        existing_evals = set(
+            TAEvaluation.objects.filter(
+                reviewer_id__in=list(professor_to_pairs.keys()),
+                ta_id__in=list(ta_ids),
+                course_id__in=list(closed_course_ids),
+            ).values_list("reviewer_id", "ta_id", "course_id")
+        )
+
+        for professor_id, bucket in professor_to_pairs.items():
+            professor = bucket["prof"]
+            pairs = bucket["pairs"]
+            if not pairs:
+                continue
+
+            # Prefer a link to a missing evaluation; if all are already reviewed, fall back to the first pair.
+            missing_pair = next(
+                ((ta_id, course_id) for (ta_id, course_id) in pairs if (professor_id, ta_id, course_id) not in existing_evals),
+                None,
+            )
+            link_ta_id, link_course_id = missing_pair or pairs[0]
+
+            target_url = (
+                f"{reverse('evaluations:create')}?ta_id={link_ta_id}&course_id={link_course_id}"
+            )
+
+            create_notification(
+                user=professor,
+                title="TA evaluations requested (optional written feedback)",
+                target_url=target_url,
+            )
+
+            if professor.email:
+                send_notification_email(
+                    subject="TA evaluation request",
+                    recipients=professor.email,
+                    message_lines=[
+                        f"Dear {professor.get_full_name()},",
+                        "The semester has been closed. Please leave TA evaluations for your TAs below.",
+                        f"Review link: {app_site_absolute_url(target_url)}",
+                        "Written feedback is optional.",
+                    ],
+                )
+
+        messages.success(request, "Successfully closed all courses for the semester and prompted professors to complete TA evaluations.")
 
     return redirect('courses')
 

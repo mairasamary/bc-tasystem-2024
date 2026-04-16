@@ -503,7 +503,7 @@
                     {% endif %}
                     {% for num in page.paginator.page_range %}
                     {% if page.number == num %}
-                    <span aria-current="page" class="relative z-10 inline-flex items-center bg-gradient-to-r from-bc-maroon to-bc-maroon-700 px-4 py-2 text-sm font-semibold text-white focus:z-20 shadow-md">{{ num }}</span>
+                    <span aria-current="page" class="relative z-10 inline-flex items-center px-4 py-2 text-sm font-semibold text-white focus:z-20" style="background-color:#800000;">{{ num }}</span>
                     {% else %}
                     <a href="{% url 'courses' %}{% if query_string %}?{{ query_string }}&{% else %}?{% endif %}page={{ num }}"
                         class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">{{ num }}</a>

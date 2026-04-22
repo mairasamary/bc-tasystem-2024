@@ -5,6 +5,16 @@ from main.constants import BC_STUDENT_EMPLOYMENT_NEW_HIRES_URL
 from main.notifications import create_notification
 from main.utils import app_site_absolute_url, send_notification_email
 
+CS_TA_GUIDELINES_CONTRACT_URL = (
+    "https://docs.google.com/forms/d/e/1FAIpQLSfcb4M_9cD8CW_nz8eQrhEKiinBjpobpTMkTHe-TTBDODv4iQ/viewform"
+)
+PEOPLESOFT_PAYROLL_COMPENSATION_URL = (
+    "https://sites.google.com/bc.edu/human-resources/peoplesoft-hr/peoplesoft-hr-employee-self-service/employee-self-service-payroll-compensation"
+)
+DIRECT_DEPOSIT_INSTRUCTIONS_URL = (
+    "https://www.bc.edu/content/dam/files/offices/hr/pdf/Direct%20Deposit%20Instructions.pdf"
+)
+
 
 def send_student_ta_acceptance_onboarding_email(user, course_code: str, course_title: str) -> None:
     """Email sent when a student accepts a TA offer (student employment onboarding)."""
@@ -18,34 +28,45 @@ def send_student_ta_acceptance_onboarding_email(user, course_code: str, course_t
         "",
         f"Congratulations! You have accepted your TA assignment for {course_code} — {course_title}.",
         "",
-        "All newly hired student employees who will be working for the first time at BC must complete "
-        "the following onboarding documents before they begin to work. Note that students must secure "
-        "a job on campus or through our Off-Campus Federal Work-Study (FWS) Program to complete these "
-        "student employment onboarding forms.",
+        "Once you accept a TA offer in the Computer Science department, please complete the onboarding items below.",
         "",
-        "The Form I-9 Employment Eligibility Verification, Required Onboarding Form for New Student "
-        "Employees, and Payroll Form Statement (Student Hours at Boston College) are paper forms and "
-        "must be completed in person at the Office of Student Services.",
+        "1) Review and sign the CS Teaching Assistant Guidelines Contract 2026-2027 Google Form:",
+        CS_TA_GUIDELINES_CONTRACT_URL,
         "",
-        "These three forms are required to satisfy the Form I-9 requirement and must be completed only "
-        "once for all student jobs at Boston College. Students are unable to begin working until they "
-        "have completed the Form I-9 entirely, and it is on file with Student Employment.",
-        "",
-        "Please follow the link below for instructions on how to complete each form:",
+        "2) If you are a new hire and need to complete an I-9, submit your I-9 paperwork in person at "
+        "the Student Employment office in Lyons and bring original documents:",
         BC_STUDENT_EMPLOYMENT_NEW_HIRES_URL,
         "",
-        "On TA Connect you can use your personal onboarding checklist to self-report which forms you have "
-        "completed: Required Onboarding Form for Student Employees, Form I-9, Payroll Form Statement, "
-        "W-4 (Federal Withholding Form), M-4 (Massachusetts Withholding Form), and Direct Deposit "
-        "Enrollment Instructions.",
+        "3) If you are a new-hire international student who needs a Social Security number, follow the "
+        "international student instructions here:",
+        BC_STUDENT_EMPLOYMENT_NEW_HIRES_URL + "#tab-international_f_1_students",
+        "",
+        "If your paperwork is complete, your timecard appears in Employee Time Reporting near the beginning "
+        "of the employment period. If you are a new hire, complete paperwork as soon as you are on campus.",
+        "",
+        "If you have worked on campus previously and already have an I-9 on file, only Step 1 is required.",
+        "",
+        "You will know you are in the system when your timecard appears in Kronos:",
+        "Agora Portal >> Account and Personal Info >> Employee Time Reporting (select your student role).",
+        "",
+        "Only after that can you add or update direct deposit and tax documents in PeopleSoft HR:",
+        "Agora Portal >> Human Resources >> PeopleSoft Human Resources Services.",
+        "Tax withholding certificates (W-4 Federal and M-4 MA):",
+        PEOPLESOFT_PAYROLL_COMPENSATION_URL,
+        "Direct deposit setup instructions:",
+        DIRECT_DEPOSIT_INSTRUCTIONS_URL,
+        "",
+        "Important: Hourly-paid student employees must enter their hours in Kronos by the end of each week "
+        "(Friday) to be paid on time.",
+        "",
+        "If a step is not applicable to you (for example, international-only steps), check it off and disregard in the checklist.",
+        "If you run into any issues, please do not hesitate to reach out to Mary Mulkeen (mary.mulkeen@bc.edu).",
+        "",
+        "Use your TA Connect onboarding checklist to track these steps:",
         checklist_url,
-        "",
-        "Note that all completed forms should be brought to the Office of Student Services. The link to "
-        "find the forms is here:",
-        BC_STUDENT_EMPLOYMENT_NEW_HIRES_URL,
     ]
     send_notification_email(
-        subject=f"TA assignment confirmed — student employment onboarding ({course_code})",
+        subject=f"TA Employment Onboarding Next Steps ({course_code})",
         recipients=user.email,
         message_lines=lines,
     )

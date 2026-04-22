@@ -683,7 +683,7 @@ def close_semester_v2(request):
 
             if professor.email:
                 send_notification_email(
-                    subject="TA evaluation request",
+                    subject="TA Evaluation Request",
                     recipients=professor.email,
                     message_lines=[
                         f"Dear {professor.get_full_name()},",
@@ -699,14 +699,15 @@ def close_semester_v2(request):
 
 
 BC_NEW_HIRES_URL = "https://www.bc.edu/content/bc-web/offices/student-services/student-employment/new-hires.html"
+CS_TA_GUIDELINES_CONTRACT_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfcb4M_9cD8CW_nz8eQrhEKiinBjpobpTMkTHe-TTBDODv4iQ/viewform"
 
 ONBOARDING_STEPS = [
-    ("onboarding_done_required_form", "Required Onboarding Form"),
-    ("onboarding_done_i9", "Form I-9"),
-    ("onboarding_done_payroll_statement", "Payroll Form Statement"),
-    ("onboarding_done_w4", "W-4 (Federal)"),
-    ("onboarding_done_m4", "M-4 (Massachusetts)"),
-    ("onboarding_done_direct_deposit", "Direct Deposit"),
+    ("onboarding_done_required_form", "CS TA Guidelines Contract"),
+    ("onboarding_done_i9", "I-9 (new hires only)"),
+    ("onboarding_done_payroll_statement", "SSN process (international new hires)"),
+    ("onboarding_done_w4", "Kronos timecard visible"),
+    ("onboarding_done_m4", "PeopleSoft tax forms"),
+    ("onboarding_done_direct_deposit", "PeopleSoft direct deposit"),
 ]
 
 
@@ -818,15 +819,19 @@ def send_onboarding_reminders(request):
         missing = [s['label'] for s in row['steps'] if not s['done']]
         missing_list = '\n'.join(f'  • {m}' for m in missing)
         send_notification_email(
-            subject="Action required: Complete your TA onboarding forms",
+            subject="Action Required: Complete Your TA Onboarding Forms",
             recipients=ta.email,
             message_lines=[
                 f"Dear {ta.get_full_name()},",
                 f"You have been assigned as a TA for {row['course'].course if row['course'] else 'your course'}, but your BC student employment onboarding is not yet complete.",
-                f"You are still missing the following form(s):\n{missing_list}",
-                "Please complete these forms as soon as possible. All forms are submitted in person at the Office of Student Services.",
-                f"Visit the BC Student Employment New Hires page for instructions and form details:\n{BC_NEW_HIRES_URL}",
-                "If you have already submitted a form, you can mark it as complete on TA Connect so your progress is up to date.",
+                f"You are still missing the following checklist item(s):\n{missing_list}",
+                "Step 1 for all TAs: review and sign the CS Teaching Assistant Guidelines Contract:",
+                CS_TA_GUIDELINES_CONTRACT_URL,
+                "New hires who still need an I-9 must complete it in person at Student Employment in Lyons with original documents.",
+                "International new hires who need a Social Security number should follow BC's international student instructions on the same page.",
+                f"BC Student Employment New Hires instructions:\n{BC_NEW_HIRES_URL}",
+                "Once your paperwork is processed and your timecard appears in Kronos, complete direct deposit and tax forms in PeopleSoft HR.",
+                "If an item does not apply to you (for example, you already have an I-9 on file), you can still mark your checklist accordingly in TA Connect.",
             ],
         )
         sent += 1

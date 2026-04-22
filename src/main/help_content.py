@@ -144,17 +144,17 @@ HELP_TOPICS = [
         "steps": [
             "Open the Student employment onboarding page.",
             "Check each item when you have completed it:",
-            "Required Onboarding Form",
-            "I-9",
-            "Payroll Form Statement (Student Hours)",
-            "W-4",
-            "M-4",
-            "Direct Deposit Enrollment Instructions",
+            "CS TA Guidelines Contract Google Form",
+            "I-9 (new hires who still need one)",
+            "Social Security number process (international new hires)",
+            "Kronos timecard is visible",
+            "PeopleSoft tax forms (W-4 and M-4)",
+            "PeopleSoft direct deposit setup",
             "Click Save checklist.",
             "After saving, return to your dashboard (or refresh to see updates)."
         ],
         "what_to_know": [
-            "This checklist is for your own tracking. Official onboarding is managed outside the app (the page links to the Office of Student Services).",
+            "This checklist is for your own tracking. Official onboarding is managed outside the app through the BC Student Employment pages and TA contract form.",
             "The app uses these checkboxes to determine whether onboarding is complete."
         ],
         "troubleshooting": [

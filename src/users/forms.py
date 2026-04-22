@@ -154,3 +154,11 @@ class StudentEmploymentOnboardingForm(forms.ModelForm):
             "onboarding_done_m4": forms.CheckboxInput(attrs={"class": CHECKBOX_CLASS}),
             "onboarding_done_direct_deposit": forms.CheckboxInput(attrs={"class": CHECKBOX_CLASS}),
         }
+        labels = {
+            "onboarding_done_required_form": "Review and sign the CS Teaching Assistant Guidelines Contract 2026-2027 Google Form.",
+            "onboarding_done_i9": "If you are a new hire: complete I-9 paperwork in person at the Student Employment office in Lyons with original documents.",
+            "onboarding_done_payroll_statement": "If you are an international new hire: follow the BC process to obtain a Social Security number.",
+            "onboarding_done_w4": "Confirm your timecard appears in Kronos (Agora Portal >> Account and Personal Info >> Employee Time Reporting).",
+            "onboarding_done_m4": "In PeopleSoft HR, complete tax withholding certificates (W-4 Federal and M-4 Massachusetts).",
+            "onboarding_done_direct_deposit": "In PeopleSoft HR, add or confirm your payroll direct deposit details.",
+        }

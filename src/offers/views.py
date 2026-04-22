@@ -81,7 +81,7 @@ class OfferCreateView(
         student = application.student
         course = application.course
         offers_url = app_site_absolute_url(reverse("offers"))
-        subject = f"TA Application Update For {student}"
+        subject = f"TA Application Update for {student}"
         message = [
             f"Dear {student}",
             f"Congratulations! You have received an offer for {course}",
@@ -182,7 +182,7 @@ class OfferAcceptView(
         offer = self.get_object()
         course = offer.course
         url = reverse("courses:course-detail", args=[course.id])
-        subject = f"TA Offer Update For {course.instructor_first_name} {course.instructor_last_name}"
+        subject = f"TA Offer Update for {course.instructor_first_name} {course.instructor_last_name}"
         message = [
             f"Dear {course.instructor_first_name} {course.instructor_last_name}",
             f"The student has accepted your offer. You can view the status of {course} here: http://cscigpu03.bc.edu:8080{url}",
@@ -233,7 +233,7 @@ class OfferRejectView(
         offer = self.get_object()
         course = offer.course
         url = reverse("courses:course-detail", args=[course.id])
-        subject = f"TA Offer Update For {course.instructor_first_name} {course.instructor_last_name}"
+        subject = f"TA Offer Update for {course.instructor_first_name} {course.instructor_last_name}"
         message = [
             f"Dear {course.instructor_first_name} {course.instructor_last_name}",
             f"The student has declined your offer. You can view the status of {course} here: http://cscigpu03.bc.edu:8080{url}",

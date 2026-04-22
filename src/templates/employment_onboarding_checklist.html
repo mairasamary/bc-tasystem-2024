@@ -1,42 +1,32 @@
 {% extends 'base.html' %}
 
-{% block title %}Student employment onboarding - TA Connect{% endblock %}
+{% block title %}Student Employment Onboarding - TA Connect{% endblock %}
 
 {% block breadcrumb %}
 <nav class="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
     <a href="{% url 'dashboard' %}" class="hover:text-bc-maroon transition-colors">Home</a>
     <span class="mx-1.5">/</span>
-    <span class="text-gray-800 font-medium">Employment onboarding</span>
+    <span class="text-gray-800 font-medium">Employment Onboarding</span>
 </nav>
 {% endblock %}
 
 {% block content %}
 <div class="mb-8">
-    <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">Student employment onboarding</h1>
+    <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">Student Employment Onboarding</h1>
     <p class="mt-1 text-gray-500 text-sm max-w-3xl">
-        Use this checklist to record which Boston College student employment forms you have completed.
-        This is for your own tracking only; official onboarding is managed by the
-        <a href="{{ bc_new_hires_url }}" class="text-bc-maroon hover:underline font-medium" target="_blank" rel="noopener noreferrer">Office of Student Services</a>.
+        Use this checklist to track each onboarding step after accepting a Computer Science TA offer.
+        If you have previously been a BC student worker, only Step 1 is required.
     </p>
-</div>
-
-<div class="card-pro rounded-xl border border-gray-200/80 shadow-sm p-6 sm:p-8 max-w-3xl mb-8">
-    <h2 class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-2">Official instructions &amp; forms</h2>
-    <p class="text-sm text-gray-600 mb-4">
-        All newly hired student employees who will be working for the first time at BC must complete onboarding before they begin to work.
-        Paper forms (I-9, Required Onboarding Form, Payroll Form Statement) are completed in person at the Office of Student Services.
-        Bring completed forms to the Office of Student Services.
+    <p class="mt-2 text-gray-500 text-sm max-w-3xl">
+        If a step is not applicable to you (for example, international-only steps), check it off and disregard.
+        If you run into any issues, contact
+        <a href="mailto:mary.mulkeen@bc.edu" class="text-bc-maroon hover:underline font-medium">Mary Mulkeen (mary.mulkeen@bc.edu)</a>.
     </p>
-    <a href="{{ bc_new_hires_url }}" target="_blank" rel="noopener noreferrer"
-        class="inline-flex items-center gap-2 text-sm font-medium text-bc-navy hover:text-bc-navy-600 hover:underline">
-        BC Student Employment — New Hires
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-    </a>
 </div>
 
 <div class="card-pro rounded-xl border border-gray-200/80 shadow-sm p-6 sm:p-8 max-w-3xl">
     <h2 class="text-lg font-semibold text-gray-900 mb-1">Your checklist</h2>
-    <p class="text-sm text-gray-500 mb-6">Check each item when you have completed it.</p>
+    <p class="text-sm text-gray-500 mb-6">Check each item after completion. If a step does not apply to you, check it off and disregard.</p>
 
     <form method="post" class="space-y-5">
         {% csrf_token %}
@@ -49,7 +39,26 @@
         <label class="flex items-start gap-3 cursor-pointer group">
             <span class="mt-0.5">{{ field }}</span>
             <span class="text-sm text-gray-800 leading-snug">
+                {% if field.name == "onboarding_done_required_form" %}
+                Review and sign the
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLSfcb4M_9cD8CW_nz8eQrhEKiinBjpobpTMkTHe-TTBDODv4iQ/viewform" target="_blank" rel="noopener noreferrer" class="text-bc-maroon hover:underline font-medium">CS Teaching Assistant Guidelines Contract 2026-2027 Google Form</a>.
+                {% elif field.name == "onboarding_done_i9" %}
+                If you are a new hire and need an I-9, complete it in person at Student Employment (Lyons) with original documents (details on
+                <a href="{{ bc_new_hires_url }}" target="_blank" rel="noopener noreferrer" class="text-bc-maroon hover:underline font-medium">BC New Hires</a>).
+                {% elif field.name == "onboarding_done_payroll_statement" %}
+                If you are an international new hire who needs a Social Security number, follow
+                <a href="https://www.bc.edu/content/bc-web/offices/student-services/student-employment/new-hires.html#tab-international_f_1_students" target="_blank" rel="noopener noreferrer" class="text-bc-maroon hover:underline font-medium">BC international student instructions</a>.
+                {% elif field.name == "onboarding_done_w4" %}
+                Confirm your timecard appears in Kronos (Agora Portal >> Account and Personal Info >> Employee Time Reporting).
+                {% elif field.name == "onboarding_done_m4" %}
+                Complete tax withholding certificates (W-4 and M-4) in PeopleSoft HR:
+                <a href="https://sites.google.com/bc.edu/human-resources/peoplesoft-hr/peoplesoft-hr-employee-self-service/employee-self-service-payroll-compensation" target="_blank" rel="noopener noreferrer" class="text-bc-maroon hover:underline font-medium">Employee Self Service Payroll &amp; Compensation</a>.
+                {% elif field.name == "onboarding_done_direct_deposit" %}
+                Complete direct deposit setup:
+                <a href="https://www.bc.edu/content/dam/files/offices/hr/pdf/Direct%20Deposit%20Instructions.pdf" target="_blank" rel="noopener noreferrer" class="text-bc-maroon hover:underline font-medium">Direct Deposit Instructions (PDF)</a>.
+                {% else %}
                 {{ field.label }}
+                {% endif %}
                 {% if field.errors %}
                 <span class="block text-red-600 text-xs mt-1">{{ field.errors|join:", " }}</span>
                 {% endif %}

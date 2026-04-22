@@ -52,7 +52,7 @@ class ApplicationCreateView(
         # email for the professor after the student submits application
         course = self.get_object()
         url = reverse("courses:course-detail", args=[course.id])
-        subject = f"TA Offer Update For {course.instructor_first_name} {course.instructor_last_name}"
+        subject = f"TA Offer Update for {course.instructor_first_name} {course.instructor_last_name}"
         message = [
             f"Dear {course.instructor_first_name} {course.instructor_last_name}",
             f"The student submitted an application for {course.course_title}. View the application here: http://cscigpu03.bc.edu:8080{url}",
@@ -156,7 +156,7 @@ class ApplicationRejectView(
         # email for the student after an application is rejected
         url = reverse("courses:course-list")
         student = self.get_object().student
-        subject = f"TA Application Update For {student.first_name} {student.last_name}"
+        subject = f"TA Application Update for {student.first_name} {student.last_name}"
         message = [
             f"Dear {student.first_name} {student.last_name}",
             f"We regret to inform you that your application has been rejected. You can view other courses here: http://cscigpu03.bc.edu:8080{url}",

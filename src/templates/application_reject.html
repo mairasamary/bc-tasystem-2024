@@ -8,7 +8,7 @@
     <span class="mx-1.5">/</span>
     <a href="{% url 'applications' %}" class="hover:text-bc-maroon transition-colors">Applications</a>
     <span class="mx-1.5">/</span>
-    <a href="{% url 'application_detail' app.id %}" class="hover:text-bc-maroon transition-colors">Application details</a>
+    <a href="{% url 'application_detail' app.id %}" class="hover:text-bc-maroon transition-colors">Application Details</a>
     <span class="mx-1.5">/</span>
     <span class="text-gray-800 font-medium">Reject</span>
 </nav>
@@ -16,7 +16,7 @@
 
 {% block content %}
 <div class="max-w-2xl">
-    <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">Reject application</h1>
+    <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">Reject Application</h1>
     <p class="mt-2 text-sm text-gray-600">
         You’re rejecting <span class="font-medium text-gray-900">{{ app.student.get_full_name }}</span> for
         <span class="font-medium text-gray-900">{{ app.course.course }} — {{ app.course.course_title }}</span>.

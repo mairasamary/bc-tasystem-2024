@@ -15,7 +15,7 @@
 {% block content %}
 <div class="max-w-2xl mx-auto">
     <div class="mb-8">
-        <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">{% if is_edit %}Edit application{% else %}Apply for TA{% endif %}</h1>
+        <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">{% if is_edit %}Edit Application{% else %}Apply for TA{% endif %}</h1>
         <p class="mt-1 text-gray-500 text-sm">{% if is_edit %}Update your application for {{ course.course }}.{% else %}{{ course.course }} — {{ course.course_title }}{% endif %}</p>
     </div>
 

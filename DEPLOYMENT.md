@@ -64,6 +64,42 @@ DEFAULT_FROM_EMAIL=csci_ta_app@bc.edu
 LETSENCRYPT_EMAIL=you@bc.edu
 ```
 
+### How to complete `.env` (what each value should be)
+
+- `ENV`: set to `prod` on the CS server.
+- `DEBUG`: set to `false` in production.
+- `SECRET_KEY`: generate a new long random value for production (do not reuse a dev key).
+- `SITE_DOMAIN`: public DNS name pointing to this server (for example `cscita.bc.edu`).
+- `SITE_HOSTNAME`: same hostname as `SITE_DOMAIN`, no scheme and no trailing slash.
+- `PUBLIC_SITE_URL`: full HTTPS origin for user-facing links (for example `https://cscita.bc.edu`).
+- `ALLOWED_HOSTS`: comma-separated hostnames Django should accept (usually just your domain).
+- `CSRF_TRUSTED_ORIGINS`: comma-separated HTTPS origins (for example `https://cscita.bc.edu`).
+- `SECURE_SSL_REDIRECT`, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`: keep these `true` in production.
+
+- `DATABASE_NAME`: Postgres database name to create/use.
+- `DATABASE_USERNAME`: Postgres username.
+- `DATABASE_PASSWORD`: strong password for that Postgres user (create a new production value).
+- `DATABASE_HOST`: keep as `db` for Docker Compose deployment.
+- `DATABASE_PORT`: keep as `5432`.
+
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`: values from Google Cloud OAuth credentials for this app.
+  - In Google Cloud Console, add authorized redirect URI:
+    - `https://<your-domain>/oauth/google/callback`
+  - If an old secret was shared publicly, rotate/regenerate and use the new secret.
+
+- `EMAIL_HOST_USER`: SMTP login username (typically full sender email, e.g. `csci_ta_app@bc.edu`).
+- `EMAIL_HOST_PASSWORD`: SMTP password/app-password for that sending account.
+- `DEFAULT_FROM_EMAIL`: sender email address shown to users (often same as `EMAIL_HOST_USER`).
+- `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS`, `EMAIL_USE_SSL`: values provided by your SMTP provider.
+
+- `LETSENCRYPT_EMAIL`: contact email used by Caddy/Let's Encrypt for certificate notices.
+
+Secrets handling recommendation:
+
+- Do not commit `.env` to git.
+- Share production secrets with professor/IT via a secure channel (not plain email).
+- Rotate any secret that has already been sent in plaintext or committed previously.
+
 ## 3) Start, stop, logs
 
 From repo root:

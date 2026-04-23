@@ -18,6 +18,10 @@ python manage.py createsuperuser
 python manage.py startapp <appname>
 ```
 
+## Production deployment
+
+Use the Docker production stack and follow `DEPLOYMENT.md` for server setup, HTTPS, and operations.
+
 ## License
 
 None

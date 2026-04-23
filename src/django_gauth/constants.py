@@ -1,20 +1,18 @@
 import os
-import socket
 
-from bcta.settings import ENV, SITE_HOSTNAME
+from bcta.settings import PUBLIC_SITE_URL, SITE_HOSTNAME
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
-if socket.gethostname() == "cscita":
-    BASE_URI = "https://{serverName}".format(
-        serverName=os.getenv("SITE_HOSTNAME", "127.0.0.1:8000")
-    )
-if ENV.value == "prod":
-    # NOTE(ahnsv): due to cscigpu03 instance configuration, we need to use http instead of https
-    BASE_URI = "http://{serverName}".format(serverName=SITE_HOSTNAME)
+if PUBLIC_SITE_URL:
+    BASE_URI = PUBLIC_SITE_URL.rstrip("/")
 else:
-    BASE_URI = "http://127.0.0.1:8000"
+    base_host = SITE_HOSTNAME.strip()
+    if base_host.startswith("http://") or base_host.startswith("https://"):
+        BASE_URI = base_host.rstrip("/")
+    else:
+        BASE_URI = f"http://{base_host}"
 
 GOOGLE_REDIRECT_URI = f"{BASE_URI}/oauth/google/callback"
 

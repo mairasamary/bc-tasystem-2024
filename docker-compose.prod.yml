@@ -1,0 +1,58 @@
+version: "3.9"
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=bcta.settings
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn --bind 0.0.0.0:8080 --workers 3 --timeout 60 bcta.wsgi:application"
+    depends_on:
+      - db
+    restart: unless-stopped
+    volumes:
+      - staticfiles:/app/src/staticfiles
+      - media:/app/src/media
+
+  db:
+    image: postgres:15-alpine
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_DB=${DATABASE_NAME}
+      - POSTGRES_USER=${DATABASE_USERNAME}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  caddy:
+    image: caddy:2.8-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - SITE_DOMAIN=${SITE_DOMAIN}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+      - staticfiles:/srv/static
+      - media:/srv/media
+    depends_on:
+      - web
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  staticfiles:
+  media:
+  caddy_data:
+  caddy_config:

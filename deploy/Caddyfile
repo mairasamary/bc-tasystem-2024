@@ -1,0 +1,17 @@
+{$SITE_DOMAIN} {
+    tls {$LETSENCRYPT_EMAIL}
+
+    encode zstd gzip
+
+    handle /static/* {
+        root * /srv
+        file_server
+    }
+
+    handle /media/* {
+        root * /srv
+        file_server
+    }
+
+    reverse_proxy web:8080
+}

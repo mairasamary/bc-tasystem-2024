@@ -36,7 +36,6 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # Install system dependencies for runtime
 RUN apt-get update && apt-get install -y \
     libpq5 \
-    nginx \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -52,21 +51,16 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application code
 COPY src/ ./src/
-COPY .env.prod ./.env
 
 # Create necessary directories and set permissions
-RUN mkdir -p /app/src/static /app/src/media /var/log/nginx && \
-    chown -R django:django /app && \
-    chown -R django:django /var/log/nginx
+RUN mkdir -p /app/src/static /app/src/media /app/src/staticfiles && \
+    chown -R django:django /app
 
 # Switch to non-root user
 USER django
 
 # Set working directory to src for Django commands
 WORKDIR /app/src
-
-# Collect static files
-RUN python manage.py collectstatic --noinput
 
 # Expose port
 EXPOSE 8080

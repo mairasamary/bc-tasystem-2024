@@ -9,6 +9,7 @@ django-allauth==0.57.0
 dotenv==0.9.9
 et-xmlfile==1.1.0
 idna==3.4
+gunicorn
 oauthlib==3.2.2
 openpyxl==3.1.2
 Pillow==10.1.0

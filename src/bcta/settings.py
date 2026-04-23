@@ -14,7 +14,7 @@ from enum import Enum
 from pathlib import Path
 import os
 import socket
-from dotenv import load_dotenv, find_dotenv
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,19 +23,32 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 dotenv_path = os.path.join(BASE_DIR, "../.env")
 load_dotenv(dotenv_path)
 
+
+def env_bool(name: str, default: bool = False) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "t", "yes", "y", "on"}
+
+
+def env_list(name: str, default: list[str] | None = None) -> list[str]:
+    value = os.getenv(name, "")
+    if not value:
+        return default or []
+    return [item.strip() for item in value.split(",") if item.strip()]
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = "django-insecure-&-o0uda&gah_*mwk9fcn)orpv#3o)btpv5d83@+0hth#8j8e^2"
-SECRET_KEY = "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"
+SECRET_KEY = os.getenv("SECRET_KEY", "insecure-dev-key-change-me")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = False
-DEBUG = True
+DEBUG = env_bool("DEBUG", default=True)
 
-# ALLOWED_HOSTS = ["cscita.bc.edu"]
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", default=["127.0.0.1", "localhost"])
+if DEBUG and "*" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append("*")
 
 # Application definition
 
@@ -171,24 +184,20 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
-if socket.gethostname() == "cscita":
-    STATIC_ROOT = "usr/local/test/bc-tasystem/src/static/"
-else:
-    WAITLIST_APP_HOST = "localhost"
-    WAITLIST_APP_PORT = 8080
+STATIC_ROOT = os.getenv("STATIC_ROOT", os.path.join(BASE_DIR, "staticfiles"))
+WAITLIST_APP_HOST = os.getenv("WAITLIST_APP_HOST", "localhost")
+WAITLIST_APP_PORT = int(os.getenv("WAITLIST_APP_PORT", "8080"))
 
 # EMAIL
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
-EMAIL_HOST_USER = (
-    "wuaye@bc.edu" 
-)
-EMAIL_HOST_PASSWORD = "llfvmmusylcjnidb"
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", default=True)
+EMAIL_USE_SSL = env_bool("EMAIL_USE_SSL", default=False)
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
 
-DEFAULT_FROM_EMAIL = "csci_ta_app@bc.edu"
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "csci_ta_app@bc.edu")
 
 # OAUTH
 SITE_ID = 3
@@ -219,3 +228,16 @@ ENV = BcTaEnvironment(env_str)
 SITE_HOSTNAME = os.getenv("SITE_HOSTNAME", "127.0.0.1:8000")
 # Full public origin for links in emails (optional). Example: https://cscita.bc.edu
 PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "").strip()
+
+CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
+
+if ENV == BcTaEnvironment.PROD:
+    SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", default=True)
+    SESSION_COOKIE_SECURE = env_bool("SESSION_COOKIE_SECURE", default=True)
+    CSRF_COOKIE_SECURE = env_bool("CSRF_COOKIE_SECURE", default=True)
+else:
+    SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", default=False)
+    SESSION_COOKIE_SECURE = env_bool("SESSION_COOKIE_SECURE", default=False)
+    CSRF_COOKIE_SECURE = env_bool("CSRF_COOKIE_SECURE", default=False)

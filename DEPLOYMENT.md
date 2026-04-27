@@ -126,6 +126,148 @@ docker compose -f docker-compose.prod.yml exec web python manage.py createsuperu
 - Django trusts proxy HTTPS headers and enforces secure cookies when `ENV=prod`.
 - Keep `PUBLIC_SITE_URL=https://<your-domain>` so outbound links and OAuth redirects use HTTPS.
 
+## 5.1) Private server TLS (campus/VPN-only)
+
+If the server is not publicly reachable, Let's Encrypt HTTP/TLS challenges will fail. Use one of the options below so deployment can proceed regardless of network constraints.
+
+### Option A (preferred): Public 80/443 + Let's Encrypt (current default)
+
+Use when ITS allows public inbound access to this host.
+
+`deploy/Caddyfile`:
+
+```caddy
+{$SITE_DOMAIN} {
+    tls {$LETSENCRYPT_EMAIL}
+
+    encode zstd gzip
+
+    handle /static/* {
+        root * /srv
+        file_server
+    }
+
+    handle /media/* {
+        root * /srv
+        file_server
+    }
+
+    reverse_proxy web:8080
+}
+```
+
+Requirements:
+- DNS `A/AAAA` for `SITE_DOMAIN` points to this server.
+- Ports `80` and `443` are publicly reachable.
+
+### Option B: DNS challenge (no public inbound to app host)
+
+Use when DNS can be updated for ACME TXT records but the app host stays private.
+
+`deploy/Caddyfile`:
+
+```caddy
+{
+    email {$LETSENCRYPT_EMAIL}
+    # Replace with your DNS provider module name and API token env var.
+    # Example provider key shown for illustration only.
+    acme_dns cloudflare {$CF_API_TOKEN}
+}
+
+{$SITE_DOMAIN} {
+    encode zstd gzip
+
+    handle /static/* {
+        root * /srv
+        file_server
+    }
+
+    handle /media/* {
+        root * /srv
+        file_server
+    }
+
+    reverse_proxy web:8080
+}
+```
+
+Also required for Option B:
+- Use a Caddy image that includes your DNS provider plugin (the stock `caddy:2.8-alpine` image does not include `acme_dns` providers).
+- Add provider credentials in `.env` (example: `CF_API_TOKEN=...`).
+
+### Option C: Internal CA certs via Caddy (`tls internal`)
+
+Use for campus/VPN-only deployments where public trust is not required.
+
+`deploy/Caddyfile`:
+
+```caddy
+{$SITE_DOMAIN} {
+    tls internal
+
+    encode zstd gzip
+
+    handle /static/* {
+        root * /srv
+        file_server
+    }
+
+    handle /media/* {
+        root * /srv
+        file_server
+    }
+
+    reverse_proxy web:8080
+}
+```
+
+Notes for Option C:
+- Browser/device trust must be configured for Caddy's internal root CA.
+- App remains HTTPS, but certs are not publicly trusted by default.
+
+### Option D (last resort): HTTP-only on private network
+
+Use only if certificates are blocked and access is strictly campus/VPN.
+
+`deploy/Caddyfile`:
+
+```caddy
+http://{$SITE_DOMAIN} {
+    encode zstd gzip
+
+    handle /static/* {
+        root * /srv
+        file_server
+    }
+
+    handle /media/* {
+        root * /srv
+        file_server
+    }
+
+    reverse_proxy web:8080
+}
+```
+
+For Option D, update `.env`:
+
+```bash
+PUBLIC_SITE_URL=http://<your-domain>
+CSRF_TRUSTED_ORIGINS=http://<your-domain>
+SECURE_SSL_REDIRECT=false
+SESSION_COOKIE_SECURE=false
+CSRF_COOKIE_SECURE=false
+```
+
+Deployment workflow for all options:
+1. Select one option and update `deploy/Caddyfile`.
+2. Update `.env` if needed (Option B or D).
+3. Recreate services:
+   - `docker compose -f docker-compose.prod.yml up -d --build`
+4. Verify:
+   - `docker compose -f docker-compose.prod.yml logs -f caddy`
+   - Visit `PUBLIC_SITE_URL` from an allowed network.
+
 ## 6) Deploying updates
 
 For each new release:

@@ -56,6 +56,10 @@ COPY src/ ./src/
 RUN mkdir -p /app/src/static /app/src/media /app/src/staticfiles && \
     chown -R django:django /app
 
+# Create the home directory for django so that gunicorn works
+RUN mkdir -p /home/django && \
+    chown -R django:django /home/django
+
 # Switch to non-root user
 USER django
 

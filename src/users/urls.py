@@ -1,6 +1,6 @@
 from django.urls import path, re_path
 from django.views.generic import RedirectView
-from .views import ProfileView, StudentProfileView, serve_resume, serve_cv, serve_profile_photo
+from .views import ProfileView, StudentProfileView, serve_resume, serve_cv, serve_profile_photo, serve_any_user_photo
 from django.contrib.auth import views as auth_views
 
 app_name = 'users'
@@ -13,4 +13,5 @@ urlpatterns = [
     path('profile/resume/', serve_resume, name='serve_resume'),
     path('profile/cv/', serve_cv, name='serve_cv'),
     path('profile/photo/', serve_profile_photo, name='serve_profile_photo'),
+    path('photo/<uuid:user_id>/', serve_any_user_photo, name='serve_any_user_photo'),
 ]

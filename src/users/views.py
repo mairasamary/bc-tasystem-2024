@@ -222,3 +222,31 @@ def serve_profile_photo(request):
         return HttpResponse(data, content_type=content_type)
     except (ValueError, OSError):
         return HttpResponse(status=404)
+
+
+def serve_any_user_photo(request, user_id):
+    """Serve a profile photo for any user (login required)."""
+    from django.http import HttpResponse
+    if not request.user.is_authenticated:
+        return HttpResponse(status=404)
+    try:
+        profile = StudentProfile.objects.get(user_id=user_id)
+    except StudentProfile.DoesNotExist:
+        return HttpResponse(status=404)
+    if not profile.profile_photo:
+        return HttpResponse(status=404)
+    try:
+        file_handle = profile.profile_photo.open('rb')
+        data = file_handle.read()
+        filename = (profile.profile_photo.name or '').lower()
+        if filename.endswith('.png'):
+            content_type = 'image/png'
+        elif filename.endswith('.gif'):
+            content_type = 'image/gif'
+        elif filename.endswith('.webp'):
+            content_type = 'image/webp'
+        else:
+            content_type = 'image/jpeg'
+        return HttpResponse(data, content_type=content_type)
+    except (ValueError, OSError):
+        return HttpResponse(status=404)

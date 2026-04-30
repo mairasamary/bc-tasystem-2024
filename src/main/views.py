@@ -1650,7 +1650,7 @@ def users_list_v2(request):
         return redirect("dashboard")
 
     query = request.GET.get("q", "").strip()
-    users = User.objects.all().order_by("last_name", "first_name")
+    users = User.objects.select_related("student_profile").order_by("last_name", "first_name")
     if query:
         users = users.filter(
             Q(first_name__icontains=query)

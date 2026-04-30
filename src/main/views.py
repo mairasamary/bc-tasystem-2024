@@ -36,6 +36,8 @@ APPLICATIONS_SORT_ORDER = (
 
 
 def home(request):
+    if request.user.is_authenticated:
+        return redirect("dashboard")
     return render(request, "home.html")
 
 
@@ -271,6 +273,14 @@ PER_PAGE_CHOICES = [10, 20, 50]
 
 @login_required
 def courses_list_v2(request):
+    if 'term' not in request.GET and 'status' not in request.GET:
+        latest_term = Course.objects.order_by('-term').values_list('term', flat=True).first()
+        if latest_term:
+            params = request.GET.copy()
+            params['term'] = latest_term.strip()
+            params['status'] = 'active'
+            return redirect(f"{request.path}?{params.urlencode()}")
+
     query = request.GET.get('q')
     term_filter = (request.GET.get('term') or '').strip()
     professor_id = request.GET.get('professor')
@@ -1631,3 +1641,63 @@ def serve_application_applicant_photo(request, application_id):
         return response
     except (ValueError, OSError):
         return HttpResponse(status=404)
+
+
+@login_required
+def users_list_v2(request):
+    if not request.user.is_superuser:
+        messages.error(request, "Only admins can view the user list.")
+        return redirect("dashboard")
+
+    query = request.GET.get("q", "").strip()
+    users = User.objects.all().order_by("last_name", "first_name")
+    if query:
+        users = users.filter(
+            Q(first_name__icontains=query)
+            | Q(last_name__icontains=query)
+            | Q(email__icontains=query)
+        )
+    return render(request, "users_list.html", {"users": users, "query": query})
+
+
+@login_required
+def change_user_role(request, user_id):
+    if not request.user.is_superuser:
+        messages.error(request, "Only admins can change user roles.")
+        return redirect("dashboard")
+    if request.method != "POST":
+        return redirect("users_list")
+
+    target_user = get_object_or_404(User, id=user_id)
+
+    if target_user == request.user:
+        messages.error(request, "You cannot change your own role.")
+        return redirect("users_list")
+
+    new_role = request.POST.get("role")
+    if new_role == "admin":
+        target_user.is_superuser = True
+        target_user.is_staff = True
+        target_user.professor = False
+    elif new_role == "professor":
+        target_user.is_superuser = False
+        target_user.is_staff = False
+        target_user.professor = True
+    elif new_role == "student":
+        target_user.is_superuser = False
+        target_user.is_staff = False
+        target_user.professor = False
+    else:
+        messages.error(request, "Invalid role.")
+        return redirect("users_list")
+
+    target_user.save(update_fields=["is_superuser", "is_staff", "professor"])
+    messages.success(
+        request,
+        f"Updated {target_user.get_full_name() or target_user.email}'s role to {new_role}.",
+    )
+    back = reverse("users_list")
+    q = request.POST.get("q", "").strip()
+    if q:
+        back = f"{back}?q={q}"
+    return redirect(back)

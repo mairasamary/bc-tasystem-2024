@@ -54,4 +54,6 @@ urlpatterns = [
     path("onboarding-status/export/", views.export_onboarding_status, name="export_onboarding_status"),
     path("onboarding-status/remind/", views.send_onboarding_reminders, name="send_onboarding_reminders"),
     path("evaluations/", include("evaluations.urls")),
+    path("users/", views.users_list_v2, name="users_list"),
+    path("users/<uuid:user_id>/change-role/", views.change_user_role, name="change_user_role"),
 ]

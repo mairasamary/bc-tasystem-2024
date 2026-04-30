@@ -324,12 +324,12 @@
                 {% for course in courses %}
                 <tr class="bg-white hover:bg-gray-50/50 transition-colors">
                     <td class="pl-3 pr-2 py-2.5 align-middle text-left">
-                        <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0">
-                            <a href="{% url 'course_overview' course.id %}" class="inline-flex flex-wrap items-baseline gap-x-1.5 text-bc-maroon hover:text-bc-maroon-700 hover:underline min-w-0">
+                        <div class="min-w-0">
+                            <a href="{% url 'course_overview' course.id %}" class="block text-bc-maroon hover:text-bc-maroon-700 hover:underline min-w-0">
                                 <span class="text-sm font-bold">{{ course.course }}</span>
-                                <span class="text-xs text-gray-500">{{ course.course_title }}</span>
                             </a>
-                            <span class="inline-flex items-center gap-1 shrink-0">
+                            <p class="text-xs text-gray-500 truncate">{{ course.course_title }}</p>
+                            <span class="inline-flex items-center gap-1 mt-1">
                                 {% if course.class_type == 'Lecture' %}
                                 <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-purple-50 text-purple-800 ring-1 ring-purple-200/60">Lecture</span>
                                 {% else %}
@@ -340,7 +340,7 @@
                         </div>
                     </td>
                     <td class="pl-1 pr-2 py-2.5 align-middle text-left">
-                        <div class="flex items-center gap-2 min-w-0 flex-wrap">
+                        <div class="flex items-center gap-2 min-w-0">
                             <div class="h-7 w-7 shrink-0 rounded-full bg-gradient-to-br from-bc-maroon-100 to-bc-maroon-200 flex items-center justify-center text-bc-maroon-700 font-bold text-xs shadow-sm">
                                 {% if course.professor %}
                                 {{ course.professor.first_name|first }}{{ course.professor.last_name|first }}
@@ -348,16 +348,18 @@
                                 {{ course.instructor_first_name|first }}{{ course.instructor_last_name|first }}
                                 {% endif %}
                             </div>
-                            <span class="text-sm font-medium text-gray-900 min-w-0 break-words">
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium text-gray-900 truncate">
+                                    {% if course.professor %}
+                                    {{ course.professor.get_full_name }}
+                                    {% else %}
+                                    {{ course.instructor_first_name }} {{ course.instructor_last_name }}
+                                    {% endif %}
+                                </p>
                                 {% if course.professor %}
-                                {{ course.professor.get_full_name }}
-                                {% else %}
-                                {{ course.instructor_first_name }} {{ course.instructor_last_name }}
+                                <p class="text-xs text-gray-500 truncate">{{ course.professor.email }}</p>
                                 {% endif %}
-                            </span>
-                            {% if course.professor %}
-                            <span class="text-xs text-gray-500 break-words">{{ course.professor.email }}</span>
-                            {% endif %}
+                            </div>
                         </div>
                     </td>
                     <td class="pl-1 pr-2 py-2.5 align-middle whitespace-nowrap">

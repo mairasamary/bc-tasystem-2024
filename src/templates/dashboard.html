@@ -34,11 +34,11 @@
         <p class="text-2xl font-semibold text-gray-900 mt-1">{{ active_courses_count }}</p>
         <p class="text-xs text-blue-600 mt-1">Seeking TAs</p>
     </div>
-    <div class="card-pro rounded-lg p-5">
+    <a href="{% url 'users_list' %}" class="card-pro rounded-lg p-5 block no-underline hover:shadow-md transition-shadow">
         <p class="text-xs font-bold text-gray-900 uppercase tracking-wider">Total users</p>
         <p class="text-2xl font-semibold text-gray-900 mt-1">{{ total_users_count }}</p>
-        <p class="text-xs text-blue-600 mt-1">Students & professors</p>
-    </div>
+        <p class="text-xs text-bc-maroon mt-1">View all users →</p>
+    </a>
 </div>
 
 <!-- Quick links -->

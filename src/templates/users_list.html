@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Users - TA Connect{% endblock %}
+
+{% block breadcrumb %}
+<nav class="mb-6 text-sm text-gray-500" aria-label="Breadcrumb">
+    <a href="{% url 'dashboard' %}" class="hover:text-bc-maroon transition-colors">Home</a>
+    <span class="mx-1.5">/</span>
+    <span class="text-gray-800 font-medium">Users</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex items-center justify-between">
+    <div>
+        <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">Users</h1>
+        <p class="mt-1 text-gray-500 text-sm">Manage user accounts and roles</p>
+    </div>
+</div>
+
+<div class="mb-6">
+    <form method="GET" action="{% url 'users_list' %}">
+        <div class="relative w-full sm:w-72">
+            <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                </svg>
+            </div>
+            <input type="text" name="q" value="{{ query }}" placeholder="Search by name or email..."
+                class="block w-full h-11 pl-10 pr-3 text-sm text-gray-900 border-2 border-gray-300 rounded-lg bg-white focus:ring-bc-maroon focus:border-bc-maroon transition-all">
+        </div>
+    </form>
+</div>
+
+<div class="card-pro rounded-xl overflow-hidden border border-gray-200/80 shadow-sm animate-fade-in">
+    <div class="min-w-0 overflow-x-auto">
+        <table class="w-full text-sm text-left" style="min-width: 640px;">
+            <thead>
+                <tr class="border-b border-gray-200 bg-gray-50/80">
+                    <th scope="col" class="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[30%]">Name</th>
+                    <th scope="col" class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[35%]">Email</th>
+                    <th scope="col" class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[15%]">Current Role</th>
+                    <th scope="col" class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[20%]">Change Role</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for u in users %}
+                <tr class="bg-white hover:bg-gray-50/50 transition-colors">
+                    <td class="px-5 py-3 align-middle">
+                        <div class="flex items-center gap-2.5">
+                            <div class="h-8 w-8 shrink-0 rounded-full bg-gradient-to-br from-bc-maroon-100 to-bc-maroon-200 flex items-center justify-center text-bc-maroon-700 font-bold text-xs shadow-sm">
+                                {{ u.first_name|first|upper }}{{ u.last_name|first|upper }}
+                            </div>
+                            <span class="font-medium text-gray-900">{{ u.get_full_name|default:u.email }}</span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 align-middle text-gray-600">{{ u.email }}</td>
+                    <td class="px-4 py-3 align-middle">
+                        {% if u.is_superuser %}
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-purple-50 text-purple-800 ring-1 ring-purple-200/60">Admin</span>
+                        {% elif u.professor %}
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-800 ring-1 ring-blue-200/60">Professor</span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700 ring-1 ring-gray-200/60">Student</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3 align-middle">
+                        {% if u == request.user %}
+                        <span class="text-xs text-gray-400 italic">You</span>
+                        {% else %}
+                        <form method="POST" action="{% url 'change_user_role' u.id %}" class="flex items-center gap-2">
+                            {% csrf_token %}
+                            {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+                            <select name="role"
+                                class="h-8 px-2.5 text-xs text-gray-900 border border-gray-300 rounded-md bg-white focus:ring-bc-maroon focus:border-bc-maroon">
+                                <option value="student" {% if not u.is_superuser and not u.professor %}selected{% endif %}>Student</option>
+                                <option value="professor" {% if u.professor and not u.is_superuser %}selected{% endif %}>Professor</option>
+                                <option value="admin" {% if u.is_superuser %}selected{% endif %}>Admin</option>
+                            </select>
+                            <button type="submit"
+                                class="h-8 px-3 text-xs font-medium text-white bg-bc-maroon hover:bg-bc-maroon-700 rounded-md transition-colors">
+                                Save
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="px-6 py-12 text-center">
+                        <div class="flex flex-col items-center gap-2 text-gray-500">
+                            <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <p class="text-sm font-medium">No users found</p>
+                            <p class="text-xs text-gray-400">Try a different search term</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="border-t border-gray-200 bg-white px-5 py-3">
+        <p class="text-sm text-gray-500">{{ users|length }} user{{ users|length|pluralize }} found</p>
+    </div>
+</div>
+{% endblock %}

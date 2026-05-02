@@ -582,6 +582,7 @@ def edit_course_v2(request, course_id):
     if not request.user.is_superuser:
         return redirect('course_overview', course_id=course_id)
     course = get_object_or_404(Course, id=course_id)
+    page_number = request.GET.get('page', 1)
     if request.method == 'POST':
         form = CourseForm(request.POST, instance=course)
         if form.is_valid():
@@ -591,10 +592,10 @@ def edit_course_v2(request, course_id):
                 course.status = False
                 course.save(update_fields=['status'])
             messages.success(request, f"Course {course.course} - {course.course_title} updated successfully.")
-            return redirect('courses')
+            return redirect(f"{reverse('courses')}?page={page_number}")
     else:
         form = CourseForm(instance=course)
-    return render(request, 'edit_course.html', {'form': form, 'course': course})
+    return render(request, 'edit_course.html', {'form': form, 'course': course, 'page_number': page_number})
 
 
 @login_required

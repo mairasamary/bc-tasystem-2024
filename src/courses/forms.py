@@ -35,7 +35,7 @@ class CourseForm(forms.ModelForm):
             'timeslot': forms.TextInput(attrs={'class': TAILWIND_INPUT, 'placeholder': 'e.g. MWF 11:00-11:50'}),
             'max_enroll': forms.NumberInput(attrs={'class': TAILWIND_INPUT, 'placeholder': 'e.g. 30', 'min': 0}),
             'room_size': forms.NumberInput(attrs={'class': TAILWIND_INPUT, 'placeholder': 'e.g. 40', 'min': 0}),
-            'num_tas': forms.NumberInput(attrs={'class': TAILWIND_INPUT, 'placeholder': 'e.g. 2', 'min': 1}),
+            'num_tas': forms.NumberInput(attrs={'class': TAILWIND_INPUT, 'placeholder': 'e.g. 2', 'min': 0}),
             'description': forms.Textarea(attrs={'class': TAILWIND_TEXTAREA, 'rows': 3, 'placeholder': 'Course description (optional)'}),
         }
         labels = {

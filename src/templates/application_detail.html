@@ -74,7 +74,7 @@
             <p class="mt-2 text-lg text-gray-600">Applying for <a href="{% url 'course_overview' app.course.id %}" class="font-semibold text-bc-maroon hover:text-bc-maroon-700 hover:underline">{{ app.course.course }} - {{ app.course.course_title }}</a></p>
         </div>
 
-        {% if user.is_professor and app.get_status == 'PENDING' or user.is_superuser and app.get_status == 'PENDING' %}
+        {% if acting_as_professor and app.get_status == 'PENDING' or acting_as_admin and app.get_status == 'PENDING' %}
         <div class="flex flex-col items-end gap-2">
             <div class="flex items-center gap-2">
                 {% if app.course.has_ta_offer_capacity %}

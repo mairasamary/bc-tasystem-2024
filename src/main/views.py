@@ -9,6 +9,7 @@ from django.core.paginator import Paginator
 from collections import defaultdict
 from datetime import date
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from openpyxl import Workbook
 from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
@@ -23,6 +24,7 @@ from main.models import Notification
 from main.constants import BC_STUDENT_EMPLOYMENT_NEW_HIRES_URL
 from main.notifications import create_notification
 from main.ta_hiring import send_student_ta_acceptance_onboarding_email
+from main.roles import SESSION_KEY as ROLE_SESSION_KEY, acts_as_admin, acts_as_professor
 from main.terms import available_terms, default_term
 from main.utils import app_site_absolute_url, send_notification_email
 
@@ -64,6 +66,30 @@ def profile_welcome(request):
 
 
 @login_required
+def switch_role(request):
+    """Change which role a dual-role user browses as. Display only."""
+    if request.method != "POST":
+        return redirect("dashboard")
+
+    from main.roles import CHOICES, is_dual_role
+
+    if not is_dual_role(request.user):
+        return redirect("dashboard")
+
+    chosen = (request.POST.get("role") or "").strip()
+    if chosen in CHOICES:
+        request.session[ROLE_SESSION_KEY] = chosen
+
+    # Return to the page she switched from, but never off-site.
+    nxt = (request.POST.get("next") or "").strip()
+    if nxt and url_has_allowed_host_and_scheme(
+        nxt, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return redirect(nxt)
+    return redirect("dashboard")
+
+
+@login_required
 def notifications_page(request):
     notifications = Notification.objects.filter(user=request.user).order_by("-created_at")
     return render(request, "notifications.html", {"notifications": notifications})
@@ -98,7 +124,7 @@ def clear_notifications(request):
 @login_required
 def admin_dashboard_v2(request):
     # Admin: full system overview (stats + recent apps/offers)
-    if request.user.is_superuser:
+    if acts_as_admin(request):
         pending_apps_count = Application.objects.filter(status=ApplicationStatus.PENDING.value).count()
         total_offers_count = Offer.objects.count()
         active_courses_count = Course.objects.filter(status=True).count()
@@ -257,9 +283,9 @@ OFFER_STATUS_FILTERS = {
 @login_required
 def applications_list_v2(request):
     qs = Application.objects.select_related("student", "course")
-    if request.user.is_superuser:
+    if acts_as_admin(request):
         apps = qs
-    elif request.user.is_professor:
+    elif acts_as_professor(request):
         apps = qs.filter(course__professor=request.user)
     else:
         apps = qs.filter(student=request.user)
@@ -278,11 +304,11 @@ def applications_list_v2(request):
 
 @login_required
 def offers_list_v2(request):
-    # Professors see only offers they sent (even if also superuser)
-    if request.user.is_professor:
-        offers = Offer.objects.filter(sender=request.user).select_related('recipient', 'course').order_by('-created_at')
-    elif request.user.is_superuser:
+    # Same role order as applications_list_v2, so the two pages cannot disagree.
+    if acts_as_admin(request):
         offers = Offer.objects.select_related('recipient', 'course', 'sender').order_by('-created_at')
+    elif acts_as_professor(request):
+        offers = Offer.objects.filter(sender=request.user).select_related('recipient', 'course').order_by('-created_at')
     else:
         offers = Offer.objects.filter(recipient=request.user).select_related('recipient', 'course').order_by('-created_at')
 
@@ -312,7 +338,7 @@ PER_PAGE_CHOICES = [10, 20, 50]
 @login_required
 def courses_list_v2(request):
     # Non-admins get the parameter ignored rather than an error.
-    staffing_view = request.user.is_superuser and request.GET.get('view') == 'staffing'
+    staffing_view = acts_as_admin(request) and request.GET.get('view') == 'staffing'
 
     if 'term' not in request.GET and 'status' not in request.GET:
         # Not order_by('-term'): that sorts "Spring 2026" above "Fall 2026".
@@ -335,7 +361,7 @@ def courses_list_v2(request):
 
     # Professors see only their own courses by default
     professor_my_courses = False
-    if request.user.is_professor and not request.user.is_superuser:
+    if acts_as_professor(request):
         if not show_all:
             courses = courses.filter(professor=request.user)
             professor_my_courses = True
@@ -369,7 +395,7 @@ def courses_list_v2(request):
     staffing_filter_urls = None
     staffing_filter = (request.GET.get('staffing') or '').strip()
 
-    if request.user.is_superuser:
+    if acts_as_admin(request):
         stats_qs = courses.annotate(tas_count=Count('current_tas', distinct=True))
         agg = stats_qs.aggregate(
             total_slots=Sum('num_tas'),
@@ -1764,15 +1790,14 @@ def delete_course_v2(request, course_id):
     return redirect('courses')
 
 
-def _review_queue_nav_for_reviewer(application, user):
+def _review_queue_nav_for_reviewer(application, user, admin_scope, professor_scope):
     """
-    Same order as the Applications list: last name, first name, course, section, id.
-    Superuser: all applications. Professor: only applications for their courses.
+    Same order and scope as the Applications list, so the queue length matches it.
     Returns (prev_id, next_id, position_1_based, total) or (None, None, None, None) if N/A.
     """
-    if user.is_superuser:
+    if admin_scope:
         qs = Application.objects.all()
-    elif getattr(user, "is_professor", False) and application.course.professor_id == user.id:
+    elif professor_scope and application.course.professor_id == user.id:
         qs = Application.objects.filter(course__professor=user)
     else:
         return None, None, None, None
@@ -1806,8 +1831,8 @@ def application_detail_v2(request, application_id):
 
     review_prev_app_id = review_next_app_id = None
     review_queue_position = review_queue_total = None
-    show_applicant_navigation = request.user.is_superuser or (
-        is_course_professor and getattr(request.user, "is_professor", False)
+    show_applicant_navigation = acts_as_admin(request) or (
+        is_course_professor and acts_as_professor(request)
     )
     if show_applicant_navigation:
         (
@@ -1815,7 +1840,9 @@ def application_detail_v2(request, application_id):
             review_next_app_id,
             review_queue_position,
             review_queue_total,
-        ) = _review_queue_nav_for_reviewer(app, request.user)
+        ) = _review_queue_nav_for_reviewer(
+            app, request.user, acts_as_admin(request), acts_as_professor(request)
+        )
 
     custom_answers = list(
         app.custom_answers.select_related('question').order_by('question__order', 'question__id')

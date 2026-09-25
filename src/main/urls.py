@@ -13,6 +13,7 @@ urlpatterns = [
     path("help/students/search/", help_students_search, name="help_students_search"),
     path("help/students/<str:topic_id>/", help_student_topic, name="help_student_topic"),
     path("dashboard/", views.admin_dashboard_v2, name="dashboard"),
+    path("role/", views.switch_role, name="switch_role"),
     path("notifications/", views.notifications_page, name="notifications"),
     path("notifications/<uuid:notification_id>/open/", views.open_notification, name="open_notification"),
     path("notifications/<uuid:notification_id>/dismiss/", views.dismiss_notification, name="dismiss_notification"),

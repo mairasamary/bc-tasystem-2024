@@ -3,14 +3,18 @@ from django.http import Http404, HttpResponseForbidden
 from django.shortcuts import render
 
 from main.help_content import HELP_TOPICS
+from main.roles import acts_as_admin, is_dual_role
 
 import re
 from difflib import SequenceMatcher
 
 
-def _help_role(user) -> str | None:
+def _help_role(user, request=None) -> str | None:
     if not getattr(user, "is_authenticated", False):
         return None
+    # Dual-role users follow whichever view they picked; everyone else is unchanged.
+    if request is not None and is_dual_role(user):
+        return "admin" if acts_as_admin(request) else "professor"
     if getattr(user, "is_superuser", False) or getattr(user, "is_staff", False):
         return "admin"
     if getattr(user, "is_professor", False):
@@ -18,8 +22,8 @@ def _help_role(user) -> str | None:
     return "student"
 
 
-def _allowed_audiences(user) -> list[str]:
-    role = _help_role(user)
+def _allowed_audiences(user, request=None) -> list[str]:
+    role = _help_role(user, request)
     if role == "admin":
         return ["student", "professor", "admin"]
     if role == "professor":
@@ -29,13 +33,13 @@ def _allowed_audiences(user) -> list[str]:
     return []
 
 
-def _allowed_topics(user) -> list[dict]:
-    allowed = set(_allowed_audiences(user))
+def _allowed_topics(user, request=None) -> list[dict]:
+    allowed = set(_allowed_audiences(user, request))
     return [topic for topic in HELP_TOPICS if topic.get("audience") in allowed]
 
 
-def _print_guide_context(user) -> dict:
-    role = _help_role(user)
+def _print_guide_context(user, request=None) -> dict:
+    role = _help_role(user, request)
     if role == "student":
         return {
             "help_role": role,
@@ -67,8 +71,8 @@ def _print_guide_context(user) -> dict:
 
 @login_required
 def help_home(request):
-    role = _help_role(request.user)
-    topics = _allowed_topics(request.user)
+    role = _help_role(request.user, request)
+    topics = _allowed_topics(request.user, request)
     return render(
         request,
         "help/help_home.html",
@@ -85,20 +89,20 @@ def help_print(request):
     return render(
         request,
         "help/help_print.html",
-        _print_guide_context(request.user),
+        _print_guide_context(request.user, request),
     )
 
 
 @login_required
 def help_students_print(request):
-    if _help_role(request.user) != "student":
+    if _help_role(request.user, request) != "student":
         return HttpResponseForbidden("Student help is restricted.")
     return help_print(request)
 
 
 @login_required
 def help_student_topic(request, topic_id: str):
-    topics = _allowed_topics(request.user)
+    topics = _allowed_topics(request.user, request)
 
     topic = next((t for t in topics if t.get("id") == topic_id), None)
     if topic is None:
@@ -110,14 +114,14 @@ def help_student_topic(request, topic_id: str):
         {
             "topic": topic,
             "topics": topics,
-            "help_role": _help_role(request.user),
+            "help_role": _help_role(request.user, request),
         },
     )
 
 
 @login_required
 def help_students_search(request):
-    topics = _allowed_topics(request.user)
+    topics = _allowed_topics(request.user, request)
 
     raw_q = (request.GET.get("q") or "").strip()
     q = raw_q.lower()
@@ -250,7 +254,7 @@ def help_students_search(request):
         {
             "query": raw_q,
             "topics": matched_topics,
-            "help_role": _help_role(request.user),
+            "help_role": _help_role(request.user, request),
         },
     )
 

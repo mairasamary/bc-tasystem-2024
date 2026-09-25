@@ -16,7 +16,7 @@
     <p class="mt-1 text-gray-500 text-sm">All student applications</p>
 </div>
 
-{% if user.is_professor or user.is_superuser %}
+{% if acting_as_professor or acting_as_admin %}
 <div class="mb-6 flex flex-wrap items-center gap-3">
     <form method="GET" action="{% url 'applications' %}" class="flex items-center gap-2">
         <select name="status" id="status" onchange="this.form.submit()"
@@ -75,7 +75,7 @@
                     <td class="px-6 py-4">
                         <div class="flex items-center justify-end gap-2 flex-wrap">
                             <a href="{% url 'application_detail' app.id %}" class="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">View details</a>
-                            {% if user.is_professor and app.get_status == 'PENDING' or user.is_superuser and app.get_status == 'PENDING' %}
+                            {% if acting_as_professor and app.get_status == 'PENDING' or acting_as_admin and app.get_status == 'PENDING' %}
                                 {% if app.course.has_ta_offer_capacity %}
                                 <form action="{% url 'make_offer' app.id %}" method="POST" class="inline">
                                     {% csrf_token %}

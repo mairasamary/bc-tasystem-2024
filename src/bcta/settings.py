@@ -96,6 +96,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "main.context_processors.navbar_profile_photo",
                 "main.context_processors.notifications",
+                "main.context_processors.role_view",
             ],
         },
     },

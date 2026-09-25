@@ -1,4 +1,15 @@
 from main.models import Notification
+from main.roles import acts_as_admin, acts_as_professor, active_role, is_dual_role
+
+
+def role_view(request):
+    """Which role the user is browsing as. Drives display only, never permissions."""
+    return {
+        "acting_as_admin": acts_as_admin(request),
+        "acting_as_professor": acts_as_professor(request),
+        "role_view": active_role(request),
+        "show_role_switcher": is_dual_role(getattr(request, "user", None)),
+    }
 
 
 def navbar_profile_photo(request):

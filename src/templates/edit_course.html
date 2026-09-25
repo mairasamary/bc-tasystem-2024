@@ -181,7 +181,7 @@
         </form>
     </div>
 
-    {% if user.is_superuser %}
+    {% if acting_as_admin %}
     <div class="card-pro rounded-lg p-6 mt-6 border border-red-200">
         <h3 class="text-lg font-bold text-red-700 mb-2">Delete Course</h3>
         <p class="text-sm text-gray-600 mb-4">Permanently delete this course and all associated applications and offers. This cannot be undone.</p>

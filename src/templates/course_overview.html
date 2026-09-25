@@ -77,7 +77,7 @@
         <div class="prose prose-sm text-gray-600 max-w-none">{% if course.description %}{{ course.description|linebreaks }}{% else %}<p class="text-gray-500 italic">No description provided.</p>{% endif %}</div>
     </div>
 
-    {% if user.is_superuser or user.is_professor %}
+    {% if acting_as_admin or acting_as_professor %}
     <div class="card-pro rounded-lg p-6 mb-6">
         <h2 class="text-lg font-bold text-gray-900 mb-4">Current TAs</h2>
         {% if course.current_tas.all %}
@@ -93,7 +93,7 @@
                         <p class="text-xs text-gray-500">{{ ta.email }}</p>
                     </div>
                 </div>
-                {% if course.professor_id == user.id or user.is_superuser %}
+                {% if course.professor_id == user.id or acting_as_admin %}
                 <button type="button" onclick="openModal('remove-modal-{{ ta.id }}')" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-md ring-1 ring-inset ring-red-600/20 transition-colors">Remove</button>
                 {% endif %}
             </li>
@@ -105,7 +105,7 @@
     </div>
 
     {% for ta in course.current_tas.all %}
-    {% if course.professor_id == user.id or user.is_superuser %}
+    {% if course.professor_id == user.id or acting_as_admin %}
     <div id="remove-modal-{{ ta.id }}" class="hidden fixed inset-0 z-50 flex items-center justify-center">
         <div class="modal-backdrop fixed inset-0 bg-black/40" onclick="closeModal('remove-modal-{{ ta.id }}')"></div>
         <div class="modal-panel relative bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
@@ -124,7 +124,7 @@
     {% endfor %}
     {% endif %}
 
-    {% if user.is_superuser or user.is_professor and course.professor_id == user.id %}
+    {% if acting_as_admin or acting_as_professor and course.professor_id == user.id %}
     <div class="card-pro rounded-lg p-6 mb-6">
         <div class="flex items-center justify-between mb-4">
             <div>
@@ -173,7 +173,7 @@
     {% endif %}
 
     <div class="flex flex-wrap gap-3">
-        {% if user.is_superuser %}
+        {% if acting_as_admin %}
         <a href="{% url 'edit_course' course.id %}" class="inline-flex items-center px-4 py-2 bg-bc-maroon hover:bg-bc-maroon-700 text-white font-medium rounded-lg text-sm transition-colors">Manage course</a>
         {% endif %}
         {% if not user.is_professor and course.status and course.id not in applied_course_ids %}

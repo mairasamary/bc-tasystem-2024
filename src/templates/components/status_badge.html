@@ -1,12 +1,14 @@
 {% comment %}
 Reusable status badge component.
-Usage: {% include "components/status_badge.html" with status=app.get_status %}
-Supports: PENDING, ACCEPTED, REJECTED, CONFIRMED, WITHDRAWN
+Usage: {% include "components/status_badge.html" with status=app.get_status kind="application" %}
+Supports: PENDING, ACCEPTED, REJECTED, CONFIRMED, WITHDRAWN.
+kind="application" renders ACCEPTED as "Offer sent" - on an Application it means
+the professor sent an offer, not that the student accepted.
 {% endcomment %}
 {% if status == 'PENDING' %}
 <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-amber-50 text-amber-800 ring-1 ring-amber-200/60">Pending</span>
 {% elif status == 'ACCEPTED' %}
-<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200/60">Accepted</span>
+<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200/60">{% if kind == 'application' %}Offer sent{% else %}Accepted{% endif %}</span>
 {% elif status == 'REJECTED' %}
 <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-red-50 text-red-800 ring-1 ring-red-200/60">Rejected</span>
 {% elif status == 'CONFIRMED' %}

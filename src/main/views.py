@@ -238,6 +238,22 @@ def employment_onboarding_checklist(request):
     )
 
 
+# Slugs rather than enum names: an Application in ACCEPTED means an offer was sent.
+APPLICATION_STATUS_FILTERS = {
+    "pending": ApplicationStatus.PENDING.value,
+    "offer_sent": ApplicationStatus.ACCEPTED.value,
+    "confirmed": ApplicationStatus.CONFIRMED.value,
+    "rejected": ApplicationStatus.REJECTED.value,
+    "withdrawn": ApplicationStatus.WITHDRAWN.value,
+}
+
+OFFER_STATUS_FILTERS = {
+    "pending": OfferStatus.PENDING.value,
+    "accepted": OfferStatus.ACCEPTED.value,
+    "rejected": OfferStatus.REJECTED.value,
+}
+
+
 @login_required
 def applications_list_v2(request):
     qs = Application.objects.select_related("student", "course")
@@ -248,7 +264,17 @@ def applications_list_v2(request):
     else:
         apps = qs.filter(student=request.user)
     apps = apps.order_by(*APPLICATIONS_SORT_ORDER)
-    return render(request, "applications.html", {"apps": apps})
+
+    total_count = apps.count()
+    status = (request.GET.get("status") or "").strip()
+    if status in APPLICATION_STATUS_FILTERS:
+        apps = apps.filter(status=APPLICATION_STATUS_FILTERS[status])
+
+    return render(request, "applications.html", {
+        "apps": apps,
+        "status": status if status in APPLICATION_STATUS_FILTERS else "",
+        "total_count": total_count,
+    })
 
 @login_required
 def offers_list_v2(request):
@@ -259,7 +285,17 @@ def offers_list_v2(request):
         offers = Offer.objects.select_related('recipient', 'course', 'sender').order_by('-created_at')
     else:
         offers = Offer.objects.filter(recipient=request.user).select_related('recipient', 'course').order_by('-created_at')
-    return render(request, 'offers.html', {'offers': offers})
+
+    total_count = offers.count()
+    status = (request.GET.get('status') or '').strip()
+    if status in OFFER_STATUS_FILTERS:
+        offers = offers.filter(status=OFFER_STATUS_FILTERS[status])
+
+    return render(request, 'offers.html', {
+        'offers': offers,
+        'status': status if status in OFFER_STATUS_FILTERS else '',
+        'total_count': total_count,
+    })
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages

@@ -16,6 +16,31 @@
     <p class="mt-1 text-gray-500 text-sm">{% if user.is_professor or user.is_superuser %}All offers sent{% else %}Offers extended to you{% endif %}</p>
 </div>
 
+{% if user.is_professor or user.is_superuser %}
+<div class="mb-6 flex flex-wrap items-center gap-3">
+    <form method="GET" action="{% url 'offers' %}" class="flex items-center gap-2">
+        <select name="status" id="status" onchange="this.form.submit()"
+            aria-label="Filter by offer status"
+            class="block h-10 px-3 pr-8 text-sm text-gray-900 border border-gray-300 rounded-lg bg-white focus:ring-bc-maroon focus:border-bc-maroon">
+            <option value="">All statuses</option>
+            <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+            <option value="accepted" {% if status == 'accepted' %}selected{% endif %}>Accepted</option>
+            <option value="rejected" {% if status == 'rejected' %}selected{% endif %}>Rejected</option>
+        </select>
+        <noscript>
+            <button type="submit"
+                class="h-10 px-4 text-sm font-medium text-white bg-bc-maroon hover:bg-bc-maroon-700 rounded-lg transition-colors">
+                Filter
+            </button>
+        </noscript>
+    </form>
+    {% if status %}
+    <span class="text-sm text-gray-500">Showing {{ offers|length }} of {{ total_count }}</span>
+    <a href="{% url 'offers' %}" class="text-sm text-bc-maroon hover:underline">Clear</a>
+    {% endif %}
+</div>
+{% endif %}
+
 <div class="card-pro rounded-xl overflow-hidden border border-gray-200/80 shadow-sm">
     <div class="overflow-x-auto">
         <table class="w-full text-sm text-left">
@@ -34,7 +59,7 @@
                     <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ offer.recipient.get_full_name }}</td>
                     <td class="px-6 py-4 text-gray-600">{{ offer.course.course }}</td>
                     <td class="px-6 py-4 text-gray-600">{{ offer.created_at|date:"M d, Y" }}</td>
-                    <td class="px-6 py-4">{% include "components/status_badge.html" with status=offer.get_status %}</td>
+                    <td class="px-6 py-4">{% include "components/status_badge.html" with status=offer.get_status kind="offer" %}</td>
                     <td class="px-6 py-4">
                         <div class="flex items-center justify-end gap-2 flex-wrap">
                             {% if user == offer.recipient and offer.get_status == 'PENDING' %}

@@ -87,7 +87,7 @@
                 {% for app in my_apps %}
                 <tr class="bg-white hover:bg-gray-50/50 transition-colors">
                     <td class="px-6 py-4 font-medium text-gray-900">{{ app.course.course }}</td>
-                    <td class="px-6 py-4">{% include "components/status_badge.html" with status=app.get_status %}</td>
+                    <td class="px-6 py-4">{% include "components/status_badge.html" with status=app.get_status kind="application" %}</td>
                     <td class="px-6 py-4 text-right"><a href="{% url 'application_detail' app.id %}" class="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">View</a></td>
                 </tr>
                 {% empty %}
@@ -125,7 +125,7 @@
                 <tr class="bg-white hover:bg-gray-50/50 transition-colors">
                     <td class="px-6 py-4 font-medium text-gray-900">{{ offer.course.course }}</td>
                     <td class="px-6 py-4 text-gray-600">{{ offer.sender.get_full_name }}</td>
-                    <td class="px-6 py-4">{% include "components/status_badge.html" with status=offer.get_status %}</td>
+                    <td class="px-6 py-4">{% include "components/status_badge.html" with status=offer.get_status kind="offer" %}</td>
                     <td class="px-6 py-4 text-gray-600">{{ offer.created_at|date:"M d, Y" }}</td>
                 </tr>
                 {% empty %}

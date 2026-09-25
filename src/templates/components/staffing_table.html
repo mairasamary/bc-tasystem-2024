@@ -1,0 +1,144 @@
+<!-- Summary cards -->
+<div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+    <div class="card-pro rounded-lg p-5">
+        <p class="text-xs font-bold text-gray-900 uppercase tracking-wider">Sections</p>
+        <p class="text-2xl font-semibold text-gray-900 mt-1">{{ rows|length }}</p>
+        <p class="text-xs text-gray-500 mt-1">Rows shown</p>
+    </div>
+    <div class="card-pro rounded-lg p-5">
+        <p class="text-xs font-bold text-gray-900 uppercase tracking-wider">Confirmed TAs</p>
+        <p class="text-2xl font-semibold text-emerald-700 mt-1">{{ total_confirmed }}</p>
+        <p class="text-xs text-gray-500 mt-1">Of {{ total_slots }} TA slots</p>
+    </div>
+    <div class="card-pro rounded-lg p-5">
+        <p class="text-xs font-bold text-gray-900 uppercase tracking-wider">Pending offers</p>
+        <p class="text-2xl font-semibold text-amber-700 mt-1">{{ total_pending_offers }}</p>
+        <p class="text-xs text-gray-500 mt-1">Awaiting a student response</p>
+    </div>
+    <div class="card-pro rounded-lg p-5">
+        <p class="text-xs font-bold text-gray-900 uppercase tracking-wider">Not yet offered</p>
+        <p class="text-2xl font-semibold text-gray-900 mt-1">{{ total_open }}</p>
+        <p class="text-xs text-gray-500 mt-1">Slots with nobody lined up</p>
+    </div>
+</div>
+
+<div class="flex flex-wrap items-end gap-3 mb-6">
+    <form method="GET" action="{% url 'courses' %}" class="flex flex-wrap items-end gap-3">
+        <input type="hidden" name="view" value="staffing">
+        <input type="hidden" name="term" value="{{ request.GET.term|default:'' }}">
+        <input type="hidden" name="q" value="{{ request.GET.q|default:'' }}">
+        <input type="hidden" name="professor" value="{{ request.GET.professor|default:'' }}">
+        <input type="hidden" name="class_type" value="{{ request.GET.class_type|default:'' }}">
+        <input type="hidden" name="course_level" value="{{ request.GET.course_level|default:'' }}">
+        <input type="hidden" name="sort" value="{{ sort }}">
+        <input type="hidden" name="dir" value="{{ direction }}">
+        <div>
+            <select name="staffing_state" id="staffing_state" onchange="this.form.submit()"
+                aria-label="Filter by staffing status"
+                class="block h-10 px-3 pr-8 text-sm text-gray-900 border border-gray-300 rounded-lg bg-white focus:ring-bc-maroon focus:border-bc-maroon">
+                <option value="">All courses</option>
+                <option value="needs_tas" {% if staffing_state == 'needs_tas' %}selected{% endif %}>Needs TAs</option>
+                <option value="pending_offers" {% if staffing_state == 'pending_offers' %}selected{% endif %}>Has pending offers</option>
+                <option value="fully_staffed" {% if staffing_state == 'fully_staffed' %}selected{% endif %}>Fully staffed</option>
+            </select>
+        </div>
+        <noscript>
+            <button type="submit"
+                class="h-10 px-4 text-sm font-medium text-white bg-bc-maroon hover:bg-bc-maroon-700 rounded-lg transition-colors">
+                Filter
+            </button>
+        </noscript>
+    </form>
+</div>
+
+<!-- Not paginated: searched with ctrl+F. -->
+<div class="card-pro rounded-xl overflow-hidden border border-gray-200/80 shadow-sm">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left" style="min-width: 1040px;">
+            <thead>
+                <tr class="border-b border-gray-200 bg-gray-50/80">
+                    <th scope="col" class="px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <a href="?{{ sort_urls.course }}" class="inline-flex items-center gap-1 text-gray-500 hover:text-bc-maroon no-underline">
+                            Course
+                            {% if sort == 'course' %}<span aria-hidden="true">{% if direction == 'asc' %}&#9650;{% else %}&#9660;{% endif %}</span>{% endif %}
+                        </a>
+                    </th>
+                    <th scope="col" class="px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Section</th>
+                    <th scope="col" class="px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Title</th>
+                    <th scope="col" class="px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Professor</th>
+                    <th scope="col" class="px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">TA Slots</th>
+                    <th scope="col" class="px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Confirmed TAs</th>
+                    <th scope="col" class="px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <a href="?{{ sort_urls.pending_offers }}" class="inline-flex items-center gap-1 text-gray-500 hover:text-bc-maroon no-underline">
+                            Pending Offers
+                            {% if sort == 'pending_offers' %}<span aria-hidden="true">{% if direction == 'asc' %}&#9650;{% else %}&#9660;{% endif %}</span>{% endif %}
+                        </a>
+                    </th>
+                    <th scope="col" class="px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center"
+                        title="TA slots with nobody confirmed and no offer outstanding. Slots already offered to a student are not counted here.">
+                        <a href="?{{ sort_urls.open_slots }}" class="inline-flex items-center gap-1 text-gray-500 hover:text-bc-maroon no-underline">
+                            Open slots (not yet offered)
+                            {% if sort == 'open_slots' %}<span aria-hidden="true">{% if direction == 'asc' %}&#9650;{% else %}&#9660;{% endif %}</span>{% endif %}
+                        </a>
+                    </th>
+                    <th scope="col" class="px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Pending Apps</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for row in rows %}
+                <tr class="bg-white hover:bg-gray-50/50 transition-colors">
+                    <td class="px-4 py-3.5 align-top whitespace-nowrap">
+                        <a href="{% url 'course_overview' row.id %}" class="text-sm font-bold text-bc-maroon hover:text-bc-maroon-700 hover:underline">{{ row.course }}</a>
+                    </td>
+                    <td class="px-4 py-3.5 align-top whitespace-nowrap">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700 ring-1 ring-gray-200/60">{{ row.section }}</span>
+                    </td>
+                    <td class="px-4 py-3.5 align-top text-gray-600">{{ row.course_title }}</td>
+                    <td class="px-4 py-3.5 align-top text-gray-600 whitespace-nowrap">{{ row.professor }}</td>
+                    <td class="px-4 py-3.5 align-top text-center text-gray-700 tabular-nums">{{ row.num_tas }}</td>
+                    <td class="px-4 py-3.5 align-top">
+                        {% if row.confirmed_tas %}
+                        <div class="flex flex-col gap-1">
+                            {% for name in row.confirmed_tas %}
+                            <span class="inline-flex items-center w-fit px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200/60">{{ name }}</span>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <span class="text-xs text-gray-400">None</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3.5 align-top">
+                        {% if row.pending_offer_tas %}
+                        <div class="flex flex-col gap-1">
+                            {% for name in row.pending_offer_tas %}
+                            <span class="inline-flex items-center w-fit px-2 py-0.5 rounded text-xs font-medium bg-amber-50 text-amber-800 ring-1 ring-amber-200/60">{{ name }}</span>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <span class="text-xs text-gray-400">None</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3.5 align-top text-center">
+                        {% if row.open_slots %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-50 text-red-800 ring-1 ring-red-200/60 tabular-nums">{{ row.open_slots }}</span>
+                        {% else %}
+                        <span class="text-gray-400 tabular-nums">0</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3.5 align-top text-center text-gray-700 tabular-nums">{{ row.pending_applications }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="px-6 py-12 text-center">
+                        <div class="flex flex-col items-center gap-2 text-gray-500">
+                            <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            <p class="text-sm font-medium">No courses match these filters</p>
+                            <p class="text-xs text-gray-400">Try a different term or clear the status filter</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

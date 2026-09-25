@@ -3,8 +3,10 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.db.models import Count, F, Q, Sum
+from django.db.models.functions import Trim
 from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
+from collections import defaultdict
 from datetime import date
 from django.urls import reverse
 from openpyxl import Workbook
@@ -21,11 +23,11 @@ from main.models import Notification
 from main.constants import BC_STUDENT_EMPLOYMENT_NEW_HIRES_URL
 from main.notifications import create_notification
 from main.ta_hiring import send_student_ta_acceptance_onboarding_email
+from main.terms import available_terms, default_term
 from main.utils import app_site_absolute_url, send_notification_email
 
 User = get_user_model()
 
-# Shared ordering for the applications table and professor/superuser prev/next on detail pages
 APPLICATIONS_SORT_ORDER = (
     "student__last_name",
     "student__first_name",
@@ -273,11 +275,15 @@ PER_PAGE_CHOICES = [10, 20, 50]
 
 @login_required
 def courses_list_v2(request):
+    # Non-admins get the parameter ignored rather than an error.
+    staffing_view = request.user.is_superuser and request.GET.get('view') == 'staffing'
+
     if 'term' not in request.GET and 'status' not in request.GET:
-        latest_term = Course.objects.order_by('-term').values_list('term', flat=True).first()
+        # Not order_by('-term'): that sorts "Spring 2026" above "Fall 2026".
+        latest_term = default_term(available_terms())
         if latest_term:
             params = request.GET.copy()
-            params['term'] = latest_term.strip()
+            params['term'] = latest_term
             params['status'] = 'active'
             return redirect(f"{request.path}?{params.urlencode()}")
 
@@ -309,10 +315,12 @@ def courses_list_v2(request):
         courses = courses.filter(term__iexact=term_filter)
     if professor_id:
         courses = courses.filter(professor_id=professor_id)
-    if status_filter == 'active':
-        courses = courses.filter(status=True)
-    elif status_filter == 'closed':
-        courses = courses.filter(status=False)
+    # The staffing view ignores status: a course closes when it fills.
+    if not staffing_view:
+        if status_filter == 'active':
+            courses = courses.filter(status=True)
+        elif status_filter == 'closed':
+            courses = courses.filter(status=False)
     if class_type_filter:
         courses = courses.filter(class_type=class_type_filter)
     if course_level and course_level in ('1', '2', '3', '4', '5'):
@@ -399,25 +407,33 @@ def courses_list_v2(request):
             'clear': url_with_staffing(''),
         }
 
-    if per_page_param == 'all':
-        per_page_size = 9999
+    # Not paginated: the staffing view is searched with ctrl+F.
+    staffing_context = {}
+    if staffing_view:
+        staffing_context = _staffing_context(request, courses)
+        page = None
+        paginator = None
         per_page = 'all'
     else:
-        try:
-            n = int(per_page_param)
-            per_page_size = n if n in PER_PAGE_CHOICES else 10
-            per_page = str(per_page_size)
-        except (ValueError, TypeError):
-            per_page_size = 10
-            per_page = '10'
+        if per_page_param == 'all':
+            per_page_size = 9999
+            per_page = 'all'
+        else:
+            try:
+                n = int(per_page_param)
+                per_page_size = n if n in PER_PAGE_CHOICES else 10
+                per_page = str(per_page_size)
+            except (ValueError, TypeError):
+                per_page_size = 10
+                per_page = '10'
 
-    paginator = Paginator(courses, per_page_size)
-    page_number = request.GET.get('page', 1)
-    page = paginator.get_page(page_number)
-    courses = page.object_list
+        paginator = Paginator(courses, per_page_size)
+        page_number = request.GET.get('page', 1)
+        page = paginator.get_page(page_number)
+        courses = page.object_list
 
     professors = User.objects.filter(professor=True).order_by('last_name', 'first_name')
-    terms = list(Course.objects.values_list('term', flat=True).distinct().order_by('-term'))
+    terms = available_terms()
 
     if not request.user.is_professor:
         applied_course_ids = Application.objects.filter(student=request.user).values_list('course_id', flat=True)
@@ -452,7 +468,7 @@ def courses_list_v2(request):
         del get_copy['page']
     query_string = get_copy.urlencode()
 
-    return render(request, 'courses.html', {
+    context = {
         'courses': courses,
         'applied_course_ids': applied_course_ids,
         'professors': professors,
@@ -468,7 +484,36 @@ def courses_list_v2(request):
         'staffing_filter_urls': staffing_filter_urls or {},
         'staffing_filter': staffing_filter,
         'professor_my_courses': professor_my_courses,
-    })
+        'staffing_view': staffing_view,
+        'catalog_url': _courses_url_without(request, 'view', 'sort', 'dir', 'staffing_state'),
+        'staffing_url': _courses_url_with_view(request),
+        'export_url': _schedule_export_url(request),
+    }
+    context.update(staffing_context)
+    return render(request, 'courses.html', context)
+
+
+def _courses_url_without(request, *drop):
+    params = request.GET.copy()
+    for key in drop + ('page',):
+        params.pop(key, None)
+    return request.path + ('?' + params.urlencode() if params else '')
+
+
+def _schedule_export_url(request):
+    """Export link carrying only the filters export_schedule applies."""
+    params = request.GET.copy()
+    for key in ('view', 'sort', 'dir', 'staffing_state', 'status', 'page', 'per_page'):
+        params.pop(key, None)
+    return reverse('export_schedule') + ('?' + params.urlencode() if params else '')
+
+
+def _courses_url_with_view(request):
+    params = request.GET.copy()
+    params['view'] = 'staffing'
+    for key in ('page', 'staffing', 'status'):
+        params.pop(key, None)
+    return f"{request.path}?{params.urlencode()}"
 
 @login_required
 def create_course_v2(request):
@@ -851,15 +896,25 @@ def send_onboarding_reminders(request):
     return redirect('onboarding_status')
 
 
+def _courses_for_term(term):
+    """
+    Courses in a term, matched ignoring case and surrounding whitespace.
+    """
+    return Course.objects.annotate(term_normalized=Trim('term')).filter(
+        term_normalized__iexact=(term or '').strip()
+    )
+
+
 def _get_export_queryset(request):
-    """Apply same filters as courses list; used for export."""
+    """
+    Courses for the schedule export.
+    """
     query = request.GET.get('q')
     term_filter = (request.GET.get('term') or '').strip()
     professor_id = request.GET.get('professor')
-    status_filter = request.GET.get('status', '')
     class_type_filter = request.GET.get('class_type', '')
     course_level = request.GET.get('course_level', '')
-    courses = Course.objects.all().order_by('course')
+    courses = _courses_for_term(term_filter).order_by('course', 'section')
     if query:
         courses = courses.filter(
             Q(course__icontains=query) |
@@ -867,19 +922,33 @@ def _get_export_queryset(request):
             Q(instructor_first_name__icontains=query) |
             Q(instructor_last_name__icontains=query)
         )
-    if term_filter:
-        courses = courses.filter(term__iexact=term_filter)
     if professor_id:
         courses = courses.filter(professor_id=professor_id)
-    if status_filter == 'active':
-        courses = courses.filter(status=True)
-    elif status_filter == 'closed':
-        courses = courses.filter(status=False)
     if class_type_filter:
         courses = courses.filter(class_type=class_type_filter)
     if course_level and course_level in ('1', '2', '3', '4', '5'):
         courses = courses.filter(course__iregex=r'^\D*' + course_level + r'\d{3}')
     return courses
+
+
+def _export_tas_by_course(courses):
+    """
+    The TAs to report per course: CONFIRMED applications unioned with current_tas.
+    """
+    tas = defaultdict(dict)
+    confirmed = Application.objects.filter(
+        course__in=courses, status=ApplicationStatus.CONFIRMED.value
+    ).select_related('student')
+    for application in confirmed:
+        tas[application.course_id][application.student_id] = application.student
+    for course in courses:
+        for ta in course.current_tas.all():
+            tas[course.id][ta.pk] = ta
+    return tas
+
+
+def _ta_display_name(user):
+    return (user.get_full_name() or '').strip() or user.email or str(user)
 
 
 @login_required
@@ -891,11 +960,17 @@ def export_schedule(request):
     if not term_filter:
         messages.warning(request, "Select a term (use Add filter → Term) to export the schedule.")
         return redirect('courses')
-    courses = _get_export_queryset(request).select_related('professor').prefetch_related('current_tas')
+    courses = list(
+        _get_export_queryset(request)
+        .select_related('professor')
+        .prefetch_related('current_tas')
+    )
+    staffing_rows = {row['id']: row for row in _build_staffing_rows(courses)}
     headers = [
         'Term', 'Type', 'Course', 'Section', 'Course Title', 'Instructors', 'RoomName', 'TimeSlot',
         'Max Enroll', 'RoomSize',
         'Instructor Email', 'TAs Assigned', 'TAs Total', 'TA Names',
+        'Pending Offers', 'Open Slots (Not Yet Offered)', 'Pending Applications',
     ]
     wb = Workbook()
     ws = wb.active
@@ -907,11 +982,9 @@ def export_schedule(request):
         instructors_str = f"{course.instructor_last_name}, {course.instructor_first_name}" if (course.instructor_last_name or course.instructor_first_name) else (course.professor.get_full_name() if course.professor else '')
         if not instructors_str and course.professor:
             instructors_str = course.professor.get_full_name() or course.professor.email or ''
-        ta_count = course.current_tas.count()
-        ta_names = ', '.join(
-            (ta.get_full_name() or ta.email or str(ta))
-            for ta in course.current_tas.all()
-        )
+        staffing = staffing_rows.get(course.id, {})
+        ta_count = staffing.get('confirmed_count', 0)
+        ta_names = ', '.join(staffing.get('confirmed_tas', []))
         instructor_email = (course.professor.email or '') if course.professor else ''
         ws.cell(row=row_idx, column=1, value=course.term)
         ws.cell(row=row_idx, column=2, value=course.class_type)
@@ -927,6 +1000,9 @@ def export_schedule(request):
         ws.cell(row=row_idx, column=12, value=ta_count)
         ws.cell(row=row_idx, column=13, value=course.num_tas)
         ws.cell(row=row_idx, column=14, value=ta_names)
+        ws.cell(row=row_idx, column=15, value=', '.join(staffing.get('pending_offer_tas', [])))
+        ws.cell(row=row_idx, column=16, value=staffing.get('open_slots', 0))
+        ws.cell(row=row_idx, column=17, value=staffing.get('pending_applications', 0))
     for col_idx in range(1, len(headers) + 1):
         max_len = max(
             len(str(ws.cell(row=r, column=col_idx).value or ''))
@@ -946,6 +1022,145 @@ def export_schedule(request):
     )
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
+
+
+# --------------------------------------------------------------------------
+# Staffing overview (admin): one row per course AND section.
+# --------------------------------------------------------------------------
+
+STAFFING_SORT_FIELDS = ('course', 'open_slots', 'pending_offers')
+STAFFING_STATES = ('needs_tas', 'pending_offers', 'fully_staffed')
+
+
+def _build_staffing_rows(courses):
+    tas_by_course = _export_tas_by_course(courses)
+
+    offers_by_course = defaultdict(list)
+    pending_offers = Offer.objects.filter(
+        course__in=courses, status=OfferStatus.PENDING.value
+    ).select_related('recipient')
+    for offer in pending_offers:
+        offers_by_course[offer.course_id].append(offer.recipient)
+
+    pending_apps_by_course = {
+        row['course']: row['n']
+        for row in Application.objects.filter(
+            course__in=courses, status=ApplicationStatus.PENDING.value
+        ).values('course').annotate(n=Count('id'))
+    }
+
+    def by_name(users):
+        return sorted(
+            users,
+            key=lambda u: (u.last_name or '', u.first_name or '', u.email or ''),
+        )
+
+    rows = []
+    for course in courses:
+        confirmed = by_name(tas_by_course.get(course.id, {}).values())
+        offered = by_name(offers_by_course.get(course.id, []))
+        slots = course.num_tas or 0
+        rows.append({
+            'id': course.id,
+            'course': course.course,
+            'section': course.section,
+            'course_title': course.course_title,
+            'professor': _staffing_professor_name(course),
+            'num_tas': slots,
+            'confirmed_tas': [_ta_display_name(user) for user in confirmed],
+            'confirmed_count': len(confirmed),
+            'pending_offer_tas': [_ta_display_name(user) for user in offered],
+            'pending_offers': len(offered),
+            'open_slots': max(0, slots - len(confirmed) - len(offered)),
+            'pending_applications': pending_apps_by_course.get(course.id, 0),
+        })
+    return rows
+
+
+def _staffing_professor_name(course):
+    if course.professor:
+        name = course.professor.get_full_name().strip() or course.professor.email
+        if name:
+            return name
+    name = f"{course.instructor_last_name}, {course.instructor_first_name}".strip(', ')
+    return name or '—'
+
+
+def _filter_staffing_rows(rows, state):
+    """
+    Narrow rows to one staffing state. An unrecognised state returns everything.
+    """
+    if state == 'needs_tas':
+        return [row for row in rows if row['open_slots'] > 0]
+    if state == 'pending_offers':
+        return [row for row in rows if row['pending_offers'] > 0]
+    if state == 'fully_staffed':
+        return [
+            row for row in rows
+            if row['num_tas'] > 0 and row['confirmed_count'] >= row['num_tas']
+        ]
+    return rows
+
+
+def _sort_staffing_rows(rows, sort, direction):
+    """
+    Sort in Python: the confirmed count comes from a union, not a SQL annotation.
+    """
+    if sort not in STAFFING_SORT_FIELDS:
+        sort = 'course'
+    descending = direction == 'desc'
+
+    if sort == 'course':
+        return sorted(
+            rows,
+            key=lambda row: (row['course'], row['section'], str(row['id'])),
+            reverse=descending,
+        )
+
+    sign = -1 if descending else 1
+    return sorted(
+        rows,
+        key=lambda row: (
+            sign * row[sort], row['course'], row['section'], str(row['id'])
+        ),
+    )
+
+
+def _staffing_context(request, courses):
+    """
+    Context for the admin staffing view of the courses page.
+    """
+    course_list = list(courses.select_related('professor').prefetch_related('current_tas'))
+    rows = _build_staffing_rows(course_list)
+    rows = _filter_staffing_rows(rows, (request.GET.get('staffing_state') or '').strip())
+
+    sort = (request.GET.get('sort') or '').strip()
+    if sort not in STAFFING_SORT_FIELDS:
+        sort = 'course'
+    direction = 'desc' if (request.GET.get('dir') or '').strip() == 'desc' else 'asc'
+    rows = _sort_staffing_rows(rows, sort, direction)
+
+    # Toggle direction on the active column; others start ascending.
+    sort_urls = {}
+    for field in STAFFING_SORT_FIELDS:
+        params = request.GET.copy()
+        params['sort'] = field
+        params['dir'] = 'desc' if (field == sort and direction == 'asc') else 'asc'
+        params.pop('page', None)
+        sort_urls[field] = params.urlencode()
+
+    return {
+        'rows': rows,
+        'sort_urls': sort_urls,
+        'staffing_state': (request.GET.get('staffing_state') or '').strip(),
+        'sort': sort,
+        'direction': direction,
+        'total_slots': sum(row['num_tas'] for row in rows),
+        'total_confirmed': sum(row['confirmed_count'] for row in rows),
+        'total_open': sum(row['open_slots'] for row in rows),
+        'total_pending_offers': sum(row['pending_offers'] for row in rows),
+    }
+
 
 # Statuses that count toward the 5-application-per-term limit (Rejected/Withdrawn do not count)
 APPLICATION_LIMIT_COUNTED_STATUSES = [
